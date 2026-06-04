@@ -1,0 +1,25 @@
+{
+  "name": "agent-alibi",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "packageManager": "pnpm@11.5.1",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "pnpm --parallel --filter @agent-alibi/web --filter @agent-alibi/server dev",
+    "dev:web": "pnpm --filter @agent-alibi/web dev",
+    "dev:server": "pnpm --filter @agent-alibi/server dev",
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "test:game": "pnpm --filter @agent-alibi/game test",
+    "smoke": "pnpm --filter @agent-alibi/web build && pnpm playwright test",
+    "start": "pnpm --filter @agent-alibi/server start",
+    "typecheck": "pnpm -r typecheck"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.54.0",
+    "typescript": "^5.8.0"
+  }
+}
