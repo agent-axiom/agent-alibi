@@ -52,7 +52,6 @@ export class NeonMoonScene extends Phaser.Scene {
     }
 
     this.drawVault(this.snapshot.state, width, height);
-    this.drawAlarm(this.snapshot.state, width, height);
     this.drawRevealBeat(this.snapshot.latestEvents, width, height);
     this.drawLaserSweep(width, height);
   }
@@ -216,29 +215,6 @@ export class NeonMoonScene extends Phaser.Scene {
       repeat: -1,
       ease: "Sine.easeInOut"
     });
-  }
-
-  private drawAlarm(state: GameState, width: number, height: number) {
-    const x = width - 170;
-    const y = 26;
-    const panel = this.add.graphics();
-    panel.fillStyle(0x07101c, 0.76);
-    panel.fillRoundedRect(x, y, 142, 54, 8);
-    panel.lineStyle(1, 0x96f6ff, 0.28);
-    panel.strokeRoundedRect(x, y, 142, 54, 8);
-
-    this.add.text(x + 14, y + 10, "ALARM", {
-      color: "#dffcff",
-      fontFamily: "Inter, Arial, sans-serif",
-      fontSize: "11px",
-      fontStyle: "900"
-    });
-
-    for (let index = 0; index < 5; index += 1) {
-      const lit = index < state.alarm;
-      const dot = this.add.rectangle(x + 18 + index * 22, y + 36, 16, 7, lit ? 0xff4f7b : 0x526073, lit ? 1 : 0.55);
-      dot.setStrokeStyle(1, lit ? 0xffb8c8 : 0x7d8ba0, 0.6);
-    }
   }
 
   private drawRevealBeat(events: RevealEvent[], width: number, height: number) {

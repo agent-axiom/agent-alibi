@@ -110,6 +110,167 @@ p {
   box-shadow: 0 10px 0 #84a59d;
 }
 
+.home-shell {
+  position: relative;
+  place-items: stretch;
+  overflow: hidden;
+  padding: clamp(18px, 4vw, 54px);
+  background: #050811;
+  color: #f8fdff;
+}
+
+.home-visual {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background:
+    linear-gradient(rgba(216, 252, 255, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(216, 252, 255, 0.06) 1px, transparent 1px),
+    #050811;
+  background-size: 34px 34px;
+}
+
+.home-visual::before {
+  position: absolute;
+  right: 4%;
+  top: 38%;
+  width: min(70vw, 900px);
+  height: 6px;
+  content: "";
+  background: rgba(216, 252, 255, 0.18);
+  box-shadow: 0 0 34px rgba(76, 244, 240, 0.26);
+  transform: rotate(-24deg);
+}
+
+.vault-beam,
+.vault-room,
+.vault-agent,
+.vault-gem {
+  position: absolute;
+  display: block;
+}
+
+.vault-beam {
+  right: 12%;
+  bottom: -16%;
+  width: 22vw;
+  height: 120vh;
+  background: rgba(76, 244, 240, 0.08);
+  transform: rotate(19deg);
+  box-shadow: 0 0 44px rgba(76, 244, 240, 0.22);
+}
+
+.vault-room {
+  width: clamp(86px, 12vw, 160px);
+  height: clamp(58px, 8vw, 104px);
+  border: 2px solid rgba(216, 252, 255, 0.58);
+  border-radius: 8px;
+  background: rgba(7, 16, 28, 0.82);
+  box-shadow: 0 0 32px rgba(76, 244, 240, 0.16);
+}
+
+.room-a {
+  right: 16%;
+  top: 24%;
+  border-color: rgba(255, 213, 106, 0.76);
+}
+
+.room-b {
+  right: 36%;
+  top: 48%;
+  border-color: rgba(189, 169, 255, 0.78);
+}
+
+.room-c {
+  right: 10%;
+  top: 62%;
+  border-color: rgba(255, 79, 123, 0.72);
+}
+
+.vault-agent {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: #4cf4f0;
+  box-shadow: 0 0 24px rgba(76, 244, 240, 0.7);
+}
+
+.agent-a {
+  right: 39%;
+  top: 43%;
+}
+
+.agent-b {
+  right: 18%;
+  top: 58%;
+  background: #ff4f7b;
+  box-shadow: 0 0 24px rgba(255, 79, 123, 0.7);
+}
+
+.vault-gem {
+  right: 21%;
+  top: 31%;
+  width: 28px;
+  height: 28px;
+  background: #ffd56a;
+  transform: rotate(45deg);
+  box-shadow: 0 0 28px rgba(255, 213, 106, 0.78);
+}
+
+.home-panel {
+  position: relative;
+  z-index: 1;
+  width: min(760px, 100%);
+  min-height: calc(100vh - clamp(36px, 8vw, 108px));
+  align-content: center;
+  gap: 34px;
+}
+
+.home-panel h1 {
+  color: #f8fdff;
+  text-shadow: 0 0 34px rgba(76, 244, 240, 0.22);
+}
+
+.home-shell .eyebrow {
+  color: #ffd56a;
+}
+
+.home-shell .home-copy {
+  color: #c8d9e8;
+  font-size: clamp(1.05rem, 1.8vw, 1.35rem);
+}
+
+.home-shell .home-actions {
+  width: min(520px, 100%);
+  display: grid;
+  grid-template-columns: 1fr;
+}
+
+.home-shell .primary-action {
+  min-height: 60px;
+  justify-content: flex-start;
+  border: 1px solid rgba(216, 252, 255, 0.28);
+  background: rgba(7, 16, 28, 0.82);
+  color: #f8fdff;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.26);
+}
+
+.home-shell .primary-action:first-child {
+  border-color: rgba(255, 213, 106, 0.64);
+  background: #ffd56a;
+  color: #07101c;
+}
+
+.home-shell .primary-action:nth-child(2) {
+  background: rgba(76, 244, 240, 0.16);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.26);
+}
+
+.home-shell .primary-action:nth-child(3) {
+  background: rgba(255, 79, 123, 0.18);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.26);
+}
+
 .match-shell {
   min-height: 100vh;
   display: grid;
@@ -703,7 +864,7 @@ p {
   bottom: 16px;
   width: min(1120px, calc(100vw - 28px));
   display: grid;
-  grid-template-columns: minmax(260px, 0.9fr) minmax(0, 1.6fr) 150px;
+  grid-template-columns: minmax(200px, 0.68fr) minmax(0, 1.72fr) 124px;
   gap: 10px;
   transform: translateX(-50%);
   align-items: stretch;
@@ -734,7 +895,7 @@ p {
   display: grid;
   grid-template-rows: auto auto 1fr auto;
   gap: 7px;
-  padding: 13px;
+  padding: 12px;
   color: #f8fdff;
   text-align: left;
 }
@@ -789,7 +950,7 @@ p {
   opacity: 0.45;
 }
 
-@media (max-width: 980px) {
+@media (max-width: 760px) {
   .heist-topbar {
     grid-template-columns: minmax(0, 1fr) minmax(160px, 220px);
   }
@@ -844,7 +1005,7 @@ p {
   }
 }
 
-@media (max-width: 680px) {
+@media (max-width: 620px) {
   .cinematic-shell {
     min-height: 100svh;
     height: 100svh;
