@@ -15,6 +15,7 @@
     "test": "pnpm -r test",
     "test:game": "pnpm --filter @agent-alibi/game test",
     "smoke": "pnpm --filter @agent-alibi/web build && pnpm playwright test",
+    "start": "pnpm --filter @agent-alibi/server start",
     "typecheck": "pnpm -r typecheck"
   },
   "devDependencies": {

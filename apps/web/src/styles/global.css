@@ -31,7 +31,8 @@ p {
 }
 
 .home-shell,
-.final-shell {
+.final-shell,
+.room-shell {
   min-height: 100vh;
   display: grid;
   place-items: center;
@@ -43,7 +44,8 @@ p {
 }
 
 .home-panel,
-.case-file {
+.case-file,
+.room-lobby {
   width: min(920px, 100%);
   display: grid;
   gap: 28px;
@@ -73,7 +75,8 @@ p {
 }
 
 .home-actions,
-.final-actions {
+.final-actions,
+.agent-picker {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
@@ -81,7 +84,9 @@ p {
 
 .primary-action,
 .final-actions button,
-.lock-button {
+.lock-button,
+.agent-picker button,
+.slot-row button {
   min-height: 52px;
   display: inline-flex;
   align-items: center;
@@ -394,6 +399,48 @@ p {
   font-family: "SFMono-Regular", Consolas, monospace;
   line-height: 1.45;
   white-space: pre-wrap;
+}
+
+.slot-list {
+  display: grid;
+  gap: 8px;
+}
+
+.slot-row {
+  min-height: 46px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 8px;
+  align-items: center;
+  border: 2px solid #171717;
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: #fffaf2;
+}
+
+.slot-row span {
+  font-weight: 900;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.slot-row small {
+  color: #7b2d26;
+  font-weight: 800;
+}
+
+.agent-picker button,
+.slot-row button {
+  min-height: 38px;
+  box-shadow: none;
+  padding: 0 12px;
+}
+
+.error-line {
+  margin-top: 8px;
+  color: #7b2d26;
+  font-weight: 900;
 }
 
 @media (max-width: 900px) {
