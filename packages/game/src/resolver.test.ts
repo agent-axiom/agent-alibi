@@ -95,6 +95,23 @@ describe("resolveRound", () => {
     expect(result.state.players.find((player) => player.id === "p-human")!.status).toBe("caught");
     expect(result.events.map((event) => event.text).join("\n")).toContain("sealed inside");
   });
+
+  it("does not catch an agent before the final seal from alarm pressure alone", () => {
+    const state = createInitialGameState({
+      matchId: "m-test",
+      humanPlayerName: "Agent You",
+      aiProfileIds: ["rook"],
+      seed: "seed"
+    });
+    state.round = 3;
+    state.alarm = 5;
+    state.players[0]!.locationId = "inner-vault";
+    const scout = mustFindAction(state, "p-human", "Scout nearby rooms");
+
+    const result = resolveRound(state, { "p-human": scout }, "seed:pressure");
+
+    expect(result.state.players.find((player) => player.id === "p-human")!.status).toBe("active");
+  });
 });
 
 function mustFindAction(state: Parameters<typeof generateLegalActions>[0], playerId: string, label: string): LegalAction {

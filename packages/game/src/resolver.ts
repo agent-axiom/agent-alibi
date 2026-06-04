@@ -142,16 +142,16 @@ function resolveCover(state: GameState, actions: LegalAction[], events: RevealEv
 
 function updateAlarm(state: GameState, actions: LegalAction[], events: RevealEvent[]): void {
   const noisyActionCount = actions.filter((action) => action.kind === "steal" || action.kind === "sabotage").length;
-  const alarmIncrease = noisyActionCount > 0 ? 2 : 1;
-  state.alarm = Math.min(5, state.alarm + alarmIncrease);
-  events.push(event(state, state.alarm >= 4 ? "danger" : "info", `Alarm rises to ${state.alarm}/5.`));
+  state.alarm = Math.min(5, state.alarm + 1);
+  const noisySuffix = noisyActionCount > 0 ? " The guards heard something suspicious." : "";
+  events.push(event(state, state.alarm >= 4 ? "danger" : "info", `Alarm rises to ${state.alarm}/5.${noisySuffix}`));
 }
 
 function resolveCaughtChecks(state: GameState, events: RevealEvent[]): void {
   for (const player of state.players.filter((candidate) => candidate.status === "active")) {
     const room = state.rooms.find((candidate) => candidate.id === player.locationId);
     const pressure = player.suspicion + state.alarm + (room?.danger ?? 0);
-    if (pressure >= 7) {
+    if (pressure >= 10) {
       player.status = "caught";
       events.push(event(state, "danger", `${player.name} was caught by moonlit security.`, [player.id]));
     }
