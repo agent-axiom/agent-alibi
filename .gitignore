@@ -1,0 +1,14 @@
+.DS_Store
+node_modules/
+dist/
+build/
+coverage/
+.vite/
+.turbo/
+.worktrees/
+
+.env
+.env.local
+.env.production
+*.pem
+*.key
