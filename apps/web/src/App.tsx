@@ -1,5 +1,6 @@
 import { Bot, Radio, Users } from "lucide-react";
 import { useState } from "react";
+import { buildActionCards } from "./game-ui/action-cards";
 import { FinalCaseFile } from "./game-ui/FinalCaseFile";
 import { MatchScreen } from "./game-ui/MatchScreen";
 import { HomeScreen } from "./lobby/HomeScreen";
@@ -11,6 +12,7 @@ type AppScreen = "home" | "match" | "room";
 
 export function App() {
   const [screen, setScreen] = useState<AppScreen>("home");
+  const [onlineSelectedActionId, setOnlineSelectedActionId] = useState<string | null>(null);
   const localMatch = useLocalMatch();
   const onlineRoom = useOnlineRoom();
 
@@ -25,6 +27,7 @@ export function App() {
   }
 
   function createRoom() {
+    setOnlineSelectedActionId(null);
     onlineRoom.connect();
     onlineRoom.createRoom("Agent You");
     setScreen("room");
@@ -47,16 +50,30 @@ export function App() {
       return <FinalCaseFile summary={onlineRoom.summary} onRematch={onlineRoom.startMatch} onHome={() => setScreen("home")} />;
     }
     if (onlineRoom.state) {
+      const onlineActionCards = buildActionCards(onlineRoom.state, onlineRoom.legalActions);
+      const executeOnlineAction = () => {
+        const actionId = onlineSelectedActionId ?? onlineActionCards[0]?.actionId;
+        if (!actionId) return;
+        onlineRoom.lockAction(actionId);
+        setOnlineSelectedActionId(null);
+      };
       return (
         <MatchScreen
           match={{
             state: onlineRoom.state,
             legalActions: onlineRoom.legalActions,
+            actionCards: onlineActionCards,
             briefingMessages: [],
+            lastEvents: onlineRoom.state.revealLog.slice(-3),
             summary: onlineRoom.summary,
             isAiDemo: false,
+            selectedActionId: onlineSelectedActionId,
+            selectedPlayerId: undefined,
             startSolo,
             startAiDemo: startDemo,
+            selectAction: setOnlineSelectedActionId,
+            selectPlayer: () => undefined,
+            executeSelectedAction: executeOnlineAction,
             lockAction: onlineRoom.lockAction,
             advanceAiOnly: onlineRoom.startMatch,
             reset: () => setScreen("home")

@@ -469,3 +469,427 @@ p {
     width: 100%;
   }
 }
+
+.cinematic-shell {
+  position: relative;
+  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
+  background: #050811;
+  color: #f8fdff;
+}
+
+.heist-stage {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: #050811;
+}
+
+.heist-stage canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+
+.heist-vignette {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(5, 8, 17, 0.78), transparent 22%, transparent 72%, rgba(5, 8, 17, 0.82)),
+    linear-gradient(0deg, rgba(5, 8, 17, 0.86), transparent 30%, transparent 74%, rgba(5, 8, 17, 0.58));
+}
+
+.heist-topbar,
+.agent-roster,
+.radio-console,
+.action-dock {
+  position: absolute;
+  z-index: 2;
+}
+
+.heist-topbar {
+  top: 14px;
+  left: 14px;
+  right: 14px;
+  min-height: 62px;
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(190px, 260px) auto;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.heist-topbar > div,
+.radio-console,
+.agent-card,
+.action-card,
+.execute-button,
+.reveal-caption {
+  border: 1px solid rgba(216, 252, 255, 0.25);
+  border-radius: 8px;
+  background: rgba(7, 16, 28, 0.72);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.28);
+}
+
+.heist-topbar > div {
+  display: grid;
+  align-content: center;
+  gap: 3px;
+  padding: 10px 14px;
+}
+
+.heist-topbar span,
+.console-heading,
+.action-card span,
+.reveal-caption span {
+  color: #ffd56a;
+  font-size: 0.76rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.heist-topbar strong {
+  font-size: clamp(1.2rem, 2.2vw, 2rem);
+  line-height: 1;
+}
+
+.vault-meter div {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+
+.vault-meter i {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(216, 252, 255, 0.22);
+}
+
+.vault-meter i.lit {
+  background: #ff4f7b;
+  box-shadow: 0 0 18px rgba(255, 79, 123, 0.75);
+}
+
+.round-chip {
+  min-width: 116px;
+  text-align: center;
+  font-weight: 900;
+}
+
+.agent-roster {
+  top: 92px;
+  left: 14px;
+  width: 180px;
+  display: grid;
+  gap: 8px;
+}
+
+.agent-card {
+  min-height: 62px;
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  column-gap: 10px;
+  align-items: center;
+  padding: 8px;
+  color: #f8fdff;
+  text-align: left;
+}
+
+.agent-card span {
+  grid-row: span 2;
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  color: #05101a;
+  font-size: 0.8rem;
+  font-weight: 900;
+}
+
+.agent-card.blue span {
+  background: #4cf4f0;
+}
+
+.agent-card.red span {
+  background: #ff4f7b;
+  color: #fff;
+}
+
+.agent-card strong,
+.agent-card small,
+.action-card strong,
+.action-card small,
+.radio-lines span,
+.reveal-caption strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.agent-card strong {
+  font-size: 0.94rem;
+}
+
+.agent-card small {
+  color: #b7c8d8;
+  text-transform: capitalize;
+}
+
+.agent-card.selected {
+  border-color: #ffd56a;
+  box-shadow: 0 0 0 2px rgba(255, 213, 106, 0.22), 0 18px 50px rgba(0, 0, 0, 0.28);
+}
+
+.agent-card.escaped,
+.agent-card.caught {
+  opacity: 0.52;
+}
+
+.radio-console {
+  top: 92px;
+  right: 14px;
+  width: min(340px, calc(100vw - 230px));
+  max-height: 40vh;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 8px;
+  padding: 12px;
+}
+
+.console-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.radio-lines {
+  display: grid;
+  gap: 8px;
+  overflow: auto;
+}
+
+.radio-lines p {
+  display: grid;
+  gap: 3px;
+  border-left: 3px solid #4cf4f0;
+  padding-left: 8px;
+  line-height: 1.25;
+}
+
+.radio-lines strong {
+  color: #f8fdff;
+  font-size: 0.82rem;
+}
+
+.radio-lines span {
+  color: #c8d9e8;
+  font-size: 0.9rem;
+}
+
+.event-line.success {
+  border-left-color: #7effdf;
+}
+
+.event-line.danger,
+.event-line.betrayal {
+  border-left-color: #ff4f7b;
+}
+
+.action-dock {
+  left: 50%;
+  bottom: 16px;
+  width: min(1120px, calc(100vw - 28px));
+  display: grid;
+  grid-template-columns: minmax(260px, 0.9fr) minmax(0, 1.6fr) 150px;
+  gap: 10px;
+  transform: translateX(-50%);
+  align-items: stretch;
+}
+
+.reveal-caption {
+  min-height: 126px;
+  display: grid;
+  align-content: center;
+  gap: 8px;
+  padding: 14px;
+}
+
+.reveal-caption strong {
+  font-size: clamp(1rem, 1.7vw, 1.35rem);
+  line-height: 1.18;
+}
+
+.action-cards {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.action-card {
+  min-height: 126px;
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  gap: 7px;
+  padding: 13px;
+  color: #f8fdff;
+  text-align: left;
+}
+
+.action-card svg {
+  color: #d8fcff;
+}
+
+.action-card strong {
+  font-size: 1rem;
+  line-height: 1.05;
+}
+
+.action-card small {
+  color: #b7c8d8;
+  line-height: 1.22;
+}
+
+.action-card.objective {
+  border-color: rgba(126, 255, 223, 0.46);
+}
+
+.action-card.social {
+  border-color: rgba(255, 213, 106, 0.46);
+}
+
+.action-card.risk,
+.action-card.high {
+  border-color: rgba(255, 79, 123, 0.52);
+}
+
+.action-card.selected {
+  background: rgba(216, 252, 255, 0.16);
+  box-shadow: 0 0 0 2px rgba(216, 252, 255, 0.2), 0 18px 50px rgba(0, 0, 0, 0.28);
+}
+
+.execute-button {
+  min-height: 126px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 8px;
+  padding: 12px;
+  background: #ffd56a;
+  color: #07101c;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.execute-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+@media (max-width: 980px) {
+  .heist-topbar {
+    grid-template-columns: minmax(0, 1fr) minmax(160px, 220px);
+  }
+
+  .round-chip {
+    display: none !important;
+  }
+
+  .agent-roster {
+    top: 84px;
+    right: 14px;
+    width: auto;
+    grid-template-columns: repeat(4, minmax(70px, 1fr));
+  }
+
+  .agent-card {
+    min-height: 56px;
+    grid-template-columns: 1fr;
+    justify-items: center;
+    text-align: center;
+  }
+
+  .agent-card span {
+    grid-row: auto;
+    width: 34px;
+    height: 34px;
+  }
+
+  .agent-card small {
+    display: none;
+  }
+
+  .radio-console {
+    top: 158px;
+    right: 14px;
+    width: min(320px, calc(100vw - 28px));
+    max-height: 24vh;
+  }
+
+  .action-dock {
+    grid-template-columns: 1fr;
+  }
+
+  .action-cards {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .reveal-caption,
+  .action-card,
+  .execute-button {
+    min-height: 96px;
+  }
+}
+
+@media (max-width: 680px) {
+  .cinematic-shell {
+    min-height: 100svh;
+    height: 100svh;
+  }
+
+  .heist-topbar {
+    grid-template-columns: 1fr;
+  }
+
+  .vault-meter {
+    display: none !important;
+  }
+
+  .agent-roster {
+    top: 86px;
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .radio-console {
+    display: none;
+  }
+
+  .action-dock {
+    bottom: 10px;
+    width: calc(100vw - 20px);
+  }
+
+  .action-cards {
+    grid-template-columns: 1fr;
+    max-height: 31vh;
+    overflow: auto;
+  }
+
+  .action-card {
+    min-height: 78px;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: auto auto auto;
+  }
+
+  .action-card svg {
+    grid-row: span 3;
+  }
+
+  .reveal-caption,
+  .execute-button {
+    min-height: 72px;
+  }
+}

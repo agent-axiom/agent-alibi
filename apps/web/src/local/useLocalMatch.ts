@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
-import type { GameState, LegalAction, MatchSummary } from "@agent-alibi/shared";
+import type { GameState, LegalAction, MatchSummary, RevealEvent } from "@agent-alibi/shared";
 import { chooseFallbackDecision } from "@agent-alibi/ai";
 import { buildMatchSummary, createInitialGameState, generateLegalActions, resolveRound } from "@agent-alibi/game";
+import { buildActionCards, type ActionCard } from "../game-ui/action-cards";
 
 type BriefingMessage = {
   id: string;
@@ -12,11 +13,18 @@ type BriefingMessage = {
 export type LocalMatchController = {
   state: GameState | null;
   legalActions: LegalAction[];
+  actionCards: ActionCard[];
   briefingMessages: BriefingMessage[];
+  lastEvents: RevealEvent[];
   summary: MatchSummary | null;
   isAiDemo: boolean;
+  selectedActionId: string | null;
+  selectedPlayerId?: string;
   startSolo: () => void;
   startAiDemo: () => void;
+  selectAction: (actionId: string) => void;
+  selectPlayer: (playerId: string) => void;
+  executeSelectedAction: () => void;
   lockAction: (actionId: string) => void;
   advanceAiOnly: () => void;
   reset: () => void;
@@ -29,13 +37,21 @@ const AI_DEMO_PROFILES = ["rook", "moth", "gremlin", "vesper"];
 export function useLocalMatch(): LocalMatchController {
   const [state, setState] = useState<GameState | null>(null);
   const [briefingMessages, setBriefingMessages] = useState<BriefingMessage[]>([]);
+  const [lastEvents, setLastEvents] = useState<RevealEvent[]>([]);
   const [summary, setSummary] = useState<MatchSummary | null>(null);
   const [isAiDemo, setIsAiDemo] = useState(false);
+  const [selectedActionId, setSelectedActionId] = useState<string | null>(null);
+  const [selectedPlayerId, setSelectedPlayerId] = useState<string | undefined>(HUMAN_ID);
 
   const legalActions = useMemo(() => {
     if (!state || summary || isAiDemo) return [];
     return generateLegalActions(state, HUMAN_ID);
   }, [isAiDemo, state, summary]);
+
+  const actionCards = useMemo(() => {
+    if (!state || summary || isAiDemo) return [];
+    return buildActionCards(state, legalActions);
+  }, [isAiDemo, legalActions, state, summary]);
 
   function startSolo() {
     const nextState = createInitialGameState({
@@ -47,6 +63,9 @@ export function useLocalMatch(): LocalMatchController {
     setState(nextState);
     setSummary(null);
     setIsAiDemo(false);
+    setLastEvents(nextState.revealLog.slice(-1));
+    setSelectedActionId(null);
+    setSelectedPlayerId(HUMAN_ID);
     setBriefingMessages(makeBriefing(nextState));
   }
 
@@ -62,7 +81,29 @@ export function useLocalMatch(): LocalMatchController {
     setState(nextState);
     setSummary(null);
     setIsAiDemo(true);
+    setLastEvents(nextState.revealLog.slice(-1));
+    setSelectedActionId(null);
+    setSelectedPlayerId(nextState.players[0]?.id);
     setBriefingMessages(makeBriefing(nextState));
+  }
+
+  function selectAction(actionId: string) {
+    setSelectedActionId(actionId);
+  }
+
+  function selectPlayer(playerId: string) {
+    setSelectedPlayerId(playerId);
+  }
+
+  function executeSelectedAction() {
+    if (isAiDemo) {
+      advanceAiOnly();
+      return;
+    }
+    const actionId = selectedActionId ?? actionCards[0]?.actionId;
+    if (actionId) {
+      lockAction(actionId);
+    }
   }
 
   function lockAction(actionId: string) {
@@ -99,6 +140,8 @@ export function useLocalMatch(): LocalMatchController {
 
     const resolved = resolveRound(state, lockedActions, `${state.rngSeed}:${state.round}`);
     setState(resolved.state);
+    setLastEvents(resolved.events);
+    setSelectedActionId(null);
     setBriefingMessages(messages);
 
     if (resolved.state.phase === "finished") {
@@ -109,18 +152,28 @@ export function useLocalMatch(): LocalMatchController {
   function reset() {
     setState(null);
     setBriefingMessages([]);
+    setLastEvents([]);
     setSummary(null);
     setIsAiDemo(false);
+    setSelectedActionId(null);
+    setSelectedPlayerId(HUMAN_ID);
   }
 
   return {
     state,
     legalActions,
+    actionCards,
     briefingMessages,
+    lastEvents,
     summary,
     isAiDemo,
+    selectedActionId,
+    selectedPlayerId,
     startSolo,
     startAiDemo,
+    selectAction,
+    selectPlayer,
+    executeSelectedAction,
     lockAction,
     advanceAiOnly,
     reset
