@@ -47,4 +47,19 @@ describe("chooseFallbackDecision", () => {
     expect(decision.chosenActionId).toContain("cover");
     expect(decision.publicMessage).toContain("alibi");
   });
+
+  it("does not let fallback agents escape from the Atrium on round one", () => {
+    const state = createInitialGameState({
+      matchId: "m-ai",
+      humanPlayerName: "Agent You",
+      aiProfileIds: ["rook", "anchor"],
+      seed: "seed"
+    });
+
+    const rook = chooseFallbackDecision(state, "p-ai-rook-1", "rook");
+    const anchor = chooseFallbackDecision(state, "p-ai-anchor-2", "anchor");
+
+    expect(rook.chosenActionId).not.toContain("escape");
+    expect(anchor.chosenActionId).not.toContain("escape");
+  });
 });
