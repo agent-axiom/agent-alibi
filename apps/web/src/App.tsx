@@ -18,11 +18,12 @@ export function App() {
   const [soundEnabled, setSoundEnabled] = useState(false);
   const localMatch = useLocalMatch();
   const onlineRoom = useOnlineRoom();
+  const arcadeHud = localMatch.arcade?.hud;
   const musicTrack = selectMusicTrack({
     screen,
-    isArcade: false,
-    alarm: localMatch.state?.alarm,
-    timeLeftMs: undefined
+    isArcade: Boolean(localMatch.arcade?.enabled),
+    alarm: arcadeHud?.alarm ?? localMatch.state?.alarm,
+    timeLeftMs: arcadeHud?.timeLeftMs
   });
   const music = useDynamicMusic(musicTrack, soundEnabled);
 

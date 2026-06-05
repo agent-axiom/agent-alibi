@@ -973,6 +973,210 @@ p {
   opacity: 0.45;
 }
 
+.arcade-shell {
+  position: relative;
+  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
+  background: #050811;
+  color: #f8fdff;
+}
+
+.arcade-stage {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: #050811;
+}
+
+.arcade-stage canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+
+.arcade-vignette {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(5, 8, 17, 0.82), transparent 20%, transparent 74%, rgba(5, 8, 17, 0.8)),
+    linear-gradient(0deg, rgba(5, 8, 17, 0.86), transparent 28%, transparent 75%, rgba(5, 8, 17, 0.55));
+}
+
+.arcade-shell.lockdown .arcade-vignette {
+  background:
+    linear-gradient(90deg, rgba(21, 4, 12, 0.86), transparent 23%, transparent 72%, rgba(21, 4, 12, 0.84)),
+    linear-gradient(0deg, rgba(21, 4, 12, 0.9), transparent 30%, transparent 74%, rgba(5, 8, 17, 0.62));
+}
+
+.arcade-topbar,
+.arcade-roster,
+.arcade-feed,
+.arcade-objective {
+  position: absolute;
+  z-index: 2;
+}
+
+.arcade-topbar {
+  top: 14px;
+  left: 14px;
+  right: 14px;
+  min-height: 64px;
+  display: grid;
+  grid-template-columns: minmax(210px, 1fr) 112px 150px minmax(170px, 220px);
+  gap: 10px;
+}
+
+.mission-title,
+.arcade-stat,
+.arcade-alarm,
+.arcade-agent,
+.arcade-feed,
+.arcade-objective {
+  border: 1px solid rgba(216, 252, 255, 0.24);
+  border-radius: 8px;
+  background: rgba(7, 16, 28, 0.72);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.28);
+}
+
+.mission-title,
+.arcade-stat,
+.arcade-alarm {
+  display: grid;
+  align-content: center;
+  gap: 4px;
+  padding: 10px 14px;
+}
+
+.mission-title span,
+.arcade-stat span,
+.arcade-alarm span,
+.arcade-objective span {
+  color: #ffd56a;
+  font-size: 0.76rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.mission-title strong {
+  font-size: clamp(1.2rem, 2.3vw, 2rem);
+  line-height: 1;
+}
+
+.arcade-stat strong {
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.arcade-alarm div {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+
+.arcade-alarm i {
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(216, 252, 255, 0.22);
+}
+
+.arcade-alarm i.lit {
+  background: #ff4f7b;
+  box-shadow: 0 0 18px rgba(255, 79, 123, 0.72);
+}
+
+.arcade-roster {
+  top: 94px;
+  left: 14px;
+  width: 178px;
+  display: grid;
+  gap: 8px;
+}
+
+.arcade-agent {
+  min-height: 54px;
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
+  gap: 9px;
+  align-items: center;
+  padding: 7px;
+  color: #f8fdff;
+  text-align: left;
+}
+
+.arcade-agent span {
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: #ff4f7b;
+  color: #fff;
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+
+.arcade-agent.blue span {
+  background: #4cf4f0;
+  color: #05101a;
+}
+
+.arcade-agent.human span {
+  background: #ffd56a;
+  color: #05101a;
+}
+
+.arcade-agent strong {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 0.92rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.arcade-feed {
+  top: 94px;
+  right: 14px;
+  width: min(340px, calc(100vw - 222px));
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+}
+
+.arcade-feed p {
+  border-left: 3px solid #4cf4f0;
+  padding-left: 8px;
+  color: #c8d9e8;
+  font-size: 0.92rem;
+  line-height: 1.3;
+}
+
+.arcade-objective {
+  left: 50%;
+  bottom: 18px;
+  width: min(760px, calc(100vw - 28px));
+  display: grid;
+  gap: 7px;
+  padding: 15px 18px;
+  transform: translateX(-50%);
+}
+
+.arcade-objective strong {
+  color: #f8fdff;
+  font-size: clamp(1.15rem, 2.2vw, 1.85rem);
+  line-height: 1.05;
+  overflow-wrap: anywhere;
+}
+
+.arcade-objective small {
+  color: #b7c8d8;
+  font-weight: 800;
+  line-height: 1.3;
+}
+
 @media (max-width: 760px) {
   .heist-topbar {
     grid-template-columns: minmax(0, 1fr) minmax(160px, 220px);
@@ -1026,6 +1230,45 @@ p {
   .execute-button {
     min-height: 96px;
   }
+
+  .arcade-topbar {
+    grid-template-columns: minmax(0, 1fr) 96px 128px;
+  }
+
+  .arcade-alarm {
+    display: none;
+  }
+
+  .arcade-roster {
+    top: 88px;
+    right: 14px;
+    width: auto;
+    grid-template-columns: repeat(4, minmax(62px, 1fr));
+  }
+
+  .arcade-agent {
+    min-height: 48px;
+    grid-template-columns: 1fr;
+    justify-items: center;
+    text-align: center;
+  }
+
+  .arcade-agent span {
+    width: 30px;
+    height: 30px;
+  }
+
+  .arcade-agent strong {
+    display: none;
+  }
+
+  .arcade-feed {
+    top: 148px;
+    right: 14px;
+    width: min(320px, calc(100vw - 28px));
+    max-height: 22vh;
+    overflow: hidden;
+  }
 }
 
 @media (max-width: 620px) {
@@ -1075,5 +1318,37 @@ p {
   .reveal-caption,
   .execute-button {
     min-height: 72px;
+  }
+
+  .arcade-shell {
+    min-height: 100svh;
+    height: 100svh;
+  }
+
+  .arcade-topbar {
+    grid-template-columns: 1fr 92px;
+  }
+
+  .arcade-topbar .arcade-stat:nth-of-type(3) {
+    display: none;
+  }
+
+  .arcade-roster {
+    top: 86px;
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .arcade-feed {
+    display: none;
+  }
+
+  .arcade-objective {
+    bottom: 10px;
+    width: calc(100vw - 20px);
+    padding: 12px;
+  }
+
+  .arcade-objective small {
+    font-size: 0.78rem;
   }
 }

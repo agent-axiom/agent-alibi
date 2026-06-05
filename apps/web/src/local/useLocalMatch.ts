@@ -2,6 +2,8 @@ import { useMemo, useState } from "react";
 import type { GameState, LegalAction, MatchSummary, RevealEvent } from "@agent-alibi/shared";
 import { chooseFallbackDecision } from "@agent-alibi/ai";
 import { buildMatchSummary, createInitialGameState, generateLegalActions, resolveRound } from "@agent-alibi/game";
+import { buildArcadeMatchSummary, type ArcadeMissionResult } from "../arcade/arcade-rules";
+import { ARCADE_MISSION_DURATION_MS, type ArcadeController, type ArcadeHudState } from "../arcade/arcade-types";
 import { buildActionCards, type ActionCard } from "../game-ui/action-cards";
 
 type BriefingMessage = {
@@ -18,6 +20,7 @@ export type LocalMatchController = {
   lastEvents: RevealEvent[];
   summary: MatchSummary | null;
   isAiDemo: boolean;
+  arcade?: ArcadeController;
   selectedActionId: string | null;
   selectedPlayerId?: string;
   startSolo: () => void;
@@ -40,6 +43,7 @@ export function useLocalMatch(): LocalMatchController {
   const [lastEvents, setLastEvents] = useState<RevealEvent[]>([]);
   const [summary, setSummary] = useState<MatchSummary | null>(null);
   const [isAiDemo, setIsAiDemo] = useState(false);
+  const [arcadeHud, setArcadeHud] = useState<ArcadeHudState | null>(null);
   const [selectedActionId, setSelectedActionId] = useState<string | null>(null);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | undefined>(HUMAN_ID);
 
@@ -63,6 +67,7 @@ export function useLocalMatch(): LocalMatchController {
     setState(nextState);
     setSummary(null);
     setIsAiDemo(false);
+    setArcadeHud(makeInitialArcadeHud(nextState));
     setLastEvents(nextState.revealLog.slice(-1));
     setSelectedActionId(null);
     setSelectedPlayerId(HUMAN_ID);
@@ -81,6 +86,7 @@ export function useLocalMatch(): LocalMatchController {
     setState(nextState);
     setSummary(null);
     setIsAiDemo(true);
+    setArcadeHud(null);
     setLastEvents(nextState.revealLog.slice(-1));
     setSelectedActionId(null);
     setSelectedPlayerId(nextState.players[0]?.id);
@@ -155,9 +161,39 @@ export function useLocalMatch(): LocalMatchController {
     setLastEvents([]);
     setSummary(null);
     setIsAiDemo(false);
+    setArcadeHud(null);
     setSelectedActionId(null);
     setSelectedPlayerId(HUMAN_ID);
   }
+
+  function finishArcadeMission(result: ArcadeMissionResult) {
+    setArcadeHud((current) =>
+      current
+        ? {
+            ...current,
+            phase: result.outcome,
+            alarm: result.alarm,
+            lootValue: result.lootValue,
+            aiLootValue: result.aiLootValue,
+            artifactsStolen: result.artifactsStolen,
+            timeLeftMs: Math.max(0, ARCADE_MISSION_DURATION_MS - result.elapsedMs),
+            objective: result.outcome === "escaped" ? "Case closed. Exit route burned clean." : "Case closed. The vault kept its receipt."
+          }
+        : current
+    );
+    setSummary(buildArcadeMatchSummary(result));
+  }
+
+  const arcade =
+    state && !isAiDemo && !summary
+      ? {
+          enabled: true as const,
+          runId: state.matchId,
+          hud: arcadeHud,
+          updateHud: setArcadeHud,
+          finishMission: finishArcadeMission
+        }
+      : undefined;
 
   return {
     state,
@@ -167,6 +203,7 @@ export function useLocalMatch(): LocalMatchController {
     lastEvents,
     summary,
     isAiDemo,
+    arcade,
     selectedActionId,
     selectedPlayerId,
     startSolo,
@@ -188,4 +225,20 @@ function makeBriefing(state: GameState): BriefingMessage[] {
       playerName: player.name,
       text: `${player.name}: Six rounds, one vault, zero believable receipts.`
     }));
+}
+
+function makeInitialArcadeHud(state: GameState): ArcadeHudState {
+  return {
+    phase: "stealth",
+    timeLeftMs: ARCADE_MISSION_DURATION_MS,
+    alarm: state.alarm,
+    lootValue: 0,
+    aiLootValue: 0,
+    artifactsStolen: 0,
+    totalArtifacts: state.artifacts.length,
+    canEscape: false,
+    dashReady: true,
+    objective: "Steal a relic before the vault learns your name",
+    feed: ["Moon Vault breach started.", "Move fast. Steal clean. Escape before lockdown."]
+  };
 }

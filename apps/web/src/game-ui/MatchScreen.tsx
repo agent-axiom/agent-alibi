@@ -1,5 +1,6 @@
 import { Eye, Footprints, Gem, Hand, LockKeyhole, Radio, Shield, Sparkles, Zap } from "lucide-react";
 import type { ActionKind } from "@agent-alibi/shared";
+import { ArcadeHeistStage } from "../arcade/ArcadeHeistStage";
 import { HeistStage } from "../heist/HeistStage";
 import type { LocalMatchController } from "../local/useLocalMatch";
 
@@ -20,13 +21,84 @@ const KIND_ICONS: Record<ActionKind, typeof Footprints> = {
 
 export function MatchScreen({ match }: MatchScreenProps) {
   if (!match.state) return null;
+  const state = match.state;
+
+  if (match.arcade?.enabled) {
+    const hud = match.arcade.hud;
+    return (
+      <main className={`arcade-shell ${hud?.phase ?? "stealth"}`}>
+        <ArcadeHeistStage
+          state={state}
+          runId={match.arcade.runId}
+          onHudUpdate={match.arcade.updateHud}
+          onFinish={match.arcade.finishMission}
+        />
+        <div className="arcade-vignette" />
+
+        <header className="arcade-topbar" aria-label="Live mission status">
+          <div className="mission-title">
+            <span>Agent Alibi</span>
+            <strong>Moon Vault Run</strong>
+          </div>
+          <div className="arcade-stat">
+            <span>Timer</span>
+            <strong>{formatClock(hud?.timeLeftMs ?? 0)}</strong>
+          </div>
+          <div className="arcade-stat">
+            <span>Loot</span>
+            <strong>
+              {hud?.lootValue ?? 0} / AI {hud?.aiLootValue ?? 0}
+            </strong>
+          </div>
+          <div className="arcade-alarm" aria-label={`Alarm ${hud?.alarm ?? match.state.alarm} of 5`}>
+            <span>Alarm</span>
+            <div>
+              {Array.from({ length: 5 }, (_, index) => (
+                <i className={index < (hud?.alarm ?? state.alarm) ? "lit" : ""} key={index} />
+              ))}
+            </div>
+          </div>
+        </header>
+
+        <aside className="arcade-roster" aria-label="Live agents">
+          {state.players.map((player) => (
+            <button
+              className={`arcade-agent ${player.teamId} ${player.kind}`}
+              key={player.id}
+              onClick={() => match.selectPlayer(player.id)}
+              type="button"
+            >
+              <span>{shortName(player.name)}</span>
+              <strong>{player.name}</strong>
+            </button>
+          ))}
+        </aside>
+
+        <aside className="arcade-feed" aria-label="Mission radio">
+          <div className="console-heading">
+            <Radio size={16} />
+            <span>Radio</span>
+          </div>
+          {(hud?.feed ?? ["Moon Vault breach started."]).slice(-5).map((line, index) => (
+            <p key={`${line}-${index}`}>{line}</p>
+          ))}
+        </aside>
+
+        <section className="arcade-objective" aria-label="Current objective">
+          <span>{hud?.phase === "lockdown" ? "Lockdown" : hud?.phase === "alarm" ? "Alarm rising" : "Heist live"}</span>
+          <strong>{hud?.objective ?? "Steal a relic before the vault learns your name"}</strong>
+          <small>WASD / arrows move · click to run · Shift dash · E or Space escape</small>
+        </section>
+      </main>
+    );
+  }
 
   const latestEvents = match.lastEvents.length > 0 ? match.lastEvents : match.state.revealLog.slice(-3);
   const selectedActionId = match.selectedActionId ?? match.actionCards[0]?.actionId ?? null;
   const latestBeat = latestEvents.at(-1);
   const executeDisabled = !match.isAiDemo && match.actionCards.length === 0;
   const snapshot = {
-    state: match.state,
+    state,
     latestEvents,
     selectedPlayerId: match.selectedPlayerId
   };
@@ -139,4 +211,11 @@ function shortName(name: string): string {
 function stripSpeaker(text: string): string {
   const separator = text.indexOf(":");
   return separator >= 0 ? text.slice(separator + 1).trim() : text;
+}
+
+function formatClock(ms: number): string {
+  const totalSeconds = Math.max(0, Math.ceil(ms / 1000));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 }
