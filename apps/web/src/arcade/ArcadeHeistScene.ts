@@ -51,6 +51,16 @@ type MovementKeys = {
   space: Phaser.Input.Keyboard.Key;
 };
 
+type RawMovementKeys = {
+  W: Phaser.Input.Keyboard.Key;
+  A: Phaser.Input.Keyboard.Key;
+  S: Phaser.Input.Keyboard.Key;
+  D: Phaser.Input.Keyboard.Key;
+  SHIFT: Phaser.Input.Keyboard.Key;
+  E: Phaser.Input.Keyboard.Key;
+  SPACE: Phaser.Input.Keyboard.Key;
+};
+
 export class ArcadeHeistScene extends Phaser.Scene {
   private config?: ArcadeMissionConfig;
   private state?: GameState;
@@ -85,8 +95,18 @@ export class ArcadeHeistScene extends Phaser.Scene {
       this.pointerTarget = new Phaser.Math.Vector2(worldPoint.x, worldPoint.y);
     });
     this.cursors = this.input.keyboard?.createCursorKeys();
-    const keys = this.input.keyboard?.addKeys("W,A,S,D,SHIFT,E,SPACE") as MovementKeys | undefined;
-    this.keys = keys;
+    const rawKeys = this.input.keyboard?.addKeys("W,A,S,D,SHIFT,E,SPACE") as RawMovementKeys | undefined;
+    this.keys = rawKeys
+      ? {
+          w: rawKeys.W,
+          a: rawKeys.A,
+          s: rawKeys.S,
+          d: rawKeys.D,
+          shift: rawKeys.SHIFT,
+          e: rawKeys.E,
+          space: rawKeys.SPACE
+        }
+      : undefined;
 
     if (this.config) {
       this.startMission(this.config);

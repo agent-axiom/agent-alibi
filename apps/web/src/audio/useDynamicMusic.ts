@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import type { MusicTrackId } from "../arcade/music";
+import { fadeProgress } from "./fade";
 
 const TRACK_SOURCES: Record<MusicTrackId, string> = {
   menu: "/audio/agent_alibi_main_loop.mp3",
@@ -50,7 +51,7 @@ export function useDynamicMusic(trackId: MusicTrackId | null, enabled: boolean) 
       if (!nextTrack) {
         const startedAt = performance.now();
         const fadeOut = (now: number) => {
-          const progress = Math.min(1, (now - startedAt) / 450);
+          const progress = fadeProgress({ startedAt, now, durationMs: 450 });
           for (const audio of Object.values(audioRef.current)) {
             if (!audio) continue;
             audio.volume = audio.volume * (1 - progress);
@@ -77,7 +78,7 @@ export function useDynamicMusic(trackId: MusicTrackId | null, enabled: boolean) 
       const targetVolume = TRACK_VOLUME[nextTrack];
 
       const fade = (now: number) => {
-        const progress = Math.min(1, (now - startedAt) / 700);
+        const progress = fadeProgress({ startedAt, now, durationMs: 700 });
         nextAudio.volume = targetVolume * progress;
 
         if (previousAudio && previousAudio !== nextAudio) {
