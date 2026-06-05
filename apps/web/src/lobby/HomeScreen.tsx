@@ -1,4 +1,5 @@
 import type { LucideIcon } from "lucide-react";
+import { Volume2, VolumeX } from "lucide-react";
 
 type HomeAction = {
   label: string;
@@ -8,11 +9,19 @@ type HomeAction = {
 
 type HomeScreenProps = {
   actions: HomeAction[];
+  soundEnabled: boolean;
+  onToggleSound: () => void;
 };
 
-export function HomeScreen({ actions }: HomeScreenProps) {
+export function HomeScreen({ actions, soundEnabled, onToggleSound }: HomeScreenProps) {
+  const SoundIcon = soundEnabled ? Volume2 : VolumeX;
+
   return (
     <main className="home-shell">
+      <button className={`sound-toggle ${soundEnabled ? "enabled" : ""}`} onClick={onToggleSound} type="button">
+        <SoundIcon aria-hidden="true" size={18} />
+        <span>{soundEnabled ? "Sound On" : "Sound Off"}</span>
+      </button>
       <div className="home-visual" aria-hidden="true">
         <span className="vault-beam" />
         <i className="vault-room room-a" />

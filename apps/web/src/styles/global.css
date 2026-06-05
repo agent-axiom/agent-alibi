@@ -226,6 +226,29 @@ p {
   gap: 34px;
 }
 
+.sound-toggle {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  z-index: 2;
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(216, 252, 255, 0.28);
+  border-radius: 8px;
+  padding: 0 12px;
+  background: rgba(7, 16, 28, 0.72);
+  color: #dffcff;
+  font-weight: 900;
+  backdrop-filter: blur(12px);
+}
+
+.sound-toggle.enabled {
+  border-color: rgba(255, 213, 106, 0.64);
+  color: #ffd56a;
+}
+
 .home-panel h1 {
   color: #f8fdff;
   text-shadow: 0 0 34px rgba(76, 244, 240, 0.22);

@@ -1,5 +1,7 @@
 import { Bot, Radio, Users } from "lucide-react";
 import { useState } from "react";
+import { selectMusicTrack } from "./arcade/music";
+import { useDynamicMusic } from "./audio/useDynamicMusic";
 import { buildActionCards } from "./game-ui/action-cards";
 import { FinalCaseFile } from "./game-ui/FinalCaseFile";
 import { MatchScreen } from "./game-ui/MatchScreen";
@@ -13,20 +15,36 @@ type AppScreen = "home" | "match" | "room";
 export function App() {
   const [screen, setScreen] = useState<AppScreen>("home");
   const [onlineSelectedActionId, setOnlineSelectedActionId] = useState<string | null>(null);
+  const [soundEnabled, setSoundEnabled] = useState(false);
   const localMatch = useLocalMatch();
   const onlineRoom = useOnlineRoom();
+  const musicTrack = selectMusicTrack({
+    screen,
+    isArcade: false,
+    alarm: localMatch.state?.alarm,
+    timeLeftMs: undefined
+  });
+  const music = useDynamicMusic(musicTrack, soundEnabled);
+
+  async function enableSound() {
+    setSoundEnabled(true);
+    await music.unlock();
+  }
 
   function startSolo() {
+    void enableSound();
     localMatch.startSolo();
     setScreen("match");
   }
 
   function startDemo() {
+    void enableSound();
     localMatch.startAiDemo();
     setScreen("match");
   }
 
   function createRoom() {
+    void enableSound();
     setOnlineSelectedActionId(null);
     onlineRoom.connect();
     onlineRoom.createRoom("Agent You");
@@ -41,6 +59,14 @@ export function App() {
           { label: "Create Room", icon: Users, onClick: createRoom },
           { label: "AI vs AI Demo", icon: Radio, onClick: startDemo }
         ]}
+        soundEnabled={soundEnabled}
+        onToggleSound={() => {
+          const nextEnabled = !soundEnabled;
+          setSoundEnabled(nextEnabled);
+          if (nextEnabled) {
+            void music.unlock();
+          }
+        }}
       />
     );
   }
