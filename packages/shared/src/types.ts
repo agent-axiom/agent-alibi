@@ -101,5 +101,15 @@ export type MatchSummary = {
   biggestBetrayal?: string;
   mostSuspiciousPlayerId?: string;
   title: string;
+  runRating?: string;
+  styleBonus?: number;
+  lootChain?: number;
+  greedRoute?: "successful" | "skipped";
+  stolenRelicNames?: string[];
+  rivalRelicNames?: string[];
+  alibiPulsesUsed?: number;
+  scanBurns?: number;
+  carrierIntercepts?: number;
+  interceptedRelicNames?: string[];
   caseFile: string;
 };

@@ -15,6 +15,7 @@
     "@agent-alibi/game": "workspace:*",
     "@agent-alibi/shared": "workspace:*",
     "lucide-react": "^0.468.0",
+    "phaser": "^3.90.0",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
     "socket.io-client": "^4.8.0"

@@ -28,9 +28,8 @@ export function chooseFallbackDecision(state: GameState, playerId: string, profi
 }
 
 function scoreAction(state: GameState, action: LegalAction, archetype: ReturnType<typeof getAgentProfile>["archetype"]): number {
-  const roundPressure = state.round >= state.maxRounds || state.alarm >= 4 ? 50 : 0;
-  const base = action.kind === "escape" ? roundPressure : 0;
   const riskBonus = action.risk === "high" ? 20 : action.risk === "medium" ? 10 : 4;
+  if (action.kind === "escape") return scoreEscape(state, action, archetype);
 
   if (archetype === "chaotic") {
     if (action.kind === "steal" && action.risk === "high") return 140;
@@ -41,7 +40,6 @@ function scoreAction(state: GameState, action: LegalAction, archetype: ReturnTyp
 
   if (archetype === "loyal") {
     if (action.kind === "cover" && targetHasSuspicion(state, action.payload.teammateId)) return 140;
-    if (action.kind === "escape") return 70 + base;
     if (action.kind === "cover") return 65;
   }
 
@@ -57,12 +55,26 @@ function scoreAction(state: GameState, action: LegalAction, archetype: ReturnTyp
   }
 
   if (action.kind === "steal") return 80 + riskBonus;
-  if (action.kind === "escape") return 55 + base;
   if (action.kind === "move") return 45;
   if (action.kind === "cover") return 40;
   if (action.kind === "scout") return 35;
   if (action.kind === "guard") return 20;
   return 10;
+}
+
+function scoreEscape(state: GameState, action: LegalAction, archetype: ReturnType<typeof getAgentProfile>["archetype"]): number {
+  const actor = state.players.find((player) => player.id === action.actorId);
+  const hasLoot = (actor?.inventory.length ?? 0) > 0;
+  const urgent = state.round >= state.maxRounds || state.alarm >= 4;
+  const nearlySealed = state.round >= state.maxRounds - 1;
+
+  if (!urgent && !nearlySealed && !hasLoot) {
+    return archetype === "loyal" ? 18 : 12;
+  }
+
+  const pressure = urgent ? 130 : nearlySealed ? 95 : 68;
+  const lootBonus = hasLoot ? 30 : 0;
+  return pressure + lootBonus;
 }
 
 function targetHasSuspicion(state: GameState, teammateId: string | undefined): boolean {
