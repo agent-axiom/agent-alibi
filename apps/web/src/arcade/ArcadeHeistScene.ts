@@ -128,6 +128,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private config?: ArcadeMissionConfig;
   private state?: GameState;
   private rooms = new Map<string, { room: Room; x: number; y: number }>();
+  private arenaRoomLabelCount = 0;
+  private arenaZoneBeacons = new Set<string>();
   private artifacts: RuntimeArtifact[] = [];
   private aiAgents: RuntimeAgent[] = [];
   private player?: RuntimeAgent;
@@ -287,6 +289,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       routeGuide,
       threatHalo: this.threatHaloDebug(),
       motionTrail: this.motionTrailDebug(),
+      arenaLabels: this.arenaLabelsDebug(),
       routeMode: this.routeMode,
       nearestRival,
       lastRivalSteal: this.lastRivalSteal,
@@ -364,6 +367,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.config = config;
     this.state = config.state;
     this.rooms.clear();
+    this.arenaRoomLabelCount = 0;
+    this.arenaZoneBeacons.clear();
     this.artifacts = [];
     this.aiAgents = [];
     this.player = undefined;
@@ -493,6 +498,32 @@ export class ArcadeHeistScene extends Phaser.Scene {
         strokeThickness: 5
       })
       .setOrigin(0.5);
+    this.arenaRoomLabelCount += 1;
+
+    if (room.id === "inner-vault") {
+      this.createZoneBadge(x, y + height / 2 - 24, "HIGH VALUE", 0xffd56a);
+    } else if (room.id === "east-hall" || room.id === "west-hall") {
+      this.createZoneBadge(x, y + height / 2 - 22, "RIVAL ENTRY", 0xff4f7b);
+    } else if (danger >= 3) {
+      this.createZoneBadge(x, y + height / 2 - 22, `RISK ${danger}`, 0xff4f7b);
+    }
+  }
+
+  private createZoneBadge(x: number, y: number, text: string, color: number) {
+    this.arenaZoneBeacons.add(text);
+    const width = Math.max(76, text.length * 8 + 18);
+    const plate = this.add.rectangle(0, 0, width, 24, 0x050811, 0.78).setStrokeStyle(2, color, 0.72);
+    const label = this.add
+      .text(0, 0, text, {
+        color: `#${color.toString(16).padStart(6, "0")}`,
+        fontFamily: "Inter, Arial, sans-serif",
+        fontSize: "11px",
+        fontStyle: "900",
+        stroke: "#050811",
+        strokeThickness: 3
+      })
+      .setOrigin(0.5);
+    this.add.container(x, y, [plate, label]).setDepth(11);
   }
 
   private createArtifacts(state: GameState) {
@@ -540,6 +571,17 @@ export class ArcadeHeistScene extends Phaser.Scene {
     const atrium = this.rooms.get("atrium");
     if (!atrium) return;
     const ring = this.add.circle(0, 0, EXIT_RADIUS, 0x4cf4f0, 0.07).setStrokeStyle(4, 0x7effdf, 0.52);
+    this.arenaZoneBeacons.add("EXTRACT");
+    const extract = this.add
+      .text(0, -EXIT_RADIUS - 24, "EXTRACT", {
+        color: "#7effdf",
+        fontFamily: "Inter, Arial, sans-serif",
+        fontSize: "12px",
+        fontStyle: "900",
+        stroke: "#050811",
+        strokeThickness: 5
+      })
+      .setOrigin(0.5);
     const label = this.add
       .text(0, EXIT_RADIUS + 24, "ESCAPE LIFT", {
         color: "#7effdf",
@@ -550,7 +592,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
         strokeThickness: 5
       })
       .setOrigin(0.5);
-    this.escapeZone = this.add.container(atrium.x, atrium.y + 92, [ring, label]);
+    this.escapeZone = this.add.container(atrium.x, atrium.y + 92, [ring, extract, label]);
   }
 
   private createActors(state: GameState) {
@@ -1592,6 +1634,13 @@ export class ArcadeHeistScene extends Phaser.Scene {
       burstCount: this.motionTrailBurstCount,
       pointCount: this.motionTrailPoints.length,
       activeMs: Math.max(0, Math.round(this.motionTrailActiveUntilMs - this.elapsedMs))
+    };
+  }
+
+  private arenaLabelsDebug() {
+    return {
+      roomCount: this.arenaRoomLabelCount,
+      zoneBeacons: Array.from(this.arenaZoneBeacons).sort()
     };
   }
 
