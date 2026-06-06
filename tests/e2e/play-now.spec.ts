@@ -166,6 +166,9 @@ test("close rivals burn the player's alibi if contact is not broken", async ({ p
   await expect(page.getByText(/rival on you: .+ (?:n|ne|e|se|s|sw|w|nw|here) 8m/i)).toBeVisible();
   await expect(page.getByText(/dash or break line/i)).toBeVisible();
   await expect(page.getByLabel(/rival scan meter/i).getByText(/scan charg/i)).toBeVisible();
+  const scanHalo = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().threatHalo);
+  expect(scanHalo?.kind).toBe("scan");
+  expect(scanHalo?.visible).toBe(true);
 
   const alarmBeforeScan = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().alarmRaw);
   for (let tick = 0; tick < 5; tick += 1) {
@@ -320,6 +323,9 @@ test("rival steals trigger a clear red loot alert", async ({ page }) => {
   const carrierObjective = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().target);
   expect(carrierObjective?.kind).toBe("carrier");
   expect(carrierObjective?.label).toMatch(/rook carrier/i);
+  const carrierHalo = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().threatHalo);
+  expect(carrierHalo?.kind).toBe("carrier");
+  expect(carrierHalo?.visible).toBe(true);
   const rivalIntercept = page.getByLabel(/rival intercept/i);
   await expect(rivalIntercept.getByText(/rook carrying/i)).toBeVisible();
   await expect(rivalIntercept.getByText(/moon pearl \+3/i)).toBeVisible();
