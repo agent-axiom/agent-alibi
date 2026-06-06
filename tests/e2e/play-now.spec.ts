@@ -173,6 +173,10 @@ test("rival steals trigger a clear red loot alert", async ({ page }) => {
   await expect(threatVector.getByText(/carrier (?:n|ne|e|se|s|sw|w|nw|here) \d+m/i)).toBeVisible();
   await expect(threatVector.getByText(/rook with moon pearl \+3/i)).toBeVisible();
   await expect(threatVector.getByText(/close gap and press e/i)).toBeVisible();
+  await expect(page.getByLabel(/route distance/i).getByText(/carrier (?:n|ne|e|se|s|sw|w|nw|here) \d+m/i)).toBeVisible();
+  const carrierObjective = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().target);
+  expect(carrierObjective?.kind).toBe("carrier");
+  expect(carrierObjective?.label).toMatch(/rook carrier/i);
   const rivalIntercept = page.getByLabel(/rival intercept/i);
   await expect(rivalIntercept.getByText(/rook carrying/i)).toBeVisible();
   await expect(rivalIntercept.getByText(/moon pearl \+3/i)).toBeVisible();
