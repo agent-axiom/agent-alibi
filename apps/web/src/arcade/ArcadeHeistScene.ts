@@ -203,6 +203,32 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.finish("escaped");
   }
 
+  setVirtualDirection(direction: HeldDirection, pressed: boolean) {
+    if (pressed) {
+      this.heldDirections.add(direction);
+      this.pointerTarget = undefined;
+      this.keyboardImpulse = nextMovementImpulse(undefined, movementVectorFromDirection(direction), 0);
+      return;
+    }
+
+    this.heldDirections.delete(direction);
+  }
+
+  tapVirtualDash() {
+    this.shiftHeld = true;
+    this.time.delayedCall(420, () => {
+      this.shiftHeld = false;
+    });
+  }
+
+  tapVirtualInteract() {
+    this.tryInteract();
+  }
+
+  tapVirtualRoute() {
+    this.toggleRouteMode();
+  }
+
   getDebugState() {
     const target = this.currentObjectiveTarget();
     const nearestRival = this.nearestRivalScan();
@@ -216,6 +242,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       lootValue: this.lootValue,
       aiLootValue: this.aiLootValue,
       alarmRaw: Number(this.alarm.toFixed(3)),
+      dashCooldownMs: Math.round(this.dashCooldownMs),
       rivalScanChargeMs: Math.round(this.rivalScanState.chargeMs),
       alibiPulseCooldownMs: Math.round(this.alibiPulseCooldownMs),
       targetArtifact: this.primaryTargetArtifact()

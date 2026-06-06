@@ -149,6 +149,90 @@ test("close rivals burn the player's alibi if contact is not broken", async ({ p
   expect(alarmAfterScan).toBeGreaterThan((alarmBeforeScan ?? 0) + 0.4);
 });
 
+test("on-screen arcade controls move, dash, interact, and switch route", async ({ page }) => {
+  await startSoloArcade(page);
+  await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_STATE__ === "function");
+
+  const controls = page.getByLabel(/arcade touch controls/i);
+  await expect(controls).toBeVisible();
+  await expect(controls.getByRole("button", { name: /move right/i })).toBeVisible();
+  await expect(controls.getByRole("button", { name: /interact/i })).toBeVisible();
+  await expect(controls.getByRole("button", { name: /dash/i })).toBeVisible();
+  await expect(controls.getByRole("button", { name: /switch route/i })).toBeVisible();
+
+  const beforeMove = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().player);
+  const moveRight = controls.getByRole("button", { name: /move right/i });
+  await moveRight.hover();
+  await page.mouse.down();
+  await page.waitForTimeout(360);
+  await page.mouse.up();
+  const afterMove = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().player);
+  expect(afterMove?.x).toBeGreaterThan((beforeMove?.x ?? 0) + 40);
+
+  const beforeDash = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().player);
+  await controls.getByRole("button", { name: /dash/i }).click();
+  await moveRight.hover();
+  await page.mouse.down();
+  await page.waitForTimeout(120);
+  await page.mouse.up();
+  const afterDash = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());
+  expect(afterDash?.player?.x).toBeGreaterThan((beforeDash?.x ?? 0) + 45);
+  expect(afterDash?.dashCooldownMs).toBeGreaterThan(0);
+
+  await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget());
+  await expect(page.getByText(/press e \/ space to steal/i)).toBeVisible();
+  await controls.getByRole("button", { name: /interact/i }).click();
+  await expect(page.getByText(/moon pearl secured/i)).toBeVisible();
+  await expect(page.getByLabel(/route choice/i).getByText(/press g/i)).toBeVisible();
+  await controls.getByRole("button", { name: /switch route/i }).click();
+  await expect(page.getByLabel(/optional relic/i).getByText(/greed route/i)).toBeVisible();
+  const afterRoute = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().routeMode);
+  expect(afterRoute).toBe("greed");
+});
+
+test("mobile arcade controls stay clear of the objective panel", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await startSoloArcade(page);
+
+  const layout = await page.evaluate(() => {
+    const rect = (selector: string) => {
+      const element = document.querySelector(selector);
+      const box = element?.getBoundingClientRect();
+      return box
+        ? {
+            x: Math.round(box.x),
+            y: Math.round(box.y),
+            right: Math.round(box.right),
+            bottom: Math.round(box.bottom),
+            width: Math.round(box.width),
+            height: Math.round(box.height)
+          }
+        : null;
+    };
+    const controls = rect('[aria-label="Arcade touch controls"]');
+    const objective = rect('[aria-label="Current objective"]');
+    const overlaps = Boolean(
+      controls &&
+        objective &&
+        controls.x < objective.right &&
+        controls.right > objective.x &&
+        controls.y < objective.bottom &&
+        controls.bottom > objective.y
+    );
+    return {
+      controls,
+      objective,
+      overlaps,
+      buttonCount: document.querySelectorAll('[aria-label="Arcade touch controls"] button').length
+    };
+  });
+
+  expect(layout.buttonCount).toBe(7);
+  expect(layout.controls).not.toBeNull();
+  expect(layout.objective).not.toBeNull();
+  expect(layout.overlaps).toBe(false);
+});
+
 test("rival steals trigger a clear red loot alert", async ({ page }) => {
   await startSoloArcade(page);
   await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_STATE__ === "function");
