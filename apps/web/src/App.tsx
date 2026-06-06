@@ -20,8 +20,9 @@ export function App() {
   const localMatch = useLocalMatch();
   const onlineRoom = useOnlineRoom();
   const arcadeHud = localMatch.arcade?.hud;
+  const effectiveMusicScreen = localMatch.summary || onlineRoom.summary ? "final" : screen;
   const musicTrack = selectMusicTrack({
-    screen,
+    screen: effectiveMusicScreen,
     isArcade: Boolean(localMatch.arcade?.enabled),
     alarm: arcadeHud?.alarm ?? localMatch.state?.alarm,
     timeLeftMs: arcadeHud?.timeLeftMs
@@ -82,7 +83,15 @@ export function App() {
 
   if (screen === "room") {
     if (onlineRoom.summary) {
-      return <FinalCaseFile summary={onlineRoom.summary} onRematch={onlineRoom.startMatch} onHome={() => setScreen("home")} />;
+      return (
+        <FinalCaseFile
+          summary={onlineRoom.summary}
+          soundEnabled={soundEnabled}
+          onToggleSound={toggleSound}
+          onRematch={onlineRoom.startMatch}
+          onHome={() => setScreen("home")}
+        />
+      );
     }
     if (onlineRoom.state) {
       const onlineActionCards = buildActionCards(onlineRoom.state, onlineRoom.legalActions);
@@ -135,6 +144,8 @@ export function App() {
     return (
       <FinalCaseFile
         summary={localMatch.summary}
+        soundEnabled={soundEnabled}
+        onToggleSound={toggleSound}
         onRematch={startSolo}
         onHome={() => {
           localMatch.reset();
