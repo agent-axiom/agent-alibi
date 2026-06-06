@@ -232,7 +232,11 @@ export function MatchScreen({ match }: MatchScreenProps) {
                 <strong>
                   Risk +{routeChoice.greedRelicValue}: {routeChoice.greedRelicName}
                 </strong>
-                <small>{routeChoice.mode === "greed" ? `Projected cashout +${routeChoice.projectedCashout}` : `Press G for cashout +${routeChoice.projectedCashout}`}</small>
+                <small>
+                  {routeChoice.mode === "greed"
+                    ? `Projected cashout +${routeChoice.projectedCashout} · ${routeChoice.greedDistanceMeters}m to relic`
+                    : `Press G for cashout +${routeChoice.projectedCashout} · ${routeChoice.greedDistanceMeters}m detour`}
+                </small>
               </div>
             ) : null}
             <div className="arcade-route" aria-label="Route distance">

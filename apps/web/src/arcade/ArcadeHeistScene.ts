@@ -1452,11 +1452,15 @@ export class ArcadeHeistScene extends Phaser.Scene {
 
   private routeChoice(escapePayout: { cashout: number } | null, targetArtifact: RuntimeArtifact | undefined): ArcadeRouteChoice | null {
     if (!escapePayout || !targetArtifact || !this.canGreedRoute()) return null;
+    const greedDistanceMeters = this.player
+      ? Math.max(0, Math.round(Phaser.Math.Distance.Between(this.player.x, this.player.y, targetArtifact.x, targetArtifact.y) / 8))
+      : 0;
     return {
       mode: this.routeMode,
       cashoutNow: escapePayout.cashout,
       greedRelicName: targetArtifact.name,
       greedRelicValue: targetArtifact.value,
+      greedDistanceMeters,
       projectedCashout: escapePayout.cashout + targetArtifact.value
     };
   }

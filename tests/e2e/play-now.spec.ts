@@ -103,7 +103,7 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   const routeChoice = page.getByLabel(/route choice/i);
   await expect(routeChoice.getByText(/bank \+5 now/i)).toBeVisible();
   await expect(routeChoice.getByText(/risk \+3: argent crown/i)).toBeVisible();
-  await expect(routeChoice.getByText(/press g for cashout \+8/i)).toBeVisible();
+  await expect(routeChoice.getByText(/press g for cashout \+8 · \d+m detour/i)).toBeVisible();
   await expect(miniRadar.getByText(/cashout \+5: atrium lift/i)).toBeVisible();
   await expect(page.getByLabel(/radar exit: atrium lift/i)).toBeVisible();
   const afterSteal = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().lootValue);
@@ -121,7 +121,7 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(objectiveBanner.getByText(/greed route armed/i)).toBeVisible();
   await expect(objectiveBanner.getByText(/steal argent crown before escape/i)).toBeVisible();
   await expect(routeChoice.getByText(/greed armed/i)).toBeVisible();
-  await expect(routeChoice.getByText(/projected cashout \+8/i)).toBeVisible();
+  await expect(routeChoice.getByText(/projected cashout \+8 · \d+m to relic/i)).toBeVisible();
   await expect(currentObjective.getByText(/greed route: steal argent crown \+3/i)).toBeVisible();
   const greedTarget = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().target);
   expect(greedTarget?.kind).toBe("artifact");
