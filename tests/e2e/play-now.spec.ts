@@ -99,6 +99,9 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(heistRace.getByText(/blue 3/i)).toBeVisible();
   await expect(heistRace.getByText(/red 0/i)).toBeVisible();
   await expect(heistRace.getByText(/you lead by 3/i)).toBeVisible();
+  const carriedLoot = page.getByLabel(/carried loot/i);
+  await expect(carriedLoot.getByText(/carrying \+3/i)).toBeVisible();
+  await expect(carriedLoot.getByText(/bank \+5 at lift/i)).toBeVisible();
   const escapePayout = page.getByLabel(/escape payout/i);
   await expect(escapePayout.getByText(/escape bonus \+2/i)).toBeVisible();
   await expect(escapePayout.getByText(/cashout 5/i)).toBeVisible();
@@ -147,6 +150,8 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   expect(afterGreedSteal?.target?.kind).toBe("escape");
   expect(afterGreedSteal?.targetMarker?.label).toBe("Cashout +8");
   expect(afterGreedSteal?.escapeZoneBadge).toEqual({ visible: true, label: "Cashout +8" });
+  await expect(carriedLoot.getByText(/carrying \+6/i)).toBeVisible();
+  await expect(carriedLoot.getByText(/bank \+8 at lift/i)).toBeVisible();
 
   await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget());
   await expect(page.locator(".arcade-objective > span").getByText(/press e \/ space to cashout \+8/i)).toBeVisible();

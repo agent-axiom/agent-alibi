@@ -38,6 +38,7 @@ export function MatchScreen({ match }: MatchScreenProps) {
       : "Sweep clear";
     const routeChoice = hud?.routeChoice ?? null;
     const cashoutStepLabel = hud?.escapePayout ? `Cashout +${hud.escapePayout.cashout}` : "Escape";
+    const carriedLoot = hud && hud.lootValue > 0 && hud.escapePayout ? { loot: hud.lootValue, cashout: hud.escapePayout.cashout } : null;
     return (
       <main className={`arcade-shell ${hud?.phase ?? "stealth"}`}>
         <Suspense
@@ -211,6 +212,12 @@ export function MatchScreen({ match }: MatchScreenProps) {
                   {hud.rivalIntercept.distanceMeters}m away ·{" "}
                   {hud.rivalIntercept.urgency === "critical" ? "cashout imminent" : `cashout in ${hud.rivalIntercept.cashoutSeconds}s`} · intercept with E
                 </small>
+              </div>
+            ) : null}
+            {carriedLoot ? (
+              <div className="arcade-carried-loot" aria-label="Carried loot">
+                <span>Carrying +{carriedLoot.loot}</span>
+                <strong>Bank +{carriedLoot.cashout} at lift</strong>
               </div>
             ) : null}
             {hud?.escapePayout ? (
