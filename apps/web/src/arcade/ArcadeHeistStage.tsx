@@ -8,6 +8,7 @@ type ArcadeHeistStageProps = ArcadeMissionConfig;
 declare global {
   interface Window {
     __AGENT_ALIBI_FINISH_ARCADE__?: () => void;
+    __AGENT_ALIBI_ARCADE_STATE__?: () => ReturnType<ArcadeHeistScene["getDebugState"]>;
   }
 }
 
@@ -15,6 +16,16 @@ export function ArcadeHeistStage({ state, runId, onHudUpdate, onFinish }: Arcade
   const hostRef = useRef<HTMLDivElement | null>(null);
   const gameRef = useRef<Phaser.Game | null>(null);
   const sceneRef = useRef<ArcadeHeistScene | null>(null);
+  const onHudUpdateRef = useRef(onHudUpdate);
+  const onFinishRef = useRef(onFinish);
+
+  useEffect(() => {
+    onHudUpdateRef.current = onHudUpdate;
+  }, [onHudUpdate]);
+
+  useEffect(() => {
+    onFinishRef.current = onFinish;
+  }, [onFinish]);
 
   useEffect(() => {
     if (!hostRef.current || gameRef.current) return;
@@ -38,10 +49,15 @@ export function ArcadeHeistStage({ state, runId, onHudUpdate, onFinish }: Arcade
       scene
     });
     window.__AGENT_ALIBI_FINISH_ARCADE__ = () => scene.finishForDebug();
+    window.__AGENT_ALIBI_ARCADE_STATE__ = () => scene.getDebugState();
+    hostRef.current.focus({ preventScroll: true });
 
     return () => {
       if (window.__AGENT_ALIBI_FINISH_ARCADE__) {
         delete window.__AGENT_ALIBI_FINISH_ARCADE__;
+      }
+      if (window.__AGENT_ALIBI_ARCADE_STATE__) {
+        delete window.__AGENT_ALIBI_ARCADE_STATE__;
       }
       gameRef.current?.destroy(true);
       gameRef.current = null;
@@ -50,8 +66,14 @@ export function ArcadeHeistStage({ state, runId, onHudUpdate, onFinish }: Arcade
   }, []);
 
   useEffect(() => {
-    sceneRef.current?.setMissionConfig({ state, runId, onHudUpdate, onFinish });
-  }, [onFinish, onHudUpdate, runId, state]);
+    sceneRef.current?.setMissionConfig({
+      state,
+      runId,
+      onHudUpdate: (hud) => onHudUpdateRef.current(hud),
+      onFinish: (result) => onFinishRef.current(result)
+    });
+    hostRef.current?.focus({ preventScroll: true });
+  }, [runId, state]);
 
-  return <div className="arcade-stage" ref={hostRef} aria-label="Playable Moon Vault arcade scene" />;
+  return <div className="arcade-stage" ref={hostRef} aria-label="Playable Moon Vault arcade scene" tabIndex={0} />;
 }

@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import type { ArtifactState, GameState, PlayerState, Room, TeamId } from "@agent-alibi/shared";
 import { ARCADE_MISSION_DURATION_MS, type ArcadeHudPhase, type ArcadeHudState, type ArcadeMissionConfig } from "./arcade-types";
+import { nextMovementImpulse, selectMovementVector, type MovementImpulse, type MovementVector } from "./movement";
 
 const WORLD_WIDTH = 1680;
 const WORLD_HEIGHT = 1040;
@@ -39,6 +40,7 @@ type RuntimeAgent = {
   lootValue: number;
   body: Phaser.GameObjects.Container;
   dot: Phaser.GameObjects.Arc;
+  ship: Phaser.GameObjects.Container;
 };
 
 type MovementKeys = {
@@ -61,6 +63,8 @@ type RawMovementKeys = {
   SPACE: Phaser.Input.Keyboard.Key;
 };
 
+type HeldDirection = "up" | "down" | "left" | "right";
+
 export class ArcadeHeistScene extends Phaser.Scene {
   private config?: ArcadeMissionConfig;
   private state?: GameState;
@@ -70,6 +74,9 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private player?: RuntimeAgent;
   private cursors?: Phaser.Types.Input.Keyboard.CursorKeys;
   private keys?: MovementKeys;
+  private heldDirections = new Set<HeldDirection>();
+  private shiftHeld = false;
+  private keyboardImpulse?: MovementImpulse;
   private pointerTarget?: Phaser.Math.Vector2;
   private elapsedMs = 0;
   private alarm = 1;
@@ -95,6 +102,16 @@ export class ArcadeHeistScene extends Phaser.Scene {
       this.pointerTarget = new Phaser.Math.Vector2(worldPoint.x, worldPoint.y);
     });
     this.cursors = this.input.keyboard?.createCursorKeys();
+    this.input.keyboard?.on("keydown", this.handleKeyDown, this);
+    window.addEventListener("keydown", this.handleWindowKeyDown, true);
+    window.addEventListener("keyup", this.handleWindowKeyUp, true);
+    window.addEventListener("blur", this.clearWindowKeys);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      this.input.keyboard?.off("keydown", this.handleKeyDown, this);
+      window.removeEventListener("keydown", this.handleWindowKeyDown, true);
+      window.removeEventListener("keyup", this.handleWindowKeyUp, true);
+      window.removeEventListener("blur", this.clearWindowKeys);
+    });
     const rawKeys = this.input.keyboard?.addKeys("W,A,S,D,SHIFT,E,SPACE") as RawMovementKeys | undefined;
     this.keys = rawKeys
       ? {
@@ -125,6 +142,18 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.finish("escaped");
   }
 
+  getDebugState() {
+    return {
+      player: this.player ? { x: this.player.x, y: this.player.y } : null,
+      camera: {
+        scrollX: this.cameras.main.scrollX,
+        scrollY: this.cameras.main.scrollY,
+        zoom: this.cameras.main.zoom
+      },
+      impulse: this.keyboardImpulse ?? null
+    };
+  }
+
   override update(_time: number, delta: number) {
     if (!this.state || !this.player || this.finished) return;
 
@@ -150,6 +179,9 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.artifacts = [];
     this.aiAgents = [];
     this.player = undefined;
+    this.heldDirections.clear();
+    this.shiftHeld = false;
+    this.keyboardImpulse = undefined;
     this.pointerTarget = undefined;
     this.elapsedMs = 0;
     this.alarm = 1;
@@ -309,7 +341,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       this.aiAgents.push(runtime);
     }
 
-    this.cameras.main.startFollow(this.player.body, true, 0.08, 0.08);
+    this.cameras.main.startFollow(this.player.body, true, 0.06, 0.06);
   }
 
   private createRuntimeAgent(player: PlayerState, x: number, y: number, controlled: boolean): RuntimeAgent {
@@ -317,6 +349,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     const shadow = this.add.circle(0, 12, 24, 0x000000, 0.22);
     const dot = this.add.circle(0, 0, controlled ? 20 : 17, color, 0.98).setStrokeStyle(4, 0xf8fdff, controlled ? 0.9 : 0.65);
     const visor = this.add.rectangle(6, -4, 16, 5, 0x050811, 0.58);
+    const ship = this.add.container(0, 0, [dot, visor]);
     const label = this.add
       .text(0, 32, controlled ? "YOU" : player.name.toUpperCase(), {
         color: controlled ? "#ffd56a" : "#f8fdff",
@@ -327,7 +360,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
         strokeThickness: 5
       })
       .setOrigin(0.5);
-    const body = this.add.container(x, y, [shadow, dot, visor, label]);
+    const body = this.add.container(x, y, [shadow, ship, label]);
     body.setDepth(controlled ? 20 : 12);
 
     return {
@@ -339,19 +372,18 @@ export class ArcadeHeistScene extends Phaser.Scene {
       targetRoomId: "atrium",
       lootValue: 0,
       body,
-      dot
+      dot,
+      ship
     };
   }
 
   private updatePlayer(delta: number) {
     if (!this.player) return;
-    const vector = new Phaser.Math.Vector2(0, 0);
-    const cursors = this.cursors;
-    const keys = this.keys;
-    if (keys?.w.isDown || cursors?.up?.isDown) vector.y -= 1;
-    if (keys?.s.isDown || cursors?.down?.isDown) vector.y += 1;
-    if (keys?.a.isDown || cursors?.left?.isDown) vector.x -= 1;
-    if (keys?.d.isDown || cursors?.right?.isDown) vector.x += 1;
+
+    const held = this.readHeldMovementVector();
+    this.keyboardImpulse = nextMovementImpulse(this.keyboardImpulse, this.readTappedMovementVector(), delta);
+    const selected = selectMovementVector({ held, impulse: this.keyboardImpulse });
+    const vector = new Phaser.Math.Vector2(selected.x, selected.y);
 
     if (vector.lengthSq() > 0) {
       this.pointerTarget = undefined;
@@ -365,16 +397,84 @@ export class ArcadeHeistScene extends Phaser.Scene {
     }
 
     if (vector.lengthSq() > 0) {
-      vector.normalize();
       let speed = PLAYER_SPEED;
-      if (keys?.shift.isDown && this.dashCooldownMs <= 0) {
+      if ((this.shiftHeld || this.keys?.shift.isDown) && this.dashCooldownMs <= 0) {
         speed = DASH_SPEED;
         this.dashCooldownMs = DASH_COOLDOWN_MS;
         this.addTrail(this.player.x, this.player.y);
       }
       this.moveAgent(this.player, vector.x * speed * (delta / 1000), vector.y * speed * (delta / 1000));
-      this.player.body.rotation = Phaser.Math.Angle.Between(0, 0, vector.x, vector.y) + Math.PI / 2;
+      this.player.ship.rotation = Phaser.Math.Angle.Between(0, 0, vector.x, vector.y) + Math.PI / 2;
     }
+  }
+
+  private readHeldMovementVector(): MovementVector {
+    const vector = { x: 0, y: 0 };
+    const cursors = this.cursors;
+    const keys = this.keys;
+    if (this.heldDirections.has("up") || keys?.w.isDown || cursors?.up?.isDown) vector.y -= 1;
+    if (this.heldDirections.has("down") || keys?.s.isDown || cursors?.down?.isDown) vector.y += 1;
+    if (this.heldDirections.has("left") || keys?.a.isDown || cursors?.left?.isDown) vector.x -= 1;
+    if (this.heldDirections.has("right") || keys?.d.isDown || cursors?.right?.isDown) vector.x += 1;
+    return vector;
+  }
+
+  private readTappedMovementVector(): MovementVector {
+    const vector = { x: 0, y: 0 };
+    const cursors = this.cursors;
+    const keys = this.keys;
+    if ((keys?.w && Phaser.Input.Keyboard.JustDown(keys.w)) || (cursors?.up && Phaser.Input.Keyboard.JustDown(cursors.up))) {
+      vector.y -= 1;
+    }
+    if ((keys?.s && Phaser.Input.Keyboard.JustDown(keys.s)) || (cursors?.down && Phaser.Input.Keyboard.JustDown(cursors.down))) {
+      vector.y += 1;
+    }
+    if ((keys?.a && Phaser.Input.Keyboard.JustDown(keys.a)) || (cursors?.left && Phaser.Input.Keyboard.JustDown(cursors.left))) {
+      vector.x -= 1;
+    }
+    if ((keys?.d && Phaser.Input.Keyboard.JustDown(keys.d)) || (cursors?.right && Phaser.Input.Keyboard.JustDown(cursors.right))) {
+      vector.x += 1;
+    }
+    return vector;
+  }
+
+  private handleKeyDown(event: KeyboardEvent) {
+    this.activateKey(event.key, event);
+  }
+
+  private handleWindowKeyDown = (event: KeyboardEvent) => {
+    this.activateKey(event.key, event);
+  };
+
+  private handleWindowKeyUp = (event: KeyboardEvent) => {
+    if (event.key.toLowerCase() === "shift") {
+      this.shiftHeld = false;
+      return;
+    }
+
+    const direction = movementDirectionFromKey(event.key);
+    if (!direction) return;
+    event.preventDefault();
+    this.heldDirections.delete(direction);
+  };
+
+  private clearWindowKeys = () => {
+    this.heldDirections.clear();
+    this.shiftHeld = false;
+  };
+
+  private activateKey(key: string, event?: KeyboardEvent) {
+    if (key.toLowerCase() === "shift") {
+      this.shiftHeld = true;
+      return;
+    }
+
+    const direction = movementDirectionFromKey(key);
+    if (!direction) return;
+    event?.preventDefault();
+    this.heldDirections.add(direction);
+    this.pointerTarget = undefined;
+    this.keyboardImpulse = nextMovementImpulse(undefined, movementVectorFromDirection(direction), 0);
   }
 
   private updateAi(delta: number) {
@@ -389,7 +489,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       }
       vector.normalize();
       this.moveAgent(agent, vector.x * AI_SPEED * (delta / 1000), vector.y * AI_SPEED * (delta / 1000));
-      agent.body.rotation = Phaser.Math.Angle.Between(0, 0, vector.x, vector.y) + Math.PI / 2;
+      agent.ship.rotation = Phaser.Math.Angle.Between(0, 0, vector.x, vector.y) + Math.PI / 2;
     }
   }
 
@@ -559,5 +659,23 @@ export class ArcadeHeistScene extends Phaser.Scene {
     const camera = this.cameras.main;
     const zoom = Phaser.Math.Clamp(Math.min(this.scale.width / 1120, this.scale.height / 720), 0.62, 1.08);
     camera.setZoom(zoom);
+    camera.setDeadzone(Math.max(140, this.scale.width * 0.28), Math.max(110, this.scale.height * 0.24));
   };
+}
+
+function movementDirectionFromKey(key: string): HeldDirection | null {
+  const normalized = key.toLowerCase();
+  if (normalized === "arrowup" || normalized === "w") return "up";
+  if (normalized === "arrowdown" || normalized === "s") return "down";
+  if (normalized === "arrowleft" || normalized === "a") return "left";
+  if (normalized === "arrowright" || normalized === "d") return "right";
+  return null;
+}
+
+function movementVectorFromDirection(direction: HeldDirection): MovementVector {
+  if (direction === "up") return { x: 0, y: -1 };
+  if (direction === "down") return { x: 0, y: 1 };
+  if (direction === "left") return { x: -1, y: 0 };
+  if (direction === "right") return { x: 1, y: 0 };
+  return { x: 0, y: 0 };
 }

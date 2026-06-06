@@ -995,6 +995,10 @@ p {
   display: block;
 }
 
+.arcade-stage:focus {
+  outline: none;
+}
+
 .arcade-vignette {
   position: absolute;
   inset: 0;
