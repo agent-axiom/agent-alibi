@@ -112,6 +112,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private alibiPulseCooldownMs = 0;
   private alibiPulsesUsed = 0;
   private scanBurns = 0;
+  private lastRivalSteal: string | null = null;
   private playerName = "Agent You";
   private routeMode: RouteMode = "escape";
   private escapeZone?: Phaser.GameObjects.Container;
@@ -197,6 +198,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       hasTargetBeam: Boolean(this.targetBeam),
       routeMode: this.routeMode,
       nearestRival,
+      lastRivalSteal: this.lastRivalSteal,
       impulse: this.keyboardImpulse ?? null
     };
   }
@@ -219,6 +221,17 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.moveAgent(rival, this.player.x + direction * distancePx - rival.x, this.player.y - rival.y);
     this.aiReleased = true;
     this.updateRivalPressureFeed();
+    this.emitHudIfNeeded(true);
+  }
+
+  forceRivalStealForDebug() {
+    const rival = this.aiAgents[0];
+    const artifact = this.artifacts.find((candidate) => !candidate.takenBy);
+    if (!rival || !artifact) return;
+
+    this.aiReleased = true;
+    this.moveAgent(rival, artifact.x - rival.x, artifact.y - rival.y);
+    this.stealArtifact(artifact, rival, rival.name);
     this.emitHudIfNeeded(true);
   }
 
@@ -271,6 +284,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.alibiPulseCooldownMs = 0;
     this.alibiPulsesUsed = 0;
     this.scanBurns = 0;
+    this.lastRivalSteal = null;
     this.routeMode = "escape";
     this.targetMarker = undefined;
     this.targetBeam = undefined;
@@ -621,6 +635,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
 
     this.aiLootValue += artifact.value;
     this.alarm = Math.min(5, this.alarm + 0.12);
+    this.lastRivalSteal = `Red +${artifact.value}: ${actorLabel} stole ${artifact.name}`;
     this.feedLine(`${actorLabel} stole ${artifact.name}.`);
     this.collectArtifactVisual(artifact, TEAM_COLORS[actor.teamId]);
     this.updateTargetMarker();
@@ -806,6 +821,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       }),
       loopStep: alibiPulseReady ? "survive" : guidance.loopStep,
       raceStatus: guidance.raceStatus,
+      lastRivalSteal: this.lastRivalSteal,
       greedStatus: this.greedStatus(guidance.greedStatus),
       targetDistanceLabel:
         objectiveTarget && targetDistanceMeters !== null

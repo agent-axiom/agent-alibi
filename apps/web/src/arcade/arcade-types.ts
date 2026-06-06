@@ -22,6 +22,7 @@ export type ArcadeHudState = {
   activeAction: ActiveActionHint;
   loopStep: ArcadeLoopStep;
   raceStatus: string;
+  lastRivalSteal: string | null;
   greedStatus: string | null;
   targetDistanceLabel: string | null;
   rivalStatus: string;

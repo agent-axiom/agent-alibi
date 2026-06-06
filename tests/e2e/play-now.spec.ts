@@ -114,6 +114,26 @@ test("close rivals burn the player's alibi if contact is not broken", async ({ p
   expect(alarmAfterScan).toBeGreaterThan((alarmBeforeScan ?? 0) + 0.4);
 });
 
+test("rival steals trigger a clear red loot alert", async ({ page }) => {
+  await startSoloArcade(page);
+  await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_STATE__ === "function");
+  await page.evaluate(() =>
+    (
+      window.__AGENT_ALIBI_ARCADE_DEBUG__ as
+        | {
+            forceRivalSteal?: () => void;
+          }
+        | undefined
+    )?.forceRivalSteal?.()
+  );
+
+  const rivalLootAlert = page.getByLabel(/rival loot alert/i);
+  await expect(rivalLootAlert.getByText(/red \+\d/i)).toBeVisible();
+  await expect(rivalLootAlert.getByText(/stole/i)).toBeVisible();
+  const afterSteal = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().aiLootValue);
+  expect(afterSteal).toBeGreaterThan(0);
+});
+
 test("alibi pulse jams a close rival scan", async ({ page }) => {
   await startSoloArcade(page);
   await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_STATE__ === "function");

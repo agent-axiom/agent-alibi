@@ -133,6 +133,11 @@ export function MatchScreen({ match }: MatchScreenProps) {
               </div>
               <small>{hud?.raceStatus ?? "Loot race is tied"}</small>
             </div>
+            {hud?.lastRivalSteal ? (
+              <div className="arcade-rival-loot" aria-label="Rival loot alert">
+                {hud.lastRivalSteal}
+              </div>
+            ) : null}
             <div className="arcade-route" aria-label="Route distance">
               {hud?.targetDistanceLabel ?? "Target plotting"}
             </div>

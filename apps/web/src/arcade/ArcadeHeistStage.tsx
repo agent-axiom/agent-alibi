@@ -12,6 +12,7 @@ declare global {
     __AGENT_ALIBI_ARCADE_DEBUG__?: {
       teleportToTarget: () => void;
       forceRivalPressure: (distanceMeters?: number) => void;
+      forceRivalSteal: () => void;
     };
   }
 }
@@ -57,7 +58,8 @@ export function ArcadeHeistStage({ state, runId, onHudUpdate, onFinish }: Arcade
       window.__AGENT_ALIBI_ARCADE_STATE__ = () => scene.getDebugState();
       window.__AGENT_ALIBI_ARCADE_DEBUG__ = {
         teleportToTarget: () => scene.teleportToTargetForDebug(),
-        forceRivalPressure: (distanceMeters?: number) => scene.forceRivalPressureForDebug(distanceMeters)
+        forceRivalPressure: (distanceMeters?: number) => scene.forceRivalPressureForDebug(distanceMeters),
+        forceRivalSteal: () => scene.forceRivalStealForDebug()
       };
     }
     hostRef.current.focus({ preventScroll: true });

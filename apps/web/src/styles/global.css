@@ -1467,6 +1467,21 @@ p {
   box-shadow: 0 0 18px rgba(255, 79, 123, 0.5);
 }
 
+.arcade-rival-loot {
+  width: fit-content;
+  border: 1px solid rgba(255, 79, 123, 0.56);
+  border-radius: 6px;
+  padding: 6px 9px;
+  background: rgba(255, 79, 123, 0.14);
+  box-shadow: 0 0 22px rgba(255, 79, 123, 0.16);
+  color: #ffd8e2;
+  font-size: 0.82rem;
+  font-weight: 950;
+  line-height: 1;
+  overflow-wrap: anywhere;
+  text-transform: uppercase;
+}
+
 .arcade-route {
   width: fit-content;
   border: 1px solid rgba(76, 244, 240, 0.34);

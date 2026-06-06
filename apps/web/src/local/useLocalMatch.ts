@@ -250,6 +250,7 @@ function makeInitialArcadeHud(state: GameState): ArcadeHudState {
     },
     loopStep: "steal",
     raceStatus: "Loot race is tied",
+    lastRivalSteal: null,
     greedStatus: null,
     targetDistanceLabel: "Target plotting",
     rivalStatus: "Rivals enter in 5s",
