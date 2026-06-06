@@ -2,6 +2,7 @@ import { Bot, Radio, Users } from "lucide-react";
 import { useState } from "react";
 import { selectMusicTrack } from "./arcade/music";
 import { useDynamicMusic } from "./audio/useDynamicMusic";
+import { useMissionStingers } from "./audio/useMissionStingers";
 import { buildActionCards } from "./game-ui/action-cards";
 import { FinalCaseFile } from "./game-ui/FinalCaseFile";
 import { MatchScreen } from "./game-ui/MatchScreen";
@@ -26,6 +27,11 @@ export function App() {
     timeLeftMs: arcadeHud?.timeLeftMs
   });
   const music = useDynamicMusic(musicTrack, soundEnabled);
+  useMissionStingers({
+    enabled: soundEnabled,
+    hud: arcadeHud,
+    summary: localMatch.summary ?? onlineRoom.summary
+  });
 
   async function enableSound() {
     setSoundEnabled(true);
