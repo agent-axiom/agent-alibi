@@ -139,4 +139,23 @@ describe("buildArcadeMatchSummary", () => {
     expect(summary.caseFile).toContain("Carrier Intercepts: 1");
     expect(summary.caseFile).toContain("Recovered From Rivals: Moon Pearl");
   });
+
+  it("separates pending carrier loot from cashed-out rival relics", () => {
+    const summary = buildArcadeMatchSummary({
+      outcome: "sealed",
+      playerName: "Agent You",
+      lootValue: 0,
+      artifactsStolen: 0,
+      aiLootValue: 0,
+      alarm: 5,
+      elapsedMs: 150_000,
+      rivalRelicNames: [],
+      pendingRivalRelicNames: ["Moon Pearl"]
+    });
+
+    expect(summary.rivalRelicNames).toEqual([]);
+    expect(summary.pendingRivalRelicNames).toEqual(["Moon Pearl"]);
+    expect(summary.caseFile).toContain("Rival Relics: none");
+    expect(summary.caseFile).toContain("Pending Carrier Loot: Moon Pearl");
+  });
 });

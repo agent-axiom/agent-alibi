@@ -431,6 +431,21 @@ test("rival carriers only score after cashout", async ({ page }) => {
   await expect(page.getByLabel(/heist race/i).getByText(/red 3/i)).toBeVisible();
 });
 
+test("unfinished carrier runs become pending loot in the final case file", async ({ page }) => {
+  await startSoloArcade(page);
+  await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_STATE__ === "function");
+  await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.forceRivalSteal?.());
+  await page.evaluate(() => window.__AGENT_ALIBI_FINISH_ARCADE__?.());
+
+  const finalScores = page.getByLabel(/final scores/i);
+  await expect(finalScores.locator(".final-rival-relics")).toHaveCount(0);
+  const pendingCard = finalScores.locator(".final-pending-rival-relics");
+  await expect(pendingCard.getByText(/pending carrier loot/i)).toBeVisible();
+  await expect(pendingCard.getByText(/moon pearl/i)).toBeVisible();
+  await expect(page.getByText(/rival relics: none/i)).toBeVisible();
+  await expect(page.getByText(/pending carrier loot: moon pearl/i)).toBeVisible();
+});
+
 test("lockdown phase triggers an unmistakable vault warning", async ({ page }) => {
   await startSoloArcade(page);
   await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_STATE__ === "function");
