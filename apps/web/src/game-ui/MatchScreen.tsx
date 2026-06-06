@@ -105,6 +105,10 @@ export function MatchScreen({ match }: MatchScreenProps) {
         <section className="arcade-objective" aria-label="Current objective">
           <span>{hud?.prompt ?? (hud?.phase === "lockdown" ? "Lockdown" : hud?.phase === "alarm" ? "Alarm rising" : "Heist live")}</span>
           <strong>{hud?.objective ?? "Steal a relic before the vault learns your name"}</strong>
+          <div className={`arcade-active-action ${hud?.activeAction.tone ?? "neutral"}`} aria-label="Active action">
+            <kbd>{hud?.activeAction.key ?? "Move"}</kbd>
+            <span>{hud?.activeAction.label ?? "Follow marker"}</span>
+          </div>
           <div className="arcade-steps" aria-label="Mission loop">
             <span className={hud?.loopStep === "steal" ? "active" : ""}>
               <b>1</b> Steal

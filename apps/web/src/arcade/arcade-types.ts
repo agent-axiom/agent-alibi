@@ -1,6 +1,6 @@
 import type { GameState } from "@agent-alibi/shared";
 import type { ArcadeMissionResult } from "./arcade-rules";
-import type { ArcadeLoopStep, RivalPressureLevel } from "./guidance";
+import type { ActiveActionHint, ArcadeLoopStep, RivalPressureLevel } from "./guidance";
 
 export const ARCADE_MISSION_DURATION_MS = 150_000;
 
@@ -18,6 +18,7 @@ export type ArcadeHudState = {
   dashReady: boolean;
   objective: string;
   prompt: string;
+  activeAction: ActiveActionHint;
   loopStep: ArcadeLoopStep;
   raceStatus: string;
   greedStatus: string | null;

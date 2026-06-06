@@ -1,5 +1,6 @@
 export type ArcadeLoopStep = "steal" | "escape" | "survive";
 export type RivalPressureLevel = "standby" | "clear" | "closing" | "danger";
+export type ActiveActionTone = "neutral" | "success" | "danger";
 
 export type ArcadeGuidanceInput = {
   lootValue: number;
@@ -31,6 +32,19 @@ export type RivalPressure = {
   level: RivalPressureLevel;
   label: string | null;
   radioLine: string | null;
+};
+
+export type ActiveActionHintInput = {
+  alibiPulseReady: boolean;
+  nearArtifactName: string | null;
+  nearExit: boolean;
+  canEscape: boolean;
+};
+
+export type ActiveActionHint = {
+  key: string;
+  label: string;
+  tone: ActiveActionTone;
 };
 
 export function buildArcadeGuidance(input: ArcadeGuidanceInput): ArcadeGuidance {
@@ -111,5 +125,37 @@ export function buildRivalPressure(input: RivalPressureInput): RivalPressure {
     level: "clear",
     label: `Nearest rival ${input.distanceMeters}m`,
     radioLine: null
+  };
+}
+
+export function buildActiveActionHint(input: ActiveActionHintInput): ActiveActionHint {
+  if (input.alibiPulseReady) {
+    return {
+      key: "E / Space",
+      label: "Jam scan",
+      tone: "danger"
+    };
+  }
+
+  if (input.nearExit && input.canEscape) {
+    return {
+      key: "E / Space",
+      label: "Escape",
+      tone: "success"
+    };
+  }
+
+  if (input.nearArtifactName) {
+    return {
+      key: "E / Space",
+      label: "Steal relic",
+      tone: "success"
+    };
+  }
+
+  return {
+    key: "Move",
+    label: "Follow marker",
+    tone: "neutral"
   };
 }

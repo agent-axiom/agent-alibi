@@ -19,6 +19,8 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(page.getByText(/nearest rival \d+m/i)).toBeVisible();
   await expect(page.getByText(/s-rank pace/i)).toBeVisible();
   await expect(page.getByText(/dash ready/i)).toBeVisible();
+  await expect(page.getByLabel(/active action/i).getByText(/move/i)).toBeVisible();
+  await expect(page.getByLabel(/active action/i).getByText(/follow marker/i)).toBeVisible();
   await expect(page.getByText(/rival agents enter in 5 seconds/i)).toBeVisible();
 
   await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_STATE__ === "function");
@@ -39,6 +41,8 @@ test("solo match starts and reaches final case file", async ({ page }) => {
 
   await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget());
   await expect(page.getByText(/press e \/ space to steal/i)).toBeVisible();
+  await expect(page.getByLabel(/active action/i).getByText(/e \/ space/i)).toBeVisible();
+  await expect(page.getByLabel(/active action/i).getByText(/steal relic/i)).toBeVisible();
   await page.keyboard.press("KeyE");
   await expect(page.getByText(/escape with/i)).toBeVisible();
   await expect(page.getByText(/moon pearl secured/i)).toBeVisible();
@@ -64,6 +68,7 @@ test("solo match starts and reaches final case file", async ({ page }) => {
 
   await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget());
   await expect(page.getByText(/press e \/ space to escape/i)).toBeVisible();
+  await expect(page.getByLabel(/active action/i).getByText(/escape/i)).toBeVisible();
   await page.keyboard.press("KeyE");
 
   await expect(page.getByText(/agent alibi case file/i)).toBeVisible();
@@ -103,6 +108,7 @@ test("alibi pulse jams a close rival scan", async ({ page }) => {
   await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.forceRivalPressure(8));
   await expect(page.getByText(/alibi pulse ready/i)).toBeVisible();
   await expect(page.getByText(/press e \/ space to jam rival scan/i)).toBeVisible();
+  await expect(page.getByLabel(/active action/i).getByText(/jam scan/i)).toBeVisible();
 
   const beforePulse = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());
   await page.keyboard.press("KeyE");

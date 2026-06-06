@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildArcadeGuidance, buildRivalPressure } from "./guidance";
+import { buildActiveActionHint, buildArcadeGuidance, buildRivalPressure } from "./guidance";
 
 describe("buildArcadeGuidance", () => {
   it("starts with a concrete theft objective instead of a vague instruction", () => {
@@ -107,5 +107,44 @@ describe("buildArcadeGuidance", () => {
     expect(pressure.level).toBe("danger");
     expect(pressure.label).toBe("Rival on you: Gremlin 8m");
     expect(pressure.radioLine).toBe("Rival on you: Gremlin. Dash or break line.");
+  });
+
+  it("shows movement as the default active action", () => {
+    const hint = buildActiveActionHint({
+      alibiPulseReady: false,
+      nearArtifactName: null,
+      nearExit: false,
+      canEscape: false
+    });
+
+    expect(hint.key).toBe("Move");
+    expect(hint.label).toBe("Follow marker");
+    expect(hint.tone).toBe("neutral");
+  });
+
+  it("prioritizes stealing when a relic is in reach", () => {
+    const hint = buildActiveActionHint({
+      alibiPulseReady: false,
+      nearArtifactName: "Moon Pearl",
+      nearExit: false,
+      canEscape: false
+    });
+
+    expect(hint.key).toBe("E / Space");
+    expect(hint.label).toBe("Steal relic");
+    expect(hint.tone).toBe("success");
+  });
+
+  it("prioritizes alibi pulse over other contextual actions", () => {
+    const hint = buildActiveActionHint({
+      alibiPulseReady: true,
+      nearArtifactName: "Moon Pearl",
+      nearExit: true,
+      canEscape: true
+    });
+
+    expect(hint.key).toBe("E / Space");
+    expect(hint.label).toBe("Jam scan");
+    expect(hint.tone).toBe("danger");
   });
 });

@@ -3,7 +3,7 @@ import type { ArtifactState, GameState, PlayerState, Room, TeamId } from "@agent
 import { ALIBI_PULSE_COOLDOWN_MS, buildAlibiPulseStatus, canUseAlibiPulse } from "./alibi-pulse";
 import { rateArcadeRun } from "./arcade-rules";
 import { ARCADE_MISSION_DURATION_MS, type ArcadeHudPhase, type ArcadeHudState, type ArcadeMissionConfig } from "./arcade-types";
-import { buildArcadeGuidance, buildRivalPressure, type RivalPressure } from "./guidance";
+import { buildActiveActionHint, buildArcadeGuidance, buildRivalPressure, type RivalPressure } from "./guidance";
 import { nextMovementImpulse, selectMovementVector, type MovementImpulse, type MovementVector } from "./movement";
 import { updateRivalScan as advanceRivalScan, type RivalScanState } from "./rival-scan";
 
@@ -790,6 +790,12 @@ export class ArcadeHeistScene extends Phaser.Scene {
       dashReady: this.dashCooldownMs <= 0,
       objective: alibiPulseReady ? "Jam the rival scan" : greedPromptActive ? `Greed route: steal ${targetArtifact!.name}` : guidance.objective,
       prompt: alibiPulseReady ? "Press E / Space to jam rival scan" : greedPromptActive && nearArtifact ? "Press E / Space to steal" : guidance.prompt,
+      activeAction: buildActiveActionHint({
+        alibiPulseReady,
+        nearArtifactName: nearArtifact?.name ?? null,
+        nearExit: this.isNearExit(),
+        canEscape
+      }),
       loopStep: alibiPulseReady ? "survive" : guidance.loopStep,
       raceStatus: guidance.raceStatus,
       greedStatus: this.greedStatus(guidance.greedStatus),

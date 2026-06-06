@@ -243,6 +243,11 @@ function makeInitialArcadeHud(state: GameState): ArcadeHudState {
     dashReady: true,
     objective: "Steal the Moon Pearl",
     prompt: "Follow the gold marker",
+    activeAction: {
+      key: "Move",
+      label: "Follow marker",
+      tone: "neutral"
+    },
     loopStep: "steal",
     raceStatus: "Loot race is tied",
     greedStatus: null,

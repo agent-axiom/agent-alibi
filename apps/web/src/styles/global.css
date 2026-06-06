@@ -1134,7 +1134,7 @@ p {
 .mission-title span,
 .arcade-stat span,
 .arcade-alarm span,
-.arcade-objective span {
+.arcade-objective > span {
   color: #ffd56a;
   font-size: 0.76rem;
   font-weight: 900;
@@ -1285,6 +1285,52 @@ p {
   font-size: clamp(1.15rem, 2.2vw, 1.85rem);
   line-height: 1.05;
   overflow-wrap: anywhere;
+}
+
+.arcade-active-action {
+  width: fit-content;
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  border: 1px solid rgba(216, 252, 255, 0.24);
+  border-radius: 7px;
+  padding: 6px 10px;
+  background: rgba(216, 252, 255, 0.1);
+  color: #dffcff;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.arcade-active-action kbd {
+  min-width: 74px;
+  border: 1px solid rgba(216, 252, 255, 0.28);
+  border-radius: 5px;
+  padding: 5px 7px;
+  background: rgba(5, 8, 17, 0.52);
+  color: #f8fdff;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-align: center;
+}
+
+.arcade-active-action span {
+  color: inherit;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.arcade-active-action.success {
+  border-color: rgba(126, 255, 223, 0.54);
+  background: rgba(126, 255, 223, 0.14);
+  color: #d8fff4;
+}
+
+.arcade-active-action.danger {
+  border-color: rgba(255, 79, 123, 0.72);
+  background: rgba(255, 79, 123, 0.18);
+  color: #fff2f5;
 }
 
 .arcade-steps {
