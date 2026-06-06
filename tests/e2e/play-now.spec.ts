@@ -13,6 +13,13 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   const currentObjective = page.getByLabel(/current objective/i);
   const objectiveBanner = page.getByLabel(/objective banner/i);
   const missionBeat = page.getByLabel(/mission beat/i);
+  const miniRadar = page.getByLabel(/mini radar/i);
+  await expect(page.locator(".arcade-shell")).toHaveClass(/compact-opening/);
+  const openingContract = page.getByLabel(/opening contract/i);
+  await expect(openingContract.getByText(/moon vault contract/i)).toBeVisible();
+  await expect(openingContract.getByText(/steal moon pearl \+3/i)).toBeVisible();
+  await expect(openingContract.getByText(/cashout at atrium lift/i)).toBeVisible();
+  await expect(openingContract.getByText(/red crew breaches after first score/i)).toBeVisible();
   await expect(page.getByText(/moon vault run/i)).toBeVisible();
   await expect(page.getByText(/timer/i)).toBeVisible();
   await expect(page.getByText(/steal the moon pearl/i)).toBeVisible();
@@ -25,25 +32,19 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(page.getByText(/1 steal/i)).toBeVisible();
   await expect(page.getByText(/target (?:n|ne|e|se|s|sw|w|nw|here) \d+m/i)).toBeVisible();
   await expect(page.getByText(/rivals wake after first score or \d+s/i)).toBeVisible();
-  await expect(page.getByText(/nearest rival (?:n|ne|e|se|s|sw|w|nw|here) \d+m/i)).toBeVisible();
-  await expect(page.getByText(/s-rank pace/i)).toBeVisible();
-  const bonusWindow = page.getByLabel(/clean bonus window/i);
-  await expect(bonusWindow.getByText(/clean bonus/i)).toBeVisible();
-  await expect(bonusWindow.getByText(/\d+s left/i)).toBeVisible();
-  await expect(page.getByText(/dash ready/i)).toBeVisible();
+  await expect(page.getByLabel(/live agents/i)).toBeHidden();
+  await expect(page.getByLabel(/mission radio/i)).toBeHidden();
+  await expect(miniRadar).toBeHidden();
+  await expect(page.getByText(/nearest rival (?:n|ne|e|se|s|sw|w|nw|here) \d+m/i)).toBeHidden();
+  await expect(page.getByText(/s-rank pace/i)).toBeHidden();
+  await expect(page.getByLabel(/clean bonus window/i)).toBeHidden();
+  await expect(page.getByText(/dash ready/i)).toBeHidden();
   await expect(page.getByLabel(/active action/i).getByText(/move/i)).toBeVisible();
   await expect(page.getByLabel(/active action/i).getByText(/follow marker/i)).toBeVisible();
   const heistRace = page.getByLabel(/heist race/i);
   await expect(heistRace.getByText(/blue 0/i)).toBeVisible();
   await expect(heistRace.getByText(/red 0/i)).toBeVisible();
   await expect(heistRace.getByText(/loot race is tied/i)).toBeVisible();
-  const miniRadar = page.getByLabel(/mini radar/i);
-  await expect(miniRadar.getByText(/radar/i)).toBeVisible();
-  await expect(miniRadar.getByText(/target: moon pearl/i)).toBeVisible();
-  await expect(page.getByLabel(/radar player: agent you/i)).toBeVisible();
-  await expect(page.getByLabel(/radar target: moon pearl/i)).toBeVisible();
-  await expect(page.getByLabel(/radar rival: rook/i)).toBeVisible();
-  await expect(page.getByText(/rival agents wait for your first score/i)).toBeVisible();
 
   await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_STATE__ === "function");
   const initialTarget = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());
@@ -71,6 +72,12 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(page.getByLabel(/active action/i).getByText(/e \/ space/i)).toBeVisible();
   await expect(page.getByLabel(/active action/i).getByText(/steal moon pearl \+3/i)).toBeVisible();
   await page.keyboard.press("KeyE");
+  await expect(page.locator(".arcade-shell")).not.toHaveClass(/compact-opening/);
+  await expect(openingContract).toBeHidden();
+  await expect(page.getByLabel(/live agents/i)).toBeVisible();
+  await expect(page.getByLabel(/mission radio/i)).toBeVisible();
+  await expect(miniRadar).toBeVisible();
+  await expect(page.getByText(/dash ready/i)).toBeVisible();
   await expect(currentObjective.getByText(/escape with/i)).toBeVisible();
   await expect(page.getByLabel(/rival crew status/i).getByText(/rivals waking in \d+s/i)).toBeVisible();
   await expect(page.getByLabel(/mission radio/i).getByText(/rival agents entered the vault/i)).toBeVisible();
@@ -199,6 +206,32 @@ test("start objective banner clears before it blocks the arena", async ({ page }
     return banner ? Number(getComputedStyle(banner).opacity) : 0;
   });
   expect(bannerOpacity).toBeLessThanOrEqual(0.05);
+});
+
+test("opening seconds focus the player on the contract before expanding the full HUD", async ({ page }) => {
+  await startSoloArcade(page);
+
+  await expect(page.locator(".arcade-shell")).toHaveClass(/compact-opening/);
+  const openingContract = page.getByLabel(/opening contract/i);
+  await expect(openingContract.getByText(/moon vault contract/i)).toBeVisible();
+  await expect(openingContract.getByText(/steal moon pearl \+3/i)).toBeVisible();
+  await expect(openingContract.getByText(/cashout at atrium lift/i)).toBeVisible();
+  await expect(openingContract.getByText(/red crew breaches after first score/i)).toBeVisible();
+  await expect(page.getByLabel(/live agents/i)).toBeHidden();
+  await expect(page.getByLabel(/mission radio/i)).toBeHidden();
+  await expect(page.getByLabel(/mini radar/i)).toBeHidden();
+  await expect(page.getByLabel(/current objective/i).getByText(/steal the moon pearl \+3/i)).toBeVisible();
+
+  await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget === "function");
+  await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget());
+  await page.keyboard.press("KeyE");
+
+  await expect(page.locator(".arcade-shell")).not.toHaveClass(/compact-opening/);
+  await expect(openingContract).toBeHidden();
+  await expect(page.getByLabel(/live agents/i)).toBeVisible();
+  await expect(page.getByLabel(/mission radio/i)).toBeVisible();
+  await expect(page.getByLabel(/mini radar/i)).toBeVisible();
+  await expect(page.getByLabel(/current objective/i).getByText(/escape with/i)).toBeVisible();
 });
 
 test("arcade sound can be toggled during a run", async ({ page }) => {
