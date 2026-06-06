@@ -114,6 +114,25 @@ describe("buildMissionBeat", () => {
     });
   });
 
+  it("turns secured loot into a lead-aware cashout decision", () => {
+    const beat = buildMissionBeat({
+      targetArtifactName: "Argent Crown",
+      targetArtifactValue: 3,
+      lootValue: 3,
+      rivalLootValue: 3,
+      canEscape: true,
+      cashoutValue: 5,
+      routeChoiceRelic: "Argent Crown +3",
+      routeMode: "escape",
+      rivalCarrier: null,
+      alibiPulseReady: false,
+      nearestRivalName: null
+    });
+
+    expect(beat.title).toBe("Cashout beats Red by 2");
+    expect(beat.detail).toBe("Argent Crown +3 can extend the chain, but the lift is paying now.");
+  });
+
   it("turns a rival cashout lead into a comeback beat", () => {
     const beat = buildMissionBeat({
       targetArtifactName: "Argent Crown",
