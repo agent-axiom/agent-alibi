@@ -143,8 +143,13 @@ function buildHighlightLines(
     lines.push(`Blocked rival cashout on ${pendingRivalRelicNames.join(" + ")}`);
   }
   if (result.outcome === "escaped") {
-    lines.push(`Cashed out +${cashoutBankedValue(result)} at lift`);
-    lines.push(`Escaped with ${result.lootValue} loot`);
+    if (result.lootValue > 0) {
+      lines.push(`Cashed out +${cashoutBankedValue(result)} at lift`);
+      lines.push(`Escaped with ${result.lootValue} loot`);
+    } else {
+      lines.push("Escaped before the seal");
+      lines.push("No relics banked");
+    }
   } else if (result.outcome === "sealed") {
     lines.push("Vault sealed before extraction");
   } else {
@@ -175,10 +180,16 @@ function buildCaseFile(
   const elapsedSeconds = Math.round(result.elapsedMs / 1000);
   const outcomeLine =
     result.outcome === "escaped"
-      ? `${result.playerName} escaped with ${result.artifactsStolen} relics before lockdown.`
+      ? result.lootValue > 0
+        ? `${result.playerName} escaped with ${result.artifactsStolen} relics before lockdown.`
+        : `${result.playerName} escaped empty-handed before lockdown.`
       : result.outcome === "sealed"
         ? "Vault sealed before the crew could reach the exit."
         : `${result.playerName} was caught in the alarm wash.`;
+  const bankedLine =
+    result.outcome === "escaped" && result.lootValue === 0
+      ? "Escape Bonus: +2"
+      : `Cashout Banked: +${cashoutBankedValue(result)}`;
 
   return [
     "AGENT ALIBI CASE FILE",
@@ -186,7 +197,7 @@ function buildCaseFile(
     `Title: ${title}`,
     `Winner: ${blueScore.total === redScore.total ? "Tie" : blueScore.total > redScore.total ? "Blue Crew" : "Red Crew"}`,
     `Blue Crew: ${blueScore.total} (${blueScore.loot} loot, ${blueScore.escape} escape, ${blueScore.penalties} penalty)`,
-    `Cashout Banked: +${cashoutBankedValue(result)}`,
+    bankedLine,
     `Red Crew: ${redScore.total} (${redScore.loot} rival loot)`,
     `Run Rating: ${runRating}`,
     styleBonus > 0 ? `Clean exit bonus: +${styleBonus}` : "Clean exit bonus: +0",

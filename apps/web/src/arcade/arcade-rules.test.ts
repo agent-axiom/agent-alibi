@@ -104,6 +104,25 @@ describe("buildArcadeMatchSummary", () => {
     expect(summary.caseFile).toContain("Cashout Banked: +8");
   });
 
+  it("describes a no-loot escape as survival instead of a cashout", () => {
+    const summary = buildArcadeMatchSummary({
+      outcome: "escaped",
+      playerName: "Agent You",
+      lootValue: 0,
+      artifactsStolen: 0,
+      aiLootValue: 0,
+      alarm: 2,
+      elapsedMs: 125_000
+    });
+
+    expect(summary.highlightLines).toContain("Escaped before the seal");
+    expect(summary.highlightLines).toContain("No relics banked");
+    expect(summary.highlightLines).not.toContain("Cashed out +2 at lift");
+    expect(summary.caseFile).toContain("Escape Bonus: +2");
+    expect(summary.caseFile).toContain("Agent You escaped empty-handed before lockdown.");
+    expect(summary.caseFile).not.toContain("Cashout Banked");
+  });
+
   it("records alibi pulse saves and scan burns in the shareable case file", () => {
     const summary = buildArcadeMatchSummary({
       outcome: "escaped",

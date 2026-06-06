@@ -713,6 +713,30 @@ test("lockdown with carried loot uses cashout copy", async ({ page }) => {
   await expect(page.getByLabel(/threat vector/i).getByText(/cashout before the doors close/i)).toBeVisible();
 });
 
+test("no-loot lockdown escape final case avoids cashout wording", async ({ page }) => {
+  await startSoloArcade(page);
+  await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_DEBUG__?.forceLockdown === "function");
+
+  await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.forceLockdown?.());
+  await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget?.());
+  await page.keyboard.press("KeyE");
+
+  const finalScores = page.getByLabel(/final scores/i);
+  await expect(finalScores).toBeVisible();
+  const caseHighlights = page.getByLabel(/case highlights/i);
+  await expect(caseHighlights.getByText(/escaped before the seal/i)).toBeVisible();
+  await expect(caseHighlights.getByText(/no relics banked/i)).toBeVisible();
+  await expect(page.getByText(/escape bonus: \+2/i)).toBeVisible();
+  await expect(page.getByText(/escaped empty-handed before lockdown/i)).toBeVisible();
+  await expect(page.locator(".case-file")).not.toContainText(/cashed out \+2|cashout banked/i);
+  const scorePopup = page.getByLabel(/score popup/i);
+  await expect(scorePopup.getByText(/no relics banked/i)).toBeVisible();
+  await expect(scorePopup).not.toContainText(/cashout/i);
+  await expect(page.getByLabel(/rematch hook/i).getByText(/steal one relic/i)).toBeVisible();
+  await expect(page.getByLabel(/rematch hook/i)).not.toContainText(/cashout/i);
+  await expect(page.getByLabel(/share case stamp/i)).not.toContainText(/cashed out/i);
+});
+
 test("alibi pulse jams a close rival scan", async ({ page }) => {
   await startSoloArcade(page);
   await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_STATE__ === "function");
