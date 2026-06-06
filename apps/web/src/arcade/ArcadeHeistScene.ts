@@ -32,7 +32,7 @@ const EXIT_RADIUS = 74;
 const INTERCEPT_RADIUS = 64;
 const DASH_COOLDOWN_MS = 1150;
 const AI_GRACE_MS = 10_500;
-const AI_WAKE_HOLD_MS = 4_000;
+const AI_WAKE_HOLD_MS = 10_000;
 const LOOT_CHAIN_WINDOW_MS = 12_000;
 
 const TEAM_COLORS: Record<TeamId, number> = {
@@ -925,7 +925,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       this.stolenRelicNames.push(artifact.name);
       this.lastLootChainAtMs = this.elapsedMs;
       this.alarm = Math.min(5, this.alarm + (artifact.size === "major" ? 0.34 : 0.18));
-      this.feedLine(`You stole ${artifact.name}. Escape route unlocked.`);
+      this.feedLine(`${artifact.name} secured. Escape route unlocked.`);
       this.routeMode = "escape";
       this.flashSpotlight(this.artifactsStolen > 1 ? `Loot chain x${this.artifactsStolen}` : `${artifact.name} secured`);
       this.flashScorePopup({
