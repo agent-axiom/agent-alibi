@@ -20,6 +20,7 @@ export type ArcadeHudState = {
   prompt: string;
   loopStep: ArcadeLoopStep;
   raceStatus: string;
+  greedStatus: string | null;
   targetDistanceLabel: string | null;
   rivalStatus: string;
   paceStatus: string;

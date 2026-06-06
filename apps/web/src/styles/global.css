@@ -1364,6 +1364,19 @@ p {
   color: #b7c8d8;
 }
 
+.arcade-greed {
+  width: fit-content;
+  border: 1px solid rgba(189, 169, 255, 0.44);
+  border-radius: 6px;
+  padding: 6px 9px;
+  background: rgba(189, 169, 255, 0.12);
+  color: #eee8ff;
+  font-size: 0.82rem;
+  font-weight: 900;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
 .arcade-objective small {
   color: #b7c8d8;
   font-weight: 800;
@@ -1574,6 +1587,10 @@ p {
   }
 
   .arcade-dash {
+    font-size: 0.72rem;
+  }
+
+  .arcade-greed {
     font-size: 0.72rem;
   }
 }

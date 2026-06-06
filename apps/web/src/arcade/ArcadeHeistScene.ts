@@ -50,6 +50,8 @@ type ArcadeObjectiveTarget =
   | { kind: "artifact"; id: string; label: string; x: number; y: number }
   | { kind: "escape"; id: "escape"; label: string; x: number; y: number };
 
+type RouteMode = "escape" | "greed";
+
 type MovementKeys = {
   w: Phaser.Input.Keyboard.Key;
   a: Phaser.Input.Keyboard.Key;
@@ -98,6 +100,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private finished = false;
   private aiReleased = false;
   private playerName = "Agent You";
+  private routeMode: RouteMode = "escape";
   private escapeZone?: Phaser.GameObjects.Container;
   private targetMarker?: Phaser.GameObjects.Container;
   private targetBeam?: Phaser.GameObjects.Graphics;
@@ -175,6 +178,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
         : null,
       target,
       hasTargetBeam: Boolean(this.targetBeam),
+      routeMode: this.routeMode,
       impulse: this.keyboardImpulse ?? null
     };
   }
@@ -229,6 +233,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.spotlightUntilMs = 0;
     this.finished = false;
     this.aiReleased = false;
+    this.routeMode = "escape";
     this.targetMarker = undefined;
     this.targetBeam = undefined;
     this.playerName = config.state.players.find((player) => player.kind === "human")?.name ?? "Agent You";
@@ -511,6 +516,12 @@ export class ArcadeHeistScene extends Phaser.Scene {
       return;
     }
 
+    if (normalized === "g") {
+      event?.preventDefault();
+      this.toggleRouteMode();
+      return;
+    }
+
     if (normalized === "shift") {
       this.shiftHeld = true;
       return;
@@ -562,6 +573,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       this.artifactsStolen += 1;
       this.alarm = Math.min(5, this.alarm + (artifact.size === "major" ? 0.34 : 0.18));
       this.feedLine(`You stole ${artifact.name}. Escape route unlocked.`);
+      this.routeMode = "escape";
       this.flashSpotlight(`${artifact.name} secured`);
       this.collectArtifactVisual(artifact, 0xffd56a);
       this.updateTargetMarker();
@@ -703,6 +715,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       prompt: guidance.prompt,
       loopStep: guidance.loopStep,
       raceStatus: guidance.raceStatus,
+      greedStatus: this.greedStatus(guidance.greedStatus),
       targetDistanceLabel:
         objectiveTarget && targetDistanceMeters !== null
           ? `${objectiveTarget.kind === "escape" ? "Exit" : "Target"} ${targetDistanceMeters}m`
@@ -713,6 +726,14 @@ export class ArcadeHeistScene extends Phaser.Scene {
       feed: this.feed.slice(-5)
     };
     this.config.onHudUpdate(hud);
+  }
+
+  private greedStatus(baseStatus: string | null): string | null {
+    if (!baseStatus) return null;
+    if (this.routeMode === "greed" && this.canGreedRoute()) {
+      return baseStatus.replace("Optional relic:", "Greed route:");
+    }
+    return `${baseStatus} · press G`;
   }
 
   private paceStatus(): string {
@@ -739,7 +760,34 @@ export class ArcadeHeistScene extends Phaser.Scene {
       })[0];
   }
 
+  private canGreedRoute(): boolean {
+    return this.lootValue > 0 && this.timeLeftMs() > 45_000 && Boolean(this.primaryTargetArtifact());
+  }
+
+  private toggleRouteMode() {
+    if (!this.canGreedRoute()) {
+      this.routeMode = "escape";
+      this.emitHudIfNeeded(true);
+      return;
+    }
+    this.routeMode = this.routeMode === "greed" ? "escape" : "greed";
+    this.updateTargetMarker();
+    this.emitHudIfNeeded(true);
+  }
+
   private currentObjectiveTarget(): ArcadeObjectiveTarget | undefined {
+    const artifact = this.primaryTargetArtifact();
+
+    if (this.routeMode === "greed" && this.canGreedRoute() && artifact) {
+      return {
+        kind: "artifact",
+        id: artifact.id,
+        label: artifact.name,
+        x: artifact.x,
+        y: artifact.y
+      };
+    }
+
     if ((this.lootValue > 0 || this.timeLeftMs() <= 30_000) && this.escapeZone) {
       return {
         kind: "escape",
@@ -750,7 +798,6 @@ export class ArcadeHeistScene extends Phaser.Scene {
       };
     }
 
-    const artifact = this.primaryTargetArtifact();
     return artifact
       ? {
           kind: "artifact",

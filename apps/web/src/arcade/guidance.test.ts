@@ -18,6 +18,7 @@ describe("buildArcadeGuidance", () => {
     expect(guidance.objective).toBe("Steal the Moon Pearl");
     expect(guidance.prompt).toBe("Follow the gold marker");
     expect(guidance.loopStep).toBe("steal");
+    expect(guidance.greedStatus).toBeNull();
   });
 
   it("asks for an explicit interaction when the player is beside a relic", () => {
@@ -53,6 +54,7 @@ describe("buildArcadeGuidance", () => {
     expect(guidance.objective).toBe("Escape with 3 loot");
     expect(guidance.prompt).toBe("Return to the Atrium lift");
     expect(guidance.loopStep).toBe("escape");
+    expect(guidance.greedStatus).toBe("Optional relic: Argent Crown");
   });
 
   it("calls out when the AI crew is ahead", () => {

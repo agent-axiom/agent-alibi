@@ -17,6 +17,7 @@ export type ArcadeGuidance = {
   prompt: string;
   loopStep: ArcadeLoopStep;
   raceStatus: string;
+  greedStatus: string | null;
 };
 
 export function buildArcadeGuidance(input: ArcadeGuidanceInput): ArcadeGuidance {
@@ -27,7 +28,8 @@ export function buildArcadeGuidance(input: ArcadeGuidanceInput): ArcadeGuidance 
       objective: `Escape with ${input.lootValue} loot`,
       prompt: input.nearExit ? "Press E / Space to escape" : "Return to the Atrium lift",
       loopStep: "escape",
-      raceStatus
+      raceStatus,
+      greedStatus: input.targetArtifactName && input.timeLeftMs > 45_000 ? `Optional relic: ${input.targetArtifactName}` : null
     };
   }
 
@@ -36,7 +38,8 @@ export function buildArcadeGuidance(input: ArcadeGuidanceInput): ArcadeGuidance 
       objective: "Lockdown is closing",
       prompt: input.nearExit ? "Press E / Space to escape" : "Reach the escape lift",
       loopStep: "survive",
-      raceStatus
+      raceStatus,
+      greedStatus: null
     };
   }
 
@@ -45,7 +48,8 @@ export function buildArcadeGuidance(input: ArcadeGuidanceInput): ArcadeGuidance 
     objective: `Steal the ${target}`,
     prompt: input.nearArtifactName ? "Press E / Space to steal" : "Follow the gold marker",
     loopStep: "steal",
-    raceStatus
+    raceStatus,
+    greedStatus: null
   };
 }
 

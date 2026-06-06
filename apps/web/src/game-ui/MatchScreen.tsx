@@ -117,9 +117,14 @@ export function MatchScreen({ match }: MatchScreenProps) {
             <div className={`arcade-dash ${hud?.dashReady === false ? "cooling" : ""}`} aria-label="Dash status">
               {hud?.dashReady === false ? "Dash cooling" : "Dash ready"}
             </div>
+            {hud?.greedStatus ? (
+              <div className="arcade-greed" aria-label="Optional relic">
+                {hud.greedStatus}
+              </div>
+            ) : null}
           </div>
           <small>
-            {hud?.raceStatus ?? "Loot race is tied"} · WASD / arrows move · click to run · Shift dash · E / Space interact
+            {hud?.raceStatus ?? "Loot race is tied"} · WASD / arrows move · click to run · Shift dash · E / Space interact · G route
           </small>
         </section>
       </main>

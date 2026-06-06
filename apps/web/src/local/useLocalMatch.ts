@@ -245,6 +245,7 @@ function makeInitialArcadeHud(state: GameState): ArcadeHudState {
     prompt: "Follow the gold marker",
     loopStep: "steal",
     raceStatus: "Loot race is tied",
+    greedStatus: null,
     targetDistanceLabel: "Target plotting",
     rivalStatus: "Rivals enter in 5s",
     paceStatus: "S-Rank pace",
