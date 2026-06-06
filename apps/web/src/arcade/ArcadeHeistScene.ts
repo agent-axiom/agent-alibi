@@ -68,6 +68,8 @@ type RuntimeAgent = {
   body: Phaser.GameObjects.Container;
   dot: Phaser.GameObjects.Arc;
   ship: Phaser.GameObjects.Container;
+  carrierBadge: Phaser.GameObjects.Container;
+  carrierBadgeLabel: Phaser.GameObjects.Text;
 };
 
 type ArcadeObjectiveTarget =
@@ -293,6 +295,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       routeGuide,
       threatHalo: this.threatHaloDebug(),
       carrierCashoutRoute: this.carrierCashoutRouteDebug(),
+      carrierBadges: this.carrierBadgesDebug(),
       motionTrail: this.motionTrailDebug(),
       arenaLabels: this.arenaLabelsDebug(),
       routeMode: this.routeMode,
@@ -367,6 +370,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.updatePlayer(delta);
     this.updateMotionTrail(delta);
     this.updateAi(delta);
+    this.updateCarrierBadges();
     this.updateRivalPressureFeed();
     this.updateRivalScan(delta);
     this.updateTargetMarker();
@@ -445,6 +449,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.updateTargetMarker();
     this.updateThreatHalo();
     this.updateCarrierCashoutRoute();
+    this.updateCarrierBadges();
     this.scale.off("resize", this.resizeCamera, this);
     this.scale.on("resize", this.resizeCamera, this);
     this.flashObjectiveBanner({
@@ -648,7 +653,25 @@ export class ArcadeHeistScene extends Phaser.Scene {
         strokeThickness: 5
       })
       .setOrigin(0.5);
-    const body = this.add.container(x, y, [shadow, ship, label]);
+    const badgePlate = this.add.rectangle(0, -48, 48, 26, 0x050811, 0.88).setStrokeStyle(2, 0xff4f7b, 0.86);
+    const badgeGem = this.add.polygon(-16, -48, [
+      { x: 0, y: -7 },
+      { x: 7, y: 0 },
+      { x: 0, y: 7 },
+      { x: -7, y: 0 }
+    ], 0xffd56a, 0.98);
+    const carrierBadgeLabel = this.add
+      .text(9, -48, "+0", {
+        color: "#fff7d6",
+        fontFamily: "Inter, Arial, sans-serif",
+        fontSize: "12px",
+        fontStyle: "950",
+        stroke: "#050811",
+        strokeThickness: 4
+      })
+      .setOrigin(0.5);
+    const carrierBadge = this.add.container(0, 0, [badgePlate, badgeGem, carrierBadgeLabel]).setVisible(false);
+    const body = this.add.container(x, y, [shadow, ship, label, carrierBadge]);
     body.setDepth(controlled ? 20 : 12);
 
     return {
@@ -662,7 +685,9 @@ export class ArcadeHeistScene extends Phaser.Scene {
       carriedRelics: [],
       body,
       dot,
-      ship
+      ship,
+      carrierBadge,
+      carrierBadgeLabel
     };
   }
 
@@ -860,6 +885,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     });
     this.feedLine(`${actorLabel} stole ${artifact.name}.`);
     this.collectArtifactVisual(artifact, TEAM_COLORS[actor.teamId]);
+    this.updateCarrierBadges();
     this.updateTargetMarker();
     this.updateThreatHalo();
     this.updateCarrierCashoutRoute();
@@ -888,6 +914,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       line: `Cashed out ${this.relicListLabel(cashed)}. Too slow.`
     });
     this.feedLine(`${rival.name} cashed out ${this.relicListLabel(cashed)} at the Atrium Lift.`);
+    this.updateCarrierBadges();
     this.updateTargetMarker();
     this.updateThreatHalo();
     this.updateCarrierCashoutRoute();
@@ -1015,6 +1042,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     });
     this.feedLine(`Intercepted ${rival.name}. Recovered ${this.relicListLabel(recovered)}.`);
     this.addInterceptVisual(rival.x, rival.y);
+    this.updateCarrierBadges();
     this.updateTargetMarker();
     this.updateThreatHalo();
     this.updateCarrierCashoutRoute();
@@ -1627,6 +1655,34 @@ export class ArcadeHeistScene extends Phaser.Scene {
         agent.carriedRelics.length > 0 &&
         Phaser.Math.Distance.Between(this.player!.x, this.player!.y, agent.x, agent.y) <= INTERCEPT_RADIUS
     );
+  }
+
+  private updateCarrierBadges() {
+    for (const agent of this.aiAgents) {
+      const relic = agent.carriedRelics.at(-1);
+      const visible = Boolean(relic);
+      agent.carrierBadge.setVisible(visible);
+      agent.carrierBadge.setData("visible", visible);
+      agent.carrierBadge.setData("agentName", agent.name);
+      if (!relic) {
+        agent.carrierBadge.setData("label", "");
+        continue;
+      }
+
+      const label = `+${relic.value}`;
+      agent.carrierBadgeLabel.setText(label);
+      agent.carrierBadge.setData("label", label);
+    }
+  }
+
+  private carrierBadgesDebug() {
+    return this.aiAgents
+      .filter((agent) => Boolean(agent.carrierBadge.getData("visible")))
+      .map((agent) => ({
+        agentName: String(agent.carrierBadge.getData("agentName") ?? agent.name),
+        label: String(agent.carrierBadge.getData("label") ?? ""),
+        visible: true
+      }));
   }
 
   private updateCarrierCashoutRoute() {

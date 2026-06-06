@@ -370,6 +370,8 @@ test("rival steals trigger a clear red loot alert", async ({ page }) => {
   expect(carrierCashoutRoute?.visible).toBe(true);
   expect(carrierCashoutRoute?.targetLabel).toBe("Atrium Lift");
   expect(carrierCashoutRoute?.chevronCount).toBeGreaterThan(0);
+  const carrierBadges = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().carrierBadges);
+  expect(carrierBadges).toContainEqual({ agentName: "Rook", label: "+3", visible: true });
   const rivalIntercept = page.getByLabel(/rival intercept/i);
   await expect(rivalIntercept.getByText(/rook carrying/i)).toBeVisible();
   await expect(rivalIntercept.getByText(/moon pearl \+3/i)).toBeVisible();
