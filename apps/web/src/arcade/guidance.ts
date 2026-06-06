@@ -36,6 +36,7 @@ export type RivalPressure = {
 
 export type ActiveActionHintInput = {
   alibiPulseReady: boolean;
+  nearRivalCarrierName?: string | null;
   nearArtifactName: string | null;
   nearExit: boolean;
   canEscape: boolean;
@@ -129,6 +130,14 @@ export function buildRivalPressure(input: RivalPressureInput): RivalPressure {
 }
 
 export function buildActiveActionHint(input: ActiveActionHintInput): ActiveActionHint {
+  if (input.nearRivalCarrierName) {
+    return {
+      key: "E / Space",
+      label: "Intercept carrier",
+      tone: "danger"
+    };
+  }
+
   if (input.alibiPulseReady) {
     return {
       key: "E / Space",

@@ -14,6 +14,7 @@ const DASH_SPEED = 620;
 const AI_SPEED = 150;
 const PICKUP_RADIUS = 42;
 const EXIT_RADIUS = 74;
+const INTERCEPT_RADIUS = 64;
 const DASH_COOLDOWN_MS = 1150;
 const AI_GRACE_MS = 5_500;
 
@@ -35,6 +36,11 @@ type RuntimeArtifact = {
   label: Phaser.GameObjects.Text;
 };
 
+type CarriedRelic = {
+  name: string;
+  value: number;
+};
+
 type RuntimeAgent = {
   id: string;
   name: string;
@@ -43,6 +49,7 @@ type RuntimeAgent = {
   y: number;
   targetRoomId: string;
   lootValue: number;
+  carriedRelics: CarriedRelic[];
   body: Phaser.GameObjects.Container;
   dot: Phaser.GameObjects.Arc;
   ship: Phaser.GameObjects.Container;
@@ -200,6 +207,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       routeMode: this.routeMode,
       nearestRival,
       lastRivalSteal: this.lastRivalSteal,
+      rivalIntercept: this.rivalIntercept(),
       impulse: this.keyboardImpulse ?? null
     };
   }
@@ -477,6 +485,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       y,
       targetRoomId: "atrium",
       lootValue: 0,
+      carriedRelics: [],
       body,
       dot,
       ship
@@ -644,6 +653,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
 
     this.aiLootValue += artifact.value;
     this.rivalRelicNames.push(artifact.name);
+    actor.carriedRelics.push({ name: artifact.name, value: artifact.value });
     this.alarm = Math.min(5, this.alarm + 0.12);
     this.lastRivalSteal = `Red +${artifact.value}: ${actorLabel} stole ${artifact.name}`;
     this.feedLine(`${actorLabel} stole ${artifact.name}.`);
@@ -659,6 +669,12 @@ export class ArcadeHeistScene extends Phaser.Scene {
 
   private tryInteract() {
     if (!this.player) return;
+    const rivalCarrier = this.nearRivalCarrier();
+    if (rivalCarrier) {
+      this.interceptRivalCarrier(rivalCarrier);
+      return;
+    }
+
     if (this.tryAlibiPulse()) return;
 
     if (this.isNearExit()) {
@@ -677,6 +693,30 @@ export class ArcadeHeistScene extends Phaser.Scene {
     }
 
     this.feedLine("No relic in reach. Follow the gold marker.");
+  }
+
+  private interceptRivalCarrier(rival: RuntimeAgent) {
+    if (rival.carriedRelics.length === 0) return;
+
+    const recovered = rival.carriedRelics.splice(0);
+    const recoveredValue = recovered.reduce((total, relic) => total + relic.value, 0);
+    const recoveredNames = recovered.map((relic) => relic.name);
+    rival.lootValue = Math.max(0, rival.lootValue - recoveredValue);
+    this.aiLootValue = Math.max(0, this.aiLootValue - recoveredValue);
+    this.lootValue += recoveredValue;
+    this.artifactsStolen += recovered.length;
+    this.stolenRelicNames.push(...recoveredNames);
+    for (const relicName of recoveredNames) {
+      const index = this.rivalRelicNames.indexOf(relicName);
+      if (index >= 0) this.rivalRelicNames.splice(index, 1);
+    }
+    this.lastRivalSteal = null;
+    this.alarm = Math.min(5, this.alarm + 0.16);
+    this.shoveRivalAway(rival);
+    this.flashSpotlight(`Intercepted ${rival.name}`);
+    this.feedLine(`Intercepted ${rival.name}. Recovered ${this.relicListLabel(recovered)}.`);
+    this.addInterceptVisual(rival.x, rival.y);
+    this.updateTargetMarker();
   }
 
   private tryAlibiPulse(): boolean {
@@ -715,6 +755,18 @@ export class ArcadeHeistScene extends Phaser.Scene {
       duration: 520,
       ease: "Cubic.easeOut",
       onComplete: () => ring.destroy()
+    });
+  }
+
+  private addInterceptVisual(x: number, y: number) {
+    const burst = this.add.circle(x, y, 36, 0xffd56a, 0.2).setStrokeStyle(4, 0xffd56a, 0.82).setDepth(21);
+    this.tweens.add({
+      targets: burst,
+      scale: 2.4,
+      alpha: 0,
+      duration: 520,
+      ease: "Cubic.easeOut",
+      onComplete: () => burst.destroy()
     });
   }
 
@@ -798,6 +850,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
         : null;
     const nearestRival = this.nearestRivalScan();
     const rivalPressure = this.rivalPressure(nearestRival);
+    const rivalCarrier = this.nearRivalCarrier();
     const guidance = buildArcadeGuidance({
       lootValue: this.lootValue,
       aiLootValue: this.aiLootValue,
@@ -810,7 +863,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
       timeLeftMs: this.timeLeftMs()
     });
     const greedPromptActive = this.routeMode === "greed" && Boolean(targetArtifact);
-    const alibiPulseReady = canUseAlibiPulse(rivalPressure.level, this.alibiPulseCooldownMs);
+    const alibiPulseReady = !rivalCarrier && canUseAlibiPulse(rivalPressure.level, this.alibiPulseCooldownMs);
+    const prompt = rivalCarrier ? "Press E / Space to intercept" : alibiPulseReady ? "Press E / Space to jam rival scan" : greedPromptActive && nearArtifact ? "Press E / Space to steal" : guidance.prompt;
 
     const hud: ArcadeHudState = {
       phase: this.phase(),
@@ -822,17 +876,19 @@ export class ArcadeHeistScene extends Phaser.Scene {
       totalArtifacts: this.artifacts.length,
       canEscape,
       dashReady: this.dashCooldownMs <= 0,
-      objective: alibiPulseReady ? "Jam the rival scan" : greedPromptActive ? `Greed route: steal ${this.artifactTargetLabel(targetArtifact!)}` : guidance.objective,
-      prompt: alibiPulseReady ? "Press E / Space to jam rival scan" : greedPromptActive && nearArtifact ? "Press E / Space to steal" : guidance.prompt,
+      objective: rivalCarrier ? `Intercept ${rivalCarrier.name}'s carrier run` : alibiPulseReady ? "Jam the rival scan" : greedPromptActive ? `Greed route: steal ${this.artifactTargetLabel(targetArtifact!)}` : guidance.objective,
+      prompt,
       activeAction: buildActiveActionHint({
         alibiPulseReady,
+        nearRivalCarrierName: rivalCarrier?.name ?? null,
         nearArtifactName: nearArtifact?.name ?? null,
         nearExit: this.isNearExit(),
         canEscape
       }),
-      loopStep: alibiPulseReady ? "survive" : guidance.loopStep,
+      loopStep: rivalCarrier || alibiPulseReady ? "survive" : guidance.loopStep,
       raceStatus: guidance.raceStatus,
       lastRivalSteal: this.lastRivalSteal,
+      rivalIntercept: this.rivalIntercept(),
       vaultCondition: this.vaultCondition(),
       escapePayout: this.escapePayout(canEscape),
       radarBlips: this.buildRadarBlips(objectiveTarget),
@@ -1012,6 +1068,26 @@ export class ArcadeHeistScene extends Phaser.Scene {
     return null;
   }
 
+  private rivalIntercept() {
+    if (!this.player) return null;
+    const carrier = this.aiAgents
+      .filter((agent) => agent.carriedRelics.length > 0)
+      .map((agent) => ({
+        agent,
+        distance: Phaser.Math.Distance.Between(this.player!.x, this.player!.y, agent.x, agent.y)
+      }))
+      .sort((a, b) => a.distance - b.distance)[0];
+    if (!carrier) return null;
+    const relic = carrier.agent.carriedRelics.at(-1);
+    if (!relic) return null;
+    return {
+      agentName: carrier.agent.name,
+      relicName: relic.name,
+      value: relic.value,
+      distanceMeters: Math.max(0, Math.round(carrier.distance / 8))
+    };
+  }
+
   private rivalStatus(): string {
     if (this.aiReleased) return "Rivals active";
     const seconds = Math.max(1, Math.ceil(Math.max(0, AI_GRACE_MS - this.elapsedMs - 500) / 1000));
@@ -1087,6 +1163,21 @@ export class ArcadeHeistScene extends Phaser.Scene {
         !artifact.takenBy &&
         Phaser.Math.Distance.Between(this.player!.x, this.player!.y, artifact.x, artifact.y) <= PICKUP_RADIUS + 18
     );
+  }
+
+  private nearRivalCarrier(): RuntimeAgent | undefined {
+    if (!this.player) return undefined;
+    return this.aiAgents.find(
+      (agent) =>
+        agent.carriedRelics.length > 0 &&
+        Phaser.Math.Distance.Between(this.player!.x, this.player!.y, agent.x, agent.y) <= INTERCEPT_RADIUS
+    );
+  }
+
+  private relicListLabel(relics: CarriedRelic[]): string {
+    if (relics.length === 1) return `${relics[0]!.name} +${relics[0]!.value}`;
+    const total = relics.reduce((sum, relic) => sum + relic.value, 0);
+    return `${relics.length} relics +${total}`;
   }
 
   private updateTargetMarker() {

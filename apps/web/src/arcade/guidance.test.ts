@@ -138,6 +138,7 @@ describe("buildArcadeGuidance", () => {
   it("prioritizes alibi pulse over other contextual actions", () => {
     const hint = buildActiveActionHint({
       alibiPulseReady: true,
+      nearRivalCarrierName: null,
       nearArtifactName: "Moon Pearl",
       nearExit: true,
       canEscape: true
@@ -145,6 +146,20 @@ describe("buildArcadeGuidance", () => {
 
     expect(hint.key).toBe("E / Space");
     expect(hint.label).toBe("Jam scan");
+    expect(hint.tone).toBe("danger");
+  });
+
+  it("prioritizes intercepting a rival carrier over jamming a scan", () => {
+    const hint = buildActiveActionHint({
+      alibiPulseReady: true,
+      nearRivalCarrierName: "Rook",
+      nearArtifactName: null,
+      nearExit: false,
+      canEscape: false
+    });
+
+    expect(hint.key).toBe("E / Space");
+    expect(hint.label).toBe("Intercept carrier");
     expect(hint.tone).toBe("danger");
   });
 });

@@ -164,6 +164,15 @@ export function MatchScreen({ match }: MatchScreenProps) {
                 {hud.lastRivalSteal}
               </div>
             ) : null}
+            {hud?.rivalIntercept ? (
+              <div className="arcade-rival-intercept" aria-label="Rival intercept">
+                <span>{hud.rivalIntercept.agentName} carrying</span>
+                <strong>
+                  {hud.rivalIntercept.relicName} +{hud.rivalIntercept.value}
+                </strong>
+                <small>{hud.rivalIntercept.distanceMeters}m away · intercept with E</small>
+              </div>
+            ) : null}
             {hud?.escapePayout ? (
               <div className="arcade-escape-payout" aria-label="Escape payout">
                 <span>Escape bonus +{hud.escapePayout.escapeBonus}</span>

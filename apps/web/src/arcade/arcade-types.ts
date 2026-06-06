@@ -32,6 +32,13 @@ export type ArcadeCleanBonusWindow = {
   secondsLeft: number;
 };
 
+export type ArcadeRivalIntercept = {
+  agentName: string;
+  relicName: string;
+  value: number;
+  distanceMeters: number;
+};
+
 export type ArcadeHudState = {
   phase: ArcadeHudPhase;
   timeLeftMs: number;
@@ -48,6 +55,7 @@ export type ArcadeHudState = {
   loopStep: ArcadeLoopStep;
   raceStatus: string;
   lastRivalSteal: string | null;
+  rivalIntercept: ArcadeRivalIntercept | null;
   vaultCondition: ArcadeVaultCondition;
   escapePayout: ArcadeEscapePayout | null;
   radarBlips: ArcadeRadarBlip[];

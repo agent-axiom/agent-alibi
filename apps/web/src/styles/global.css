@@ -1602,6 +1602,37 @@ p {
   text-transform: uppercase;
 }
 
+.arcade-rival-intercept {
+  width: fit-content;
+  border: 1px solid rgba(255, 213, 106, 0.6);
+  border-radius: 6px;
+  padding: 6px 9px;
+  background: linear-gradient(135deg, rgba(255, 79, 123, 0.18), rgba(255, 213, 106, 0.14));
+  box-shadow: 0 0 26px rgba(255, 79, 123, 0.2);
+  color: #ffe9a8;
+  line-height: 1;
+  overflow-wrap: anywhere;
+  text-transform: uppercase;
+}
+
+.arcade-rival-intercept span,
+.arcade-rival-intercept strong,
+.arcade-rival-intercept small {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 950;
+}
+
+.arcade-rival-intercept strong {
+  margin-top: 4px;
+  color: #fffaf2;
+}
+
+.arcade-rival-intercept small {
+  margin-top: 4px;
+  color: #ffd8e2;
+}
+
 .arcade-clean-bonus {
   width: fit-content;
   border: 1px solid rgba(255, 213, 106, 0.54);
@@ -2091,6 +2122,12 @@ p {
   .arcade-route-choice span,
   .arcade-route-choice strong,
   .arcade-route-choice small {
+    font-size: 0.7rem;
+  }
+
+  .arcade-rival-intercept span,
+  .arcade-rival-intercept strong,
+  .arcade-rival-intercept small {
     font-size: 0.7rem;
   }
 

@@ -153,14 +153,26 @@ test("rival steals trigger a clear red loot alert", async ({ page }) => {
   const rivalLootAlert = page.getByLabel(/rival loot alert/i);
   await expect(rivalLootAlert.getByText(/red \+\d/i)).toBeVisible();
   await expect(rivalLootAlert.getByText(/stole/i)).toBeVisible();
+  const rivalIntercept = page.getByLabel(/rival intercept/i);
+  await expect(rivalIntercept.getByText(/rook carrying/i)).toBeVisible();
+  await expect(rivalIntercept.getByText(/moon pearl \+3/i)).toBeVisible();
+  await expect(rivalIntercept.getByText(/\d+m away/i)).toBeVisible();
   const afterSteal = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().aiLootValue);
   expect(afterSteal).toBeGreaterThan(0);
+  await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.forceRivalPressure(6));
+  await expect(page.getByText(/press e \/ space to intercept/i)).toBeVisible();
+  await expect(page.getByLabel(/active action/i).getByText(/intercept carrier/i)).toBeVisible();
+  await page.keyboard.press("KeyE");
+  await expect(page.getByText("Intercepted Rook", { exact: true })).toBeVisible();
+  const afterIntercept = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());
+  expect(afterIntercept?.lootValue).toBeGreaterThan(0);
+  expect(afterIntercept?.aiLootValue).toBe(0);
 
   await page.evaluate(() => window.__AGENT_ALIBI_FINISH_ARCADE__?.());
   const finalScores = page.getByLabel(/final scores/i);
-  await expect(finalScores.getByText(/rival relics/i)).toBeVisible();
+  await expect(finalScores.getByText(/relics stolen/i)).toBeVisible();
   await expect(finalScores.getByText(/moon pearl/i)).toBeVisible();
-  await expect(page.getByText(/rival relics: moon pearl/i)).toBeVisible();
+  await expect(page.getByText(/relics stolen: moon pearl/i)).toBeVisible();
 });
 
 test("lockdown phase triggers an unmistakable vault warning", async ({ page }) => {

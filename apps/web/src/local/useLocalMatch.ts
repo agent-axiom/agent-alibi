@@ -251,6 +251,7 @@ function makeInitialArcadeHud(state: GameState): ArcadeHudState {
     loopStep: "steal",
     raceStatus: "Loot race is tied",
     lastRivalSteal: null,
+    rivalIntercept: null,
     vaultCondition: {
       tone: "stable",
       label: "Vault Stable",
