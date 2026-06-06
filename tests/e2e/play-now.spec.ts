@@ -131,7 +131,7 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(missionBeat.getByText(/cashout worth 5/i)).toBeVisible();
   await expect(missionBeat.getByText(/reach atrium lift or press g/i)).toBeVisible();
   await expect(page.locator(".arcade-shell")).not.toHaveClass(/breach-alert/);
-  await expect(page.getByText(/2 cashout \+5/i)).toBeVisible();
+  await expect(page.getByText(/3 cashout \+5/i)).toBeVisible();
   await expect(page.getByLabel(/route distance/i)).toContainText(/cashout \+5/i);
   const lootChainWindow = page.getByLabel(/loot chain window/i);
   await expect(lootChainWindow.getByText(/loot chain x1/i)).toBeVisible();
@@ -297,6 +297,25 @@ test("opening seconds focus the player on the contract before expanding the full
   await expect(page.getByLabel(/mission radio/i)).toBeVisible();
   await expect(page.getByLabel(/mini radar/i)).toBeVisible();
   await expect(page.getByLabel(/current objective/i).getByText(/escape with/i)).toBeVisible();
+});
+
+test("contract chain keeps the current heist step explicit", async ({ page }) => {
+  await startSoloArcade(page);
+  await page.waitForTimeout(13_200);
+
+  const contractChain = page.getByLabel(/contract chain/i);
+  await expect(contractChain.getByText(/steal relic/i)).toBeVisible();
+  await expect(contractChain.getByText(/break heat/i)).toBeVisible();
+  await expect(contractChain.getByText(/cashout/i)).toBeVisible();
+  await expect(contractChain.locator('[aria-current="step"]')).toContainText(/steal relic/i);
+
+  await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget === "function");
+  await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget());
+  await page.keyboard.press("Space");
+
+  await expect(page.getByLabel(/score popup/i).getByText(/moon pearl/i)).toBeVisible();
+  await expect(contractChain.getByLabel(/steal relic complete/i)).toBeVisible();
+  await expect(contractChain.locator('[aria-current="step"]')).toContainText(/cashout/i);
 });
 
 test("rival agents stay visually staged until the breach starts", async ({ page }) => {

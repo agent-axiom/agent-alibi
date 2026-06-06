@@ -54,6 +54,30 @@ export function MatchScreen({ match, soundEnabled = false, onToggleSound }: Matc
     const countdownPulseAction = (hud?.lootValue ?? 0) > 0 ? "Cashout now" : "Escape now";
     const visibleRivalBark = countdownPulseActive ? null : (hud?.rivalBark ?? null);
     const breachAlert = visibleRivalBark?.agentName === "Red Crew" && /breach live/i.test(visibleRivalBark.line);
+    const stealComplete = (hud?.lootValue ?? 0) > 0 || (hud?.artifactsStolen ?? 0) > 0;
+    const cashoutCurrent = Boolean(hud?.canEscape) || countdownPulseActive;
+    const heatCurrent = threatCueActive && !cashoutCurrent;
+    const contractCurrent = !stealComplete ? "steal" : cashoutCurrent ? "cashout" : heatCurrent ? "heat" : "steal";
+    const contractSteps = [
+      {
+        key: "steal",
+        number: "1",
+        label: "Steal relic",
+        status: stealComplete ? "done" : contractCurrent === "steal" ? "current" : "queued"
+      },
+      {
+        key: "heat",
+        number: "2",
+        label: "Break heat",
+        status: contractCurrent === "heat" ? "current" : stealComplete ? "ready" : "queued"
+      },
+      {
+        key: "cashout",
+        number: "3",
+        label: stealComplete || cashoutCurrent ? cashoutStepLabel : "Cashout",
+        status: contractCurrent === "cashout" ? "current" : "queued"
+      }
+    ];
     return (
       <main
         className={`arcade-shell ${hud?.phase ?? "stealth"} ${hudDensity === "opening" ? "compact-opening" : ""} ${breachAlert ? "breach-alert" : ""} ${routePulse ? "route-pulse-active" : ""} ${scanLockActive ? "scan-lock-active" : ""} ${threatCueActive ? "threat-cue-active" : ""} ${denseThreatActive ? "dense-threat-active" : ""} ${countdownPulseActive ? "countdown-pulse-active" : ""}`}
@@ -253,16 +277,17 @@ export function MatchScreen({ match, soundEnabled = false, onToggleSound }: Matc
               <small>{hud.threatCue.action}</small>
             </div>
           ) : null}
-          <div className="arcade-steps" aria-label="Mission loop">
-            <span className={hud?.loopStep === "steal" ? "active" : ""}>
-              <b>1</b> Steal
-            </span>
-            <span className={hud?.loopStep === "escape" ? "active" : ""}>
-              <b>2</b> {cashoutStepLabel}
-            </span>
-            <span>
-              <b>3</b> Case File
-            </span>
+          <div className="arcade-steps" aria-label="Contract chain">
+            {contractSteps.map((step) => (
+              <span
+                aria-current={step.status === "current" ? "step" : undefined}
+                aria-label={`${step.label} ${step.status === "done" ? "complete" : step.status}`}
+                className={`${step.status} ${step.status === "current" ? "active" : ""}`}
+                key={step.key}
+              >
+                <b>{step.number}</b> {step.label}
+              </span>
+            ))}
           </div>
           <div className="arcade-mission-meta">
             <div className={`arcade-race ${raceTone}`} aria-label="Heist race">
