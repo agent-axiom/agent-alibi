@@ -34,7 +34,7 @@ export function MatchScreen({ match }: MatchScreenProps) {
     const raceTone = blueLoot > redLoot ? "leading" : blueLoot < redLoot ? "trailing" : "tied";
     const radarFocus = hud?.radarBlips.find((blip) => blip.kind === "carrier") ?? hud?.radarBlips.find((blip) => blip.kind === "target" || blip.kind === "exit");
     const radarFocusLabel = radarFocus
-      ? `${radarFocus.kind === "exit" ? "Exit" : radarFocus.kind === "carrier" ? "Carrier" : "Target"}: ${radarFocus.label}`
+      ? `${radarFocusPrefix(radarFocus.kind, hud?.escapePayout?.cashout ?? null)}: ${radarFocus.label}`
       : "Sweep clear";
     const routeChoiceRelic = hud?.greedStatus
       ?.replace(/^Optional relic:\s*/i, "")
@@ -415,6 +415,13 @@ function shortName(name: string): string {
 function stripSpeaker(text: string): string {
   const separator = text.indexOf(":");
   return separator >= 0 ? text.slice(separator + 1).trim() : text;
+}
+
+function radarFocusPrefix(kind: "player" | "target" | "exit" | "rival" | "carrier", cashoutValue: number | null): string {
+  if (kind === "exit" && cashoutValue && cashoutValue > 0) return `Cashout +${cashoutValue}`;
+  if (kind === "exit") return "Exit";
+  if (kind === "carrier") return "Carrier";
+  return "Target";
 }
 
 function formatClock(ms: number): string {
