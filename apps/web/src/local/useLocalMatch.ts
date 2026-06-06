@@ -291,6 +291,7 @@ function makeInitialArcadeHud(state: GameState): ArcadeHudState {
     }),
     threatCue: null,
     objectiveBanner: null,
+    rivalBark: null,
     scorePopup: null,
     spotlight: null,
     feed: ["Moon Vault breach started.", "Rival agents enter in 5 seconds.", "Move fast. Steal clean. Escape before lockdown."]

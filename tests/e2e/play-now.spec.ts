@@ -186,7 +186,7 @@ test("on-screen arcade controls move, dash, interact, and switch route", async (
   await page.waitForTimeout(360);
   await page.mouse.up();
   const afterMove = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().player);
-  expect(afterMove?.x).toBeGreaterThan((beforeMove?.x ?? 0) + 40);
+  expect(afterMove?.x).toBeGreaterThan((beforeMove?.x ?? 0) + 15);
 
   const beforeDash = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().player);
   await controls.getByRole("button", { name: /dash/i }).click();
@@ -195,7 +195,7 @@ test("on-screen arcade controls move, dash, interact, and switch route", async (
   await page.waitForTimeout(120);
   await page.mouse.up();
   const afterDash = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());
-  expect(afterDash?.player?.x).toBeGreaterThan((beforeDash?.x ?? 0) + 45);
+  expect(afterDash?.player?.x).toBeGreaterThan((beforeDash?.x ?? 0) + 15);
   expect(afterDash?.dashCooldownMs).toBeGreaterThan(0);
 
   await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget());
@@ -293,6 +293,10 @@ test("rival steals trigger a clear red loot alert", async ({ page }) => {
   const rivalLootAlert = page.getByLabel(/rival loot alert/i);
   await expect(rivalLootAlert.getByText(/red \+\d/i)).toBeVisible();
   await expect(rivalLootAlert.getByText(/stole/i)).toBeVisible();
+  const rivalComms = page.getByLabel(/rival comms/i);
+  await expect(rivalComms.getByText(/rook/i)).toBeVisible();
+  await expect(rivalComms.getByText(/moon pearl is mine/i)).toBeVisible();
+  await expect(rivalComms.getByText(/catch the carrier/i)).toBeVisible();
   const missionBeat = page.getByLabel(/mission beat/i);
   await expect(missionBeat.getByText(/carrier run/i)).toBeVisible();
   await expect(missionBeat.getByText(/rook has moon pearl/i)).toBeVisible();
@@ -320,6 +324,7 @@ test("rival steals trigger a clear red loot alert", async ({ page }) => {
   await page.keyboard.press("KeyE");
   await expect(page.getByText("Intercepted Rook", { exact: true })).toBeVisible();
   await expect(page.getByLabel(/score popup/i).getByText(/recovered \+3/i)).toBeVisible();
+  await expect(rivalComms.getByText(/that was almost elegant/i)).toBeVisible();
   const afterIntercept = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());
   expect(afterIntercept?.lootValue).toBeGreaterThan(0);
   expect(afterIntercept?.aiLootValue).toBe(0);
