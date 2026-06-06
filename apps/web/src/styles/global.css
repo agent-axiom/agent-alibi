@@ -1245,6 +1245,7 @@ p {
 .arcade-feed,
 .arcade-radar,
 .arcade-objective,
+.arcade-objective-banner,
 .arcade-spotlight,
 .arcade-score-popup {
   position: absolute;
@@ -1407,6 +1408,79 @@ p {
   text-transform: uppercase;
   transform: translateX(-50%);
   animation: arcade-score-popup-rise 1.8s ease both;
+}
+
+.arcade-objective-banner {
+  top: 42%;
+  left: 50%;
+  width: min(520px, calc(100vw - 36px));
+  display: grid;
+  gap: 7px;
+  justify-items: center;
+  border: 1px solid rgba(255, 213, 106, 0.72);
+  border-radius: 8px;
+  padding: 16px 20px;
+  background: rgba(7, 16, 28, 0.78);
+  box-shadow: 0 20px 54px rgba(0, 0, 0, 0.4), 0 0 30px rgba(255, 213, 106, 0.24);
+  color: #fff7d6;
+  text-align: center;
+  text-transform: uppercase;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  animation: arcade-objective-banner-hit 2.4s ease both;
+}
+
+.arcade-objective-banner span,
+.arcade-objective-banner small {
+  overflow-wrap: anywhere;
+  color: #cfe6f4;
+  font-size: 0.78rem;
+  font-weight: 950;
+  line-height: 1.05;
+}
+
+.arcade-objective-banner strong {
+  overflow-wrap: anywhere;
+  color: #fff7d6;
+  font-size: clamp(1.7rem, 5.2vw, 3.8rem);
+  font-weight: 950;
+  line-height: 0.92;
+}
+
+.arcade-objective-banner.escape {
+  border-color: rgba(57, 229, 192, 0.72);
+  box-shadow: 0 20px 54px rgba(0, 0, 0, 0.4), 0 0 34px rgba(57, 229, 192, 0.25);
+}
+
+.arcade-objective-banner.escape strong {
+  color: #d9fff6;
+}
+
+.arcade-objective-banner.greed {
+  border-color: rgba(255, 79, 123, 0.78);
+  box-shadow: 0 20px 54px rgba(0, 0, 0, 0.4), 0 0 34px rgba(255, 79, 123, 0.28);
+}
+
+.arcade-objective-banner.greed strong {
+  color: #ffd8e2;
+}
+
+@keyframes arcade-objective-banner-hit {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -44%) scale(0.92);
+  }
+
+  12%,
+  76% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -56%) scale(0.98);
+  }
 }
 
 .arcade-score-popup strong,
@@ -2443,6 +2517,12 @@ p {
   .arcade-score-popup {
     top: 210px;
     max-width: calc(100vw - 36px);
+  }
+
+  .arcade-objective-banner {
+    top: 40%;
+    width: calc(100vw - 24px);
+    padding: 12px 14px;
   }
 
   .arcade-objective {

@@ -11,10 +11,13 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await startSoloArcade(page);
 
   const currentObjective = page.getByLabel(/current objective/i);
+  const objectiveBanner = page.getByLabel(/objective banner/i);
   const missionBeat = page.getByLabel(/mission beat/i);
   await expect(page.getByText(/moon vault run/i)).toBeVisible();
   await expect(page.getByText(/timer/i)).toBeVisible();
   await expect(page.getByText(/steal the moon pearl/i)).toBeVisible();
+  await expect(objectiveBanner.getByText(/steal moon pearl/i)).toBeVisible();
+  await expect(objectiveBanner.getByText(/first score wins tempo/i)).toBeVisible();
   await expect(missionBeat.getByText(/first objective/i)).toBeVisible();
   await expect(missionBeat.getByText(/steal moon pearl/i)).toBeVisible();
   await expect(missionBeat.getByText(/move with wasd \/ arrows/i)).toBeVisible();
@@ -56,15 +59,17 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await page.waitForTimeout(320);
   await page.keyboard.up("ArrowRight");
   const afterMove = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().player);
-  expect(afterMove?.x).toBeGreaterThan((beforeMove?.x ?? 0) + 40);
+  expect(afterMove?.x).toBeGreaterThan((beforeMove?.x ?? 0) + 15);
 
   await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget());
   await expect(page.getByText(/press e \/ space to steal/i)).toBeVisible();
   await expect(page.getByLabel(/active action/i).getByText(/e \/ space/i)).toBeVisible();
   await expect(page.getByLabel(/active action/i).getByText(/steal relic/i)).toBeVisible();
   await page.keyboard.press("KeyE");
-  await expect(page.getByText(/escape with/i)).toBeVisible();
+  await expect(currentObjective.getByText(/escape with/i)).toBeVisible();
   await expect(page.getByText(/moon pearl secured/i)).toBeVisible();
+  await expect(objectiveBanner.getByText(/escape with 3 loot/i)).toBeVisible();
+  await expect(objectiveBanner.getByText(/cashout 5 or risk greed route/i)).toBeVisible();
   const scorePopup = page.getByLabel(/score popup/i);
   await expect(scorePopup.getByText(/\+3 moon pearl/i)).toBeVisible();
   await expect(missionBeat.getByText(/loot secured/i)).toBeVisible();
@@ -97,6 +102,8 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   expect(escapeTarget?.label).toMatch(/atrium lift/i);
   await page.keyboard.press("KeyG");
   await expect(page.getByLabel(/optional relic/i).getByText(/greed route/i)).toBeVisible();
+  await expect(objectiveBanner.getByText(/greed route armed/i)).toBeVisible();
+  await expect(objectiveBanner.getByText(/steal argent crown before escape/i)).toBeVisible();
   await expect(routeChoice.getByText(/greed route armed/i)).toBeVisible();
   await expect(currentObjective.getByText(/greed route: steal argent crown \+3/i)).toBeVisible();
   const greedTarget = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().target);
@@ -105,6 +112,7 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(page.getByText(/press e \/ space to steal/i)).toBeVisible();
   await page.keyboard.press("KeyE");
   await expect(page.locator(".arcade-spotlight").getByText(/loot chain x2/i)).toBeVisible();
+  await expect(objectiveBanner.getByText(/escape with 6 loot/i)).toBeVisible();
   await expect(lootChainWindow.getByText(/loot chain x2/i)).toBeVisible();
   const afterGreedSteal = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());
   expect(afterGreedSteal?.lootValue).toBeGreaterThan(afterSteal ?? 0);

@@ -60,6 +60,14 @@ export function MatchScreen({ match }: MatchScreenProps) {
         </Suspense>
         <div className="arcade-vignette" />
 
+        {hud?.objectiveBanner ? (
+          <div className={`arcade-objective-banner ${hud.objectiveBanner.tone}`} aria-label="Objective banner" aria-live="polite">
+            <span>{hud.objectiveBanner.tone === "greed" ? "Optional risk" : hud.objectiveBanner.tone === "escape" ? "Cashout window" : "Primary target"}</span>
+            <strong>{hud.objectiveBanner.title}</strong>
+            <small>{hud.objectiveBanner.detail}</small>
+          </div>
+        ) : null}
+
         <header className="arcade-topbar" aria-label="Live mission status">
           <div className="mission-title">
             <span>Agent Alibi</span>

@@ -67,6 +67,12 @@ export type ArcadeScorePopup = {
   detail: string;
 };
 
+export type ArcadeObjectiveBanner = {
+  tone: "steal" | "escape" | "greed" | "finish";
+  title: string;
+  detail: string;
+};
+
 export type ArcadeHudState = {
   phase: ArcadeHudPhase;
   timeLeftMs: number;
@@ -99,6 +105,7 @@ export type ArcadeHudState = {
   lootChainWindow: ArcadeLootChainWindow | null;
   missionBeat: ArcadeMissionBeat;
   threatCue: ArcadeThreatCue | null;
+  objectiveBanner: ArcadeObjectiveBanner | null;
   scorePopup: ArcadeScorePopup | null;
   spotlight: string | null;
   feed: string[];

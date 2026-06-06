@@ -7,6 +7,7 @@ import {
   type ArcadeHudPhase,
   type ArcadeHudState,
   type ArcadeMissionConfig,
+  type ArcadeObjectiveBanner,
   type ArcadeRadarBlip,
   type ArcadeRivalIntercept,
   type ArcadeScorePopup,
@@ -138,6 +139,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private spotlightUntilMs = 0;
   private scorePopup: ArcadeScorePopup | null = null;
   private scorePopupUntilMs = 0;
+  private objectiveBanner: ArcadeObjectiveBanner | null = null;
+  private objectiveBannerUntilMs = 0;
   private finished = false;
   private aiReleased = false;
   private lastRivalPressureLevel: RivalPressure["level"] = "standby";
@@ -351,6 +354,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.spotlightUntilMs = 0;
     this.scorePopup = null;
     this.scorePopupUntilMs = 0;
+    this.objectiveBanner = null;
+    this.objectiveBannerUntilMs = 0;
     this.finished = false;
     this.aiReleased = false;
     this.lastRivalPressureLevel = "standby";
@@ -374,6 +379,11 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.updateTargetMarker();
     this.scale.off("resize", this.resizeCamera, this);
     this.scale.on("resize", this.resizeCamera, this);
+    this.flashObjectiveBanner({
+      tone: "steal",
+      title: "Steal Moon Pearl",
+      detail: "First score wins tempo"
+    });
     this.emitHudIfNeeded(true);
   }
 
@@ -711,6 +721,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
         label: `+${artifact.value} ${artifact.name}`,
         detail: this.artifactsStolen > 1 ? `Loot chain x${this.artifactsStolen}` : "Relic secured"
       });
+      this.flashObjectiveBanner(this.buildEscapeBanner(this.artifactsStolen === 1));
       this.collectArtifactVisual(artifact, 0xffd56a);
       this.updateTargetMarker();
       return;
@@ -736,6 +747,21 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.scorePopup = popup;
     this.scorePopupUntilMs = this.elapsedMs + 1_800;
     this.emitHudIfNeeded(true);
+  }
+
+  private flashObjectiveBanner(banner: ArcadeObjectiveBanner, durationMs = 2_400) {
+    this.objectiveBanner = banner;
+    this.objectiveBannerUntilMs = this.elapsedMs + durationMs;
+    this.emitHudIfNeeded(true);
+  }
+
+  private buildEscapeBanner(includeGreedHint: boolean): ArcadeObjectiveBanner {
+    const cashout = this.lootValue + 2;
+    return {
+      tone: "escape",
+      title: `Escape with ${this.lootValue} loot`,
+      detail: includeGreedHint ? `Cashout ${cashout} or risk greed route` : `Cashout ${cashout} before lockdown`
+    };
   }
 
   private tryInteract() {
@@ -922,6 +948,9 @@ export class ArcadeHeistScene extends Phaser.Scene {
     if (this.scorePopup && this.elapsedMs >= this.scorePopupUntilMs) {
       this.scorePopup = null;
     }
+    if (this.objectiveBanner && this.elapsedMs >= this.objectiveBannerUntilMs) {
+      this.objectiveBanner = null;
+    }
     const targetArtifact = this.primaryTargetArtifact();
     const targetArtifactLabel = targetArtifact ? this.artifactTargetLabel(targetArtifact) : null;
     const nearArtifact = this.nearPlayerArtifact();
@@ -1014,6 +1043,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
         nearestRivalName: nearestRival?.name ?? null
       }),
       threatCue: this.threatCue(rivalIntercept, alibiPulseReady, nearestRival),
+      objectiveBanner: this.objectiveBanner,
       scorePopup: this.scorePopup,
       spotlight: this.spotlight,
       feed: this.feed.slice(-5)
@@ -1265,11 +1295,22 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private toggleRouteMode() {
     if (!this.canGreedRoute()) {
       this.routeMode = "escape";
+      this.flashObjectiveBanner(this.buildEscapeBanner(false));
       this.emitHudIfNeeded(true);
       return;
     }
     this.routeMode = this.routeMode === "greed" ? "escape" : "greed";
     this.updateTargetMarker();
+    const targetArtifact = this.primaryTargetArtifact();
+    this.flashObjectiveBanner(
+      this.routeMode === "greed" && targetArtifact
+        ? {
+            tone: "greed",
+            title: "Greed route armed",
+            detail: `Steal ${targetArtifact.name} before escape`
+          }
+        : this.buildEscapeBanner(false)
+    );
     this.emitHudIfNeeded(true);
   }
 
