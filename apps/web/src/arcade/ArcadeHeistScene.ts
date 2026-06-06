@@ -1025,6 +1025,11 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.setRivalStandbyVisuals(false);
     if (announce) {
       this.feedLine("Rival agents entered the vault.");
+      this.flashRivalBark({
+        tone: "panic",
+        agentName: "Red Crew",
+        line: `Breach live. ${Math.max(1, Math.ceil(holdMs / 1000))}s before scans.`
+      });
     }
     this.emitHudIfNeeded(true);
   }

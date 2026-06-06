@@ -1714,10 +1714,11 @@ p {
 }
 
 .arcade-rival-bark {
-  top: 164px;
+  top: 318px;
   right: 18px;
   width: min(300px, calc(100vw - 36px));
   display: grid;
+  z-index: 4;
   gap: 6px;
   border: 1px solid rgba(255, 79, 123, 0.64);
   border-radius: 8px;
