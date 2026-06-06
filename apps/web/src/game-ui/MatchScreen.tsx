@@ -1,7 +1,6 @@
+import { lazy, Suspense } from "react";
 import { Eye, Footprints, Gem, Hand, LockKeyhole, Radio, Shield, Sparkles, Zap } from "lucide-react";
 import type { ActionKind } from "@agent-alibi/shared";
-import { ArcadeHeistStage } from "../arcade/ArcadeHeistStage";
-import { HeistStage } from "../heist/HeistStage";
 import type { LocalMatchController } from "../local/useLocalMatch";
 
 type MatchScreenProps = {
@@ -19,6 +18,11 @@ const KIND_ICONS: Record<ActionKind, typeof Footprints> = {
   escape: Zap
 };
 
+const ArcadeHeistStage = lazy(() =>
+  import("../arcade/ArcadeHeistStage").then((module) => ({ default: module.ArcadeHeistStage }))
+);
+const HeistStage = lazy(() => import("../heist/HeistStage").then((module) => ({ default: module.HeistStage })));
+
 export function MatchScreen({ match }: MatchScreenProps) {
   if (!match.state) return null;
   const state = match.state;
@@ -27,12 +31,20 @@ export function MatchScreen({ match }: MatchScreenProps) {
     const hud = match.arcade.hud;
     return (
       <main className={`arcade-shell ${hud?.phase ?? "stealth"}`}>
-        <ArcadeHeistStage
-          state={state}
-          runId={match.arcade.runId}
-          onHudUpdate={match.arcade.updateHud}
-          onFinish={match.arcade.finishMission}
-        />
+        <Suspense
+          fallback={
+            <div className="arcade-stage arcade-loading" aria-label="Loading Moon Vault arcade scene">
+              Booting Moon Vault...
+            </div>
+          }
+        >
+          <ArcadeHeistStage
+            state={state}
+            runId={match.arcade.runId}
+            onHudUpdate={match.arcade.updateHud}
+            onFinish={match.arcade.finishMission}
+          />
+        </Suspense>
         <div className="arcade-vignette" />
 
         <header className="arcade-topbar" aria-label="Live mission status">
@@ -146,7 +158,15 @@ export function MatchScreen({ match }: MatchScreenProps) {
 
   return (
     <main className="cinematic-shell">
-      <HeistStage snapshot={snapshot} />
+      <Suspense
+        fallback={
+          <div className="heist-stage arcade-loading" aria-label="Loading Neon Moon Heist scene">
+            Booting Moon Vault...
+          </div>
+        }
+      >
+        <HeistStage snapshot={snapshot} />
+      </Suspense>
       <div className="heist-vignette" />
 
       <header className="heist-topbar" aria-label="Mission status">

@@ -1050,6 +1050,20 @@ p {
   background: #050811;
 }
 
+.arcade-loading {
+  display: grid;
+  place-items: center;
+  color: #dffcff;
+  font-weight: 900;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  background:
+    linear-gradient(rgba(76, 244, 240, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(76, 244, 240, 0.07) 1px, transparent 1px),
+    #050811;
+  background-size: 44px 44px;
+}
+
 .arcade-stage canvas {
   width: 100% !important;
   height: 100% !important;
