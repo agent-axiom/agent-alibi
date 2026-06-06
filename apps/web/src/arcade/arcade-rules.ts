@@ -9,6 +9,7 @@ export type ArcadeMissionResult = {
   artifactsStolen: number;
   stolenRelicNames?: string[];
   rivalRelicNames?: string[];
+  pendingRivalRelicNames?: string[];
   aiLootValue: number;
   alarm: number;
   elapsedMs: number;
@@ -31,11 +32,12 @@ export function buildArcadeMatchSummary(result: ArcadeMissionResult): MatchSumma
   const greedRoute = lootChain > 1 ? "successful" : "skipped";
   const stolenRelicNames = result.stolenRelicNames ?? [];
   const rivalRelicNames = result.rivalRelicNames ?? [];
+  const pendingRivalRelicNames = result.pendingRivalRelicNames ?? [];
   const alibiPulsesUsed = result.alibiPulsesUsed ?? 0;
   const scanBurns = result.scanBurns ?? 0;
   const carrierIntercepts = result.carrierIntercepts ?? 0;
   const interceptedRelicNames = result.interceptedRelicNames ?? [];
-  const highlightLines = buildHighlightLines(result, styleBonus, stolenRelicNames, interceptedRelicNames);
+  const highlightLines = buildHighlightLines(result, styleBonus, stolenRelicNames, interceptedRelicNames, pendingRivalRelicNames);
   const blueScore: TeamScore = {
     teamId: "blue",
     loot: result.lootValue,
@@ -66,6 +68,7 @@ export function buildArcadeMatchSummary(result: ArcadeMissionResult): MatchSumma
     greedRoute,
     stolenRelicNames,
     rivalRelicNames,
+    pendingRivalRelicNames,
     alibiPulsesUsed,
     scanBurns,
     carrierIntercepts,
@@ -107,7 +110,13 @@ function titleForResult(result: ArcadeMissionResult, winnerTeamId: MatchSummary[
   return "Neon Disaster";
 }
 
-function buildHighlightLines(result: ArcadeMissionResult, styleBonus: number, stolenRelicNames: string[], interceptedRelicNames: string[]): string[] {
+function buildHighlightLines(
+  result: ArcadeMissionResult,
+  styleBonus: number,
+  stolenRelicNames: string[],
+  interceptedRelicNames: string[],
+  pendingRivalRelicNames: string[]
+): string[] {
   const lines: string[] = [];
   if (stolenRelicNames.length > 0) {
     lines.push(`Stole ${stolenRelicNames.join(" + ")}`);
@@ -116,6 +125,9 @@ function buildHighlightLines(result: ArcadeMissionResult, styleBonus: number, st
   }
   if (interceptedRelicNames.length > 0) {
     lines.push(`Recovered ${interceptedRelicNames.join(" + ")} from rivals`);
+  }
+  if (pendingRivalRelicNames.length > 0) {
+    lines.push(`Blocked rival cashout on ${pendingRivalRelicNames.join(" + ")}`);
   }
   if (result.outcome === "escaped") {
     lines.push(`Escaped with ${result.lootValue} loot`);
@@ -159,6 +171,7 @@ function buildCaseFile(
     `Greed Route: ${result.artifactsStolen > 1 ? "successful" : "skipped"}`,
     `Relics Stolen: ${result.stolenRelicNames?.length ? result.stolenRelicNames.join(", ") : "none"}`,
     `Rival Relics: ${result.rivalRelicNames?.length ? result.rivalRelicNames.join(", ") : "none"}`,
+    `Pending Carrier Loot: ${result.pendingRivalRelicNames?.length ? result.pendingRivalRelicNames.join(", ") : "none"}`,
     `Alibi Pulses: ${result.alibiPulsesUsed ?? 0}`,
     `Scan Burns: ${result.scanBurns ?? 0}`,
     `Carrier Intercepts: ${result.carrierIntercepts ?? 0}`,

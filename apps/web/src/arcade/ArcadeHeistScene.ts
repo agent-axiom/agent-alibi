@@ -873,7 +873,6 @@ export class ArcadeHeistScene extends Phaser.Scene {
       return;
     }
 
-    this.rivalRelicNames.push(artifact.name);
     actor.carriedRelics.push({ name: artifact.name, value: artifact.value });
     actor.targetRoomId = "atrium";
     this.alarm = Math.min(5, this.alarm + 0.12);
@@ -898,8 +897,10 @@ export class ArcadeHeistScene extends Phaser.Scene {
 
     const cashed = rival.carriedRelics.splice(0);
     const cashedValue = cashed.reduce((total, relic) => total + relic.value, 0);
+    const cashedNames = cashed.map((relic) => relic.name);
     rival.lootValue += cashedValue;
     this.aiLootValue += cashedValue;
+    this.rivalRelicNames.push(...cashedNames);
     this.lastRivalSteal = `Red cashed out +${cashedValue}: ${rival.name} escaped with ${this.relicListLabel(cashed)}`;
     this.flashSpotlight(`Red cashout +${cashedValue}`);
     this.flashScorePopup({
@@ -1950,6 +1951,10 @@ export class ArcadeHeistScene extends Phaser.Scene {
     }
   }
 
+  private pendingRivalRelicNames(): string[] {
+    return this.aiAgents.flatMap((agent) => agent.carriedRelics.map((relic) => relic.name));
+  }
+
   private finish(outcome: "escaped" | "sealed" | "caught") {
     if (!this.config || this.finished) return;
     this.finished = true;
@@ -1970,6 +1975,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       artifactsStolen: this.artifactsStolen,
       stolenRelicNames: this.stolenRelicNames,
       rivalRelicNames: this.rivalRelicNames,
+      pendingRivalRelicNames: this.pendingRivalRelicNames(),
       aiLootValue: this.aiLootValue,
       alarm: Math.ceil(this.alarm),
       elapsedMs: this.elapsedMs,

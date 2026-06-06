@@ -107,6 +107,7 @@ export type MatchSummary = {
   greedRoute?: "successful" | "skipped";
   stolenRelicNames?: string[];
   rivalRelicNames?: string[];
+  pendingRivalRelicNames?: string[];
   alibiPulsesUsed?: number;
   scanBurns?: number;
   carrierIntercepts?: number;
