@@ -36,11 +36,7 @@ export function MatchScreen({ match }: MatchScreenProps) {
     const radarFocusLabel = radarFocus
       ? `${radarFocusPrefix(radarFocus.kind, hud?.escapePayout?.cashout ?? null)}: ${radarFocus.label}`
       : "Sweep clear";
-    const routeChoiceRelic = hud?.greedStatus
-      ?.replace(/^Optional relic:\s*/i, "")
-      .replace(/^Greed route:\s*/i, "")
-      .replace(/\s*·\s*press G$/i, "");
-    const routeChoiceMode = hud?.greedStatus?.toLowerCase().startsWith("greed route") ? "greed" : "escape";
+    const routeChoice = hud?.routeChoice ?? null;
     const cashoutStepLabel = hud?.escapePayout ? `Cashout +${hud.escapePayout.cashout}` : "Escape";
     return (
       <main className={`arcade-shell ${hud?.phase ?? "stealth"}`}>
@@ -230,11 +226,13 @@ export function MatchScreen({ match }: MatchScreenProps) {
                 <small>{hud.extractionCue.action}</small>
               </div>
             ) : null}
-            {hud?.escapePayout && routeChoiceRelic ? (
-              <div className={`arcade-route-choice ${routeChoiceMode}`} aria-label="Route choice">
-                <span>{routeChoiceMode === "greed" ? "Greed route armed" : `Cashout now ${hud.escapePayout.cashout}`}</span>
-                <strong>{routeChoiceMode === "greed" ? routeChoiceRelic : "Greed route"}</strong>
-                <small>{routeChoiceMode === "greed" ? "Steal then escape" : `${routeChoiceRelic} · Press G`}</small>
+            {routeChoice ? (
+              <div className={`arcade-route-choice ${routeChoice.mode}`} aria-label="Route choice">
+                <span>{routeChoice.mode === "greed" ? "Greed armed" : `Bank +${routeChoice.cashoutNow} now`}</span>
+                <strong>
+                  Risk +{routeChoice.greedRelicValue}: {routeChoice.greedRelicName}
+                </strong>
+                <small>{routeChoice.mode === "greed" ? `Projected cashout +${routeChoice.projectedCashout}` : `Press G for cashout +${routeChoice.projectedCashout}`}</small>
               </div>
             ) : null}
             <div className="arcade-route" aria-label="Route distance">

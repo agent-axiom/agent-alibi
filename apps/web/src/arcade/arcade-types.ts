@@ -33,6 +33,14 @@ export type ArcadeExtractionCue = {
   action: string;
 };
 
+export type ArcadeRouteChoice = {
+  mode: "escape" | "greed";
+  cashoutNow: number;
+  greedRelicName: string;
+  greedRelicValue: number;
+  projectedCashout: number;
+};
+
 export type ArcadeCleanBonusWindow = {
   label: string;
   detail: string;
@@ -108,6 +116,7 @@ export type ArcadeHudState = {
   vaultCondition: ArcadeVaultCondition;
   escapePayout: ArcadeEscapePayout | null;
   extractionCue: ArcadeExtractionCue | null;
+  routeChoice: ArcadeRouteChoice | null;
   radarBlips: ArcadeRadarBlip[];
   greedStatus: string | null;
   targetDistanceLabel: string | null;

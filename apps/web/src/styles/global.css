@@ -2363,6 +2363,7 @@ p {
 
 .arcade-route-choice {
   width: fit-content;
+  max-width: 100%;
   border: 1px solid rgba(255, 213, 106, 0.56);
   border-radius: 6px;
   padding: 6px 9px;
@@ -2377,6 +2378,7 @@ p {
 .arcade-route-choice strong,
 .arcade-route-choice small {
   display: block;
+  overflow-wrap: anywhere;
   font-size: 0.78rem;
   font-weight: 950;
 }
