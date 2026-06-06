@@ -308,6 +308,7 @@ test("rival agents stay visually staged until the breach starts", async ({ page 
   expect(staged?.rivals?.length).toBeGreaterThanOrEqual(3);
   expect(staged?.rivals?.map((rival) => rival.visualLabel)).toEqual(["STANDBY", "STANDBY", "STANDBY"]);
   expect(staged?.rivals?.every((rival) => rival.alpha < 0.7)).toBe(true);
+  expect(staged?.rivalIntentRoutes).toEqual({ visible: false, routeCount: 0, targetLabels: [] });
 
   await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget());
   await page.keyboard.press("KeyE");
@@ -317,6 +318,9 @@ test("rival agents stay visually staged until the breach starts", async ({ page 
   expect(breached?.rivalsReleased).toBe(true);
   expect(breached?.rivals?.map((rival) => rival.visualLabel)).toEqual(["ROOK", "GREMLIN", "ANCHOR"]);
   expect(breached?.rivals?.every((rival) => rival.alpha > 0.95)).toBe(true);
+  expect(breached?.rivalIntentRoutes?.visible).toBe(true);
+  expect(breached?.rivalIntentRoutes?.routeCount).toBeGreaterThanOrEqual(3);
+  expect(breached?.rivalIntentRoutes?.targetLabels).toEqual(expect.arrayContaining([expect.stringMatching(/rook -> /i)]));
 });
 
 test("first score triggers a visible rival breach cut-in", async ({ page }) => {
