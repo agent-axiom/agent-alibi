@@ -1422,6 +1422,25 @@ p {
   color: #b7c8d8;
 }
 
+.arcade-alibi-pulse {
+  width: fit-content;
+  border: 1px solid rgba(126, 255, 223, 0.58);
+  border-radius: 6px;
+  padding: 6px 9px;
+  background: rgba(126, 255, 223, 0.16);
+  color: #d8fff4;
+  font-size: 0.82rem;
+  font-weight: 900;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.arcade-alibi-pulse.cooling {
+  border-color: rgba(216, 252, 255, 0.22);
+  background: rgba(216, 252, 255, 0.08);
+  color: #b7c8d8;
+}
+
 .arcade-greed {
   width: fit-content;
   border: 1px solid rgba(189, 169, 255, 0.44);

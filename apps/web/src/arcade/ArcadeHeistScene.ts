@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import type { ArtifactState, GameState, PlayerState, Room, TeamId } from "@agent-alibi/shared";
+import { ALIBI_PULSE_COOLDOWN_MS, buildAlibiPulseStatus, canUseAlibiPulse } from "./alibi-pulse";
 import { rateArcadeRun } from "./arcade-rules";
 import { ARCADE_MISSION_DURATION_MS, type ArcadeHudPhase, type ArcadeHudState, type ArcadeMissionConfig } from "./arcade-types";
 import { buildArcadeGuidance, buildRivalPressure, type RivalPressure } from "./guidance";
@@ -107,6 +108,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private aiReleased = false;
   private lastRivalPressureLevel: RivalPressure["level"] = "standby";
   private rivalScanState: RivalScanState = { chargeMs: 0, cooldownMs: 0 };
+  private alibiPulseCooldownMs = 0;
   private playerName = "Agent You";
   private routeMode: RouteMode = "escape";
   private escapeZone?: Phaser.GameObjects.Container;
@@ -178,6 +180,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
       lootValue: this.lootValue,
       aiLootValue: this.aiLootValue,
       alarmRaw: Number(this.alarm.toFixed(3)),
+      rivalScanChargeMs: Math.round(this.rivalScanState.chargeMs),
+      alibiPulseCooldownMs: Math.round(this.alibiPulseCooldownMs),
       targetArtifact: this.primaryTargetArtifact()
         ? {
             id: this.primaryTargetArtifact()!.id,
@@ -220,6 +224,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
 
     this.elapsedMs += delta;
     this.dashCooldownMs = Math.max(0, this.dashCooldownMs - delta);
+    this.alibiPulseCooldownMs = Math.max(0, this.alibiPulseCooldownMs - delta);
 
     this.updatePlayer(delta);
     this.updateAi(delta);
@@ -259,6 +264,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.aiReleased = false;
     this.lastRivalPressureLevel = "standby";
     this.rivalScanState = { chargeMs: 0, cooldownMs: 0 };
+    this.alibiPulseCooldownMs = 0;
     this.routeMode = "escape";
     this.targetMarker = undefined;
     this.targetBeam = undefined;
@@ -621,6 +627,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
 
   private tryInteract() {
     if (!this.player) return;
+    if (this.tryAlibiPulse()) return;
+
     if (this.isNearExit()) {
       if (this.lootValue > 0 || this.timeLeftMs() <= 30_000) {
         this.finish("escaped");
@@ -637,6 +645,44 @@ export class ArcadeHeistScene extends Phaser.Scene {
     }
 
     this.feedLine("No relic in reach. Follow the gold marker.");
+  }
+
+  private tryAlibiPulse(): boolean {
+    if (!this.player) return false;
+    const scan = this.nearestRivalScan();
+    if (!canUseAlibiPulse(this.rivalPressure(scan).level, this.alibiPulseCooldownMs)) return false;
+    const rival = this.aiAgents.find((agent) => agent.name === scan?.name);
+    if (!rival) return false;
+
+    this.alibiPulseCooldownMs = ALIBI_PULSE_COOLDOWN_MS;
+    this.rivalScanState = { chargeMs: 0, cooldownMs: 900 };
+    this.shoveRivalAway(rival);
+    this.addAlibiPulseVisual();
+    this.flashSpotlight("Alibi pulse: scanner jammed");
+    this.feedLine(`You jammed ${rival.name}'s scan. Break for the exit.`);
+    return true;
+  }
+
+  private shoveRivalAway(rival: RuntimeAgent) {
+    if (!this.player) return;
+    const vector = new Phaser.Math.Vector2(rival.x - this.player.x, rival.y - this.player.y);
+    if (vector.lengthSq() === 0) vector.set(1, 0);
+    vector.normalize();
+    this.moveAgent(rival, vector.x * 190, vector.y * 190);
+    rival.ship.rotation = Phaser.Math.Angle.Between(0, 0, vector.x, vector.y) + Math.PI / 2;
+  }
+
+  private addAlibiPulseVisual() {
+    if (!this.player) return;
+    const ring = this.add.circle(this.player.x, this.player.y, 54, 0x7effdf, 0.18).setStrokeStyle(4, 0x7effdf, 0.9).setDepth(20);
+    this.tweens.add({
+      targets: ring,
+      scale: 3,
+      alpha: 0,
+      duration: 520,
+      ease: "Cubic.easeOut",
+      onComplete: () => ring.destroy()
+    });
   }
 
   private aiStealNearby(agent: RuntimeAgent) {
@@ -730,6 +776,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       timeLeftMs: this.timeLeftMs()
     });
     const greedPromptActive = this.routeMode === "greed" && Boolean(targetArtifact);
+    const alibiPulseReady = canUseAlibiPulse(rivalPressure.level, this.alibiPulseCooldownMs);
 
     const hud: ArcadeHudState = {
       phase: this.phase(),
@@ -741,9 +788,9 @@ export class ArcadeHeistScene extends Phaser.Scene {
       totalArtifacts: this.artifacts.length,
       canEscape,
       dashReady: this.dashCooldownMs <= 0,
-      objective: greedPromptActive ? `Greed route: steal ${targetArtifact!.name}` : guidance.objective,
-      prompt: greedPromptActive && nearArtifact ? "Press E / Space to steal" : guidance.prompt,
-      loopStep: guidance.loopStep,
+      objective: alibiPulseReady ? "Jam the rival scan" : greedPromptActive ? `Greed route: steal ${targetArtifact!.name}` : guidance.objective,
+      prompt: alibiPulseReady ? "Press E / Space to jam rival scan" : greedPromptActive && nearArtifact ? "Press E / Space to steal" : guidance.prompt,
+      loopStep: alibiPulseReady ? "survive" : guidance.loopStep,
       raceStatus: guidance.raceStatus,
       greedStatus: this.greedStatus(guidance.greedStatus),
       targetDistanceLabel:
@@ -753,6 +800,10 @@ export class ArcadeHeistScene extends Phaser.Scene {
       rivalStatus: this.rivalStatus(),
       rivalDistanceLabel: rivalPressure.label,
       rivalPressureLevel: rivalPressure.level,
+      alibiPulseStatus: buildAlibiPulseStatus({
+        rivalPressureLevel: rivalPressure.level,
+        cooldownMs: this.alibiPulseCooldownMs
+      }),
       paceStatus: this.paceStatus(),
       spotlight: this.spotlight,
       feed: this.feed.slice(-5)

@@ -96,3 +96,27 @@ test("close rivals burn the player's alibi if contact is not broken", async ({ p
   const alarmAfterScan = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().alarmRaw);
   expect(alarmAfterScan).toBeGreaterThan((alarmBeforeScan ?? 0) + 0.4);
 });
+
+test("alibi pulse jams a close rival scan", async ({ page }) => {
+  await startSoloArcade(page);
+  await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_STATE__ === "function");
+  await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.forceRivalPressure(8));
+  await expect(page.getByText(/alibi pulse ready/i)).toBeVisible();
+  await expect(page.getByText(/press e \/ space to jam rival scan/i)).toBeVisible();
+
+  const beforePulse = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());
+  await page.keyboard.press("KeyE");
+  await expect(page.getByText(/alibi pulse: scanner jammed/i)).toBeVisible();
+  await expect(page.getByText(/jammed .+ scan/i)).toBeVisible();
+  const afterPulse = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());
+  expect(afterPulse?.alibiPulseCooldownMs).toBeGreaterThan(0);
+  expect(afterPulse?.rivalScanChargeMs).toBe(0);
+
+  for (let tick = 0; tick < 3; tick += 1) {
+    await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.forceRivalPressure(8));
+    await page.waitForTimeout(220);
+  }
+
+  const afterCooldownContact = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());
+  expect(afterCooldownContact?.alarmRaw).toBeLessThan((beforePulse?.alarmRaw ?? 0) + 0.4);
+});

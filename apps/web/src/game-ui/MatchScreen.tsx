@@ -132,6 +132,9 @@ export function MatchScreen({ match }: MatchScreenProps) {
             <div className={`arcade-dash ${hud?.dashReady === false ? "cooling" : ""}`} aria-label="Dash status">
               {hud?.dashReady === false ? "Dash cooling" : "Dash ready"}
             </div>
+            <div className={`arcade-alibi-pulse ${hud?.alibiPulseStatus?.includes("cooling") ? "cooling" : ""}`} aria-label="Alibi pulse status">
+              {hud?.alibiPulseStatus ?? "Alibi ready"}
+            </div>
             {hud?.greedStatus ? (
               <div className="arcade-greed" aria-label="Optional relic">
                 {hud.greedStatus}

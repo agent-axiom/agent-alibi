@@ -25,6 +25,7 @@ export type ArcadeHudState = {
   rivalStatus: string;
   rivalDistanceLabel: string | null;
   rivalPressureLevel: RivalPressureLevel;
+  alibiPulseStatus: string;
   paceStatus: string;
   spotlight: string | null;
   feed: string[];
