@@ -24,7 +24,7 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(currentObjective.getByText(/steal the moon pearl \+3/i)).toBeVisible();
   await expect(page.getByText(/1 steal/i)).toBeVisible();
   await expect(page.getByText(/target (?:n|ne|e|se|s|sw|w|nw|here) \d+m/i)).toBeVisible();
-  await expect(page.getByText(/rivals enter in \d+s/i)).toBeVisible();
+  await expect(page.getByText(/rivals wake after first score or \d+s/i)).toBeVisible();
   await expect(page.getByText(/nearest rival (?:n|ne|e|se|s|sw|w|nw|here) \d+m/i)).toBeVisible();
   await expect(page.getByText(/s-rank pace/i)).toBeVisible();
   const bonusWindow = page.getByLabel(/clean bonus window/i);
@@ -43,7 +43,7 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(page.getByLabel(/radar player: agent you/i)).toBeVisible();
   await expect(page.getByLabel(/radar target: moon pearl/i)).toBeVisible();
   await expect(page.getByLabel(/radar rival: rook/i)).toBeVisible();
-  await expect(page.getByText(/rival agents enter in 5 seconds/i)).toBeVisible();
+  await expect(page.getByText(/rival agents wait for your first score/i)).toBeVisible();
 
   await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_STATE__ === "function");
   const initialTarget = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());
@@ -71,6 +71,8 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(page.getByLabel(/active action/i).getByText(/steal moon pearl \+3/i)).toBeVisible();
   await page.keyboard.press("KeyE");
   await expect(currentObjective.getByText(/escape with/i)).toBeVisible();
+  await expect(page.getByLabel(/rival crew status/i).getByText(/rivals waking in \d+s/i)).toBeVisible();
+  await expect(page.getByLabel(/mission radio/i).getByText(/rival agents entered the vault/i)).toBeVisible();
   await expect(page.getByText(/moon pearl secured/i)).toBeVisible();
   await expect(objectiveBanner.getByText(/escape with 3 loot/i)).toBeVisible();
   await expect(objectiveBanner.getByText(/cashout 5 or risk greed route/i)).toBeVisible();
