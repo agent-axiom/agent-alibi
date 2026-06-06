@@ -380,6 +380,8 @@ test("rival steals trigger a clear red loot alert", async ({ page }) => {
   const carrierObjective = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().target);
   expect(carrierObjective?.kind).toBe("carrier");
   expect(carrierObjective?.label).toMatch(/rook carrier/i);
+  const carrierMarker = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().targetMarker);
+  expect(carrierMarker?.label).toBe("Rook +3");
   const carrierHalo = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().threatHalo);
   expect(carrierHalo?.kind).toBe("carrier");
   expect(carrierHalo?.visible).toBe(true);
