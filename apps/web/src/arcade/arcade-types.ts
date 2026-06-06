@@ -21,6 +21,11 @@ export type ArcadeVaultCondition = {
   detail: string;
 };
 
+export type ArcadeEscapePayout = {
+  escapeBonus: number;
+  cashout: number;
+};
+
 export type ArcadeHudState = {
   phase: ArcadeHudPhase;
   timeLeftMs: number;
@@ -38,6 +43,7 @@ export type ArcadeHudState = {
   raceStatus: string;
   lastRivalSteal: string | null;
   vaultCondition: ArcadeVaultCondition;
+  escapePayout: ArcadeEscapePayout | null;
   radarBlips: ArcadeRadarBlip[];
   greedStatus: string | null;
   targetDistanceLabel: string | null;

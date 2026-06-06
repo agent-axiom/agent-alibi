@@ -159,6 +159,12 @@ export function MatchScreen({ match }: MatchScreenProps) {
                 {hud.lastRivalSteal}
               </div>
             ) : null}
+            {hud?.escapePayout ? (
+              <div className="arcade-escape-payout" aria-label="Escape payout">
+                <span>Escape bonus +{hud.escapePayout.escapeBonus}</span>
+                <strong>Cashout {hud.escapePayout.cashout}</strong>
+              </div>
+            ) : null}
             <div className="arcade-route" aria-label="Route distance">
               {hud?.targetDistanceLabel ?? "Target plotting"}
             </div>

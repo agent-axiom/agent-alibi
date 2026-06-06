@@ -256,6 +256,7 @@ function makeInitialArcadeHud(state: GameState): ArcadeHudState {
       label: "Vault Stable",
       detail: "Low profile"
     },
+    escapePayout: null,
     radarBlips: [],
     greedStatus: null,
     targetDistanceLabel: "Target plotting",

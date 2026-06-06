@@ -1602,6 +1602,30 @@ p {
   text-transform: uppercase;
 }
 
+.arcade-escape-payout {
+  width: fit-content;
+  border: 1px solid rgba(126, 255, 223, 0.56);
+  border-radius: 6px;
+  padding: 6px 9px;
+  background: rgba(126, 255, 223, 0.12);
+  box-shadow: 0 0 22px rgba(57, 229, 192, 0.16);
+  color: #d8fff4;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.arcade-escape-payout span,
+.arcade-escape-payout strong {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 950;
+}
+
+.arcade-escape-payout strong {
+  margin-top: 4px;
+  color: #fffaf2;
+}
+
 .arcade-route {
   width: fit-content;
   border: 1px solid rgba(76, 244, 240, 0.34);

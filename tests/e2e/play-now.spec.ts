@@ -64,6 +64,9 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(heistRace.getByText(/blue 3/i)).toBeVisible();
   await expect(heistRace.getByText(/red 0/i)).toBeVisible();
   await expect(heistRace.getByText(/you lead by 3/i)).toBeVisible();
+  const escapePayout = page.getByLabel(/escape payout/i);
+  await expect(escapePayout.getByText(/escape bonus \+2/i)).toBeVisible();
+  await expect(escapePayout.getByText(/cashout 5/i)).toBeVisible();
   await expect(miniRadar.getByText(/exit: atrium lift/i)).toBeVisible();
   await expect(page.getByLabel(/radar exit: atrium lift/i)).toBeVisible();
   const afterSteal = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().lootValue);

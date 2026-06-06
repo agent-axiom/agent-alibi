@@ -834,6 +834,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       raceStatus: guidance.raceStatus,
       lastRivalSteal: this.lastRivalSteal,
       vaultCondition: this.vaultCondition(),
+      escapePayout: this.escapePayout(canEscape),
       radarBlips: this.buildRadarBlips(objectiveTarget),
       greedStatus: this.greedStatus(guidance.greedStatus),
       targetDistanceLabel:
@@ -915,6 +916,15 @@ export class ArcadeHeistScene extends Phaser.Scene {
       tone: "stable" as const,
       label: "Vault Stable",
       detail: "Low profile"
+    };
+  }
+
+  private escapePayout(canEscape: boolean) {
+    if (!canEscape || this.lootValue <= 0) return null;
+    const escapeBonus = 2;
+    return {
+      escapeBonus,
+      cashout: this.lootValue + escapeBonus
     };
   }
 
