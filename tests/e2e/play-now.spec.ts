@@ -318,6 +318,24 @@ test("contract chain keeps the current heist step explicit", async ({ page }) =>
   await expect(contractChain.locator('[aria-current="step"]')).toContainText(/cashout/i);
 });
 
+test("momentum meter turns clean runs and loot chains into one readable payoff", async ({ page }) => {
+  await startSoloArcade(page);
+  await page.waitForTimeout(13_200);
+
+  const momentumMeter = page.getByLabel(/momentum meter/i);
+  await expect(momentumMeter.getByText(/clean bonus/i)).toBeVisible();
+  await expect(momentumMeter.getByText(/s-rank \+3/i)).toBeVisible();
+  await expect(momentumMeter.getByText(/\d+s for clean exit/i)).toBeVisible();
+
+  await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget === "function");
+  await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget());
+  await page.keyboard.press("Space");
+
+  await expect(momentumMeter.getByText(/loot chain x1/i)).toBeVisible();
+  await expect(momentumMeter.getByText(/next relic keeps streak/i)).toBeVisible();
+  await expect(momentumMeter.getByText(/\d+s to chain or cashout/i)).toBeVisible();
+});
+
 test("rival agents stay visually staged until the breach starts", async ({ page }) => {
   await startSoloArcade(page);
   await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_STATE__ === "function");
