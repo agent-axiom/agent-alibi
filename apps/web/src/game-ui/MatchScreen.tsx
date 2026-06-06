@@ -85,9 +85,11 @@ export function MatchScreen({ match }: MatchScreenProps) {
         </aside>
 
         <section className="arcade-objective" aria-label="Current objective">
-          <span>{hud?.phase === "lockdown" ? "Lockdown" : hud?.phase === "alarm" ? "Alarm rising" : "Heist live"}</span>
+          <span>{hud?.prompt ?? (hud?.phase === "lockdown" ? "Lockdown" : hud?.phase === "alarm" ? "Alarm rising" : "Heist live")}</span>
           <strong>{hud?.objective ?? "Steal a relic before the vault learns your name"}</strong>
-          <small>WASD / arrows move · click to run · Shift dash · E or Space escape</small>
+          <small>
+            {hud?.raceStatus ?? "Loot race is tied"} · WASD / arrows move · click to run · Shift dash · E / Space interact
+          </small>
         </section>
       </main>
     );

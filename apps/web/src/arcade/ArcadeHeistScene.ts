@@ -12,6 +12,7 @@ const AI_SPEED = 150;
 const PICKUP_RADIUS = 42;
 const EXIT_RADIUS = 74;
 const DASH_COOLDOWN_MS = 1150;
+const AI_GRACE_MS = 5_500;
 
 const TEAM_COLORS: Record<TeamId, number> = {
   blue: 0x4cf4f0,
@@ -88,8 +89,10 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private lastHudAt = -1;
   private feed: string[] = [];
   private finished = false;
+  private aiReleased = false;
   private playerName = "Agent You";
   private escapeZone?: Phaser.GameObjects.Container;
+  private targetMarker?: Phaser.GameObjects.Container;
 
   constructor() {
     super("arcade-heist");
@@ -151,8 +154,27 @@ export class ArcadeHeistScene extends Phaser.Scene {
         scrollY: this.cameras.main.scrollY,
         zoom: this.cameras.main.zoom
       },
+      lootValue: this.lootValue,
+      aiLootValue: this.aiLootValue,
+      targetArtifact: this.primaryTargetArtifact()
+        ? {
+            id: this.primaryTargetArtifact()!.id,
+            name: this.primaryTargetArtifact()!.name,
+            x: this.primaryTargetArtifact()!.x,
+            y: this.primaryTargetArtifact()!.y
+          }
+        : null,
       impulse: this.keyboardImpulse ?? null
     };
+  }
+
+  teleportToTargetForDebug() {
+    if (!this.player) return;
+    const target = this.primaryTargetArtifact();
+    if (!target) return;
+    this.moveAgent(this.player, target.x - this.player.x, target.y + 28 - this.player.y);
+    this.pointerTarget = undefined;
+    this.emitHudIfNeeded(true);
   }
 
   override update(_time: number, delta: number) {
@@ -163,9 +185,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
 
     this.updatePlayer(delta);
     this.updateAi(delta);
-    this.checkArtifactPickups();
+    this.updateTargetMarker();
     this.updateAlarm(delta);
-    this.checkEscape();
     this.emitHudIfNeeded(false);
 
     if (this.elapsedMs >= ARCADE_MISSION_DURATION_MS) {
@@ -193,6 +214,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.lastHudAt = -1;
     this.feed = ["Moon Vault breach started.", "Move fast. Steal clean. Escape before lockdown."];
     this.finished = false;
+    this.aiReleased = false;
+    this.targetMarker = undefined;
     this.playerName = config.state.players.find((player) => player.kind === "human")?.name ?? "Agent You";
 
     this.tweens.killAll();
@@ -465,7 +488,14 @@ export class ArcadeHeistScene extends Phaser.Scene {
   };
 
   private activateKey(key: string, event?: KeyboardEvent) {
-    if (key.toLowerCase() === "shift") {
+    const normalized = key.toLowerCase();
+    if (normalized === "e" || normalized === " " || normalized === "spacebar") {
+      event?.preventDefault();
+      this.tryInteract();
+      return;
+    }
+
+    if (normalized === "shift") {
       this.shiftHeld = true;
       return;
     }
@@ -479,6 +509,12 @@ export class ArcadeHeistScene extends Phaser.Scene {
   }
 
   private updateAi(delta: number) {
+    if (this.elapsedMs < AI_GRACE_MS) return;
+    if (!this.aiReleased) {
+      this.aiReleased = true;
+      this.feedLine("Rival agents entered the vault.");
+    }
+
     for (const agent of this.aiAgents) {
       const target = this.rooms.get(agent.targetRoomId) ?? this.rooms.get("inner-vault");
       if (!target) continue;
@@ -500,19 +536,46 @@ export class ArcadeHeistScene extends Phaser.Scene {
     agent.body.setPosition(agent.x, agent.y);
   }
 
-  private checkArtifactPickups() {
-    if (!this.player) return;
-    for (const artifact of this.artifacts) {
-      if (artifact.takenBy) continue;
-      const distance = Phaser.Math.Distance.Between(this.player.x, this.player.y, artifact.x, artifact.y);
-      if (distance > PICKUP_RADIUS) continue;
-      artifact.takenBy = this.player.id;
+  private stealArtifact(artifact: RuntimeArtifact, actor: RuntimeAgent, actorLabel: string) {
+    if (artifact.takenBy) return;
+    artifact.takenBy = actor.id;
+    actor.lootValue += artifact.value;
+
+    if (actor.id === this.player?.id) {
       this.lootValue += artifact.value;
       this.artifactsStolen += 1;
       this.alarm = Math.min(5, this.alarm + (artifact.size === "major" ? 0.34 : 0.18));
-      this.feedLine(`You stole ${artifact.name}.`);
+      this.feedLine(`You stole ${artifact.name}. Escape route unlocked.`);
       this.collectArtifactVisual(artifact, 0xffd56a);
+      this.updateTargetMarker();
+      return;
     }
+
+    this.aiLootValue += artifact.value;
+    this.alarm = Math.min(5, this.alarm + 0.12);
+    this.feedLine(`${actorLabel} stole ${artifact.name}.`);
+    this.collectArtifactVisual(artifact, TEAM_COLORS[actor.teamId]);
+    this.updateTargetMarker();
+  }
+
+  private tryInteract() {
+    if (!this.player) return;
+    if (this.isNearExit()) {
+      if (this.lootValue > 0 || this.timeLeftMs() <= 30_000) {
+        this.finish("escaped");
+      } else {
+        this.feedLine("The lift rejects an empty-handed alibi.");
+      }
+      return;
+    }
+
+    const artifact = this.nearPlayerArtifact();
+    if (artifact) {
+      this.stealArtifact(artifact, this.player, "You");
+      return;
+    }
+
+    this.feedLine("No relic in reach. Follow the gold marker.");
   }
 
   private aiStealNearby(agent: RuntimeAgent) {
@@ -522,12 +585,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
         Phaser.Math.Distance.Between(agent.x, agent.y, candidate.x, candidate.y) < PICKUP_RADIUS + 18
     );
     if (!artifact) return;
-    artifact.takenBy = agent.id;
-    agent.lootValue += artifact.value;
-    this.aiLootValue += artifact.value;
-    this.alarm = Math.min(5, this.alarm + 0.12);
-    this.feedLine(`${agent.name} lifted ${artifact.name}.`);
-    this.collectArtifactVisual(artifact, TEAM_COLORS[agent.teamId]);
+    this.stealArtifact(artifact, agent, agent.name);
   }
 
   private collectArtifactVisual(artifact: RuntimeArtifact, color: number) {
@@ -549,19 +607,6 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.alarm = Math.min(5, this.alarm + pressure);
     if (this.alarm >= 4.65 && this.timeLeftMs() > 10_000) {
       this.feedLine("Lockdown sirens are spooling up.");
-    }
-  }
-
-  private checkEscape() {
-    const keys = this.keys;
-    const interact = Boolean(
-      keys && (Phaser.Input.Keyboard.JustDown(keys.e) || Phaser.Input.Keyboard.JustDown(keys.space))
-    );
-    if (!interact || !this.isNearExit()) return;
-    if (this.lootValue > 0 || this.timeLeftMs() <= 30_000) {
-      this.finish("escaped");
-    } else {
-      this.feedLine("The lift rejects an empty-handed alibi.");
     }
   }
 
@@ -648,6 +693,45 @@ export class ArcadeHeistScene extends Phaser.Scene {
         !artifact.takenBy &&
         Phaser.Math.Distance.Between(this.player!.x, this.player!.y, artifact.x, artifact.y) <= PICKUP_RADIUS + 18
     );
+  }
+
+  private updateTargetMarker() {
+    const target = this.primaryTargetArtifact();
+    if (!target) {
+      this.targetMarker?.destroy(true);
+      this.targetMarker = undefined;
+      return;
+    }
+
+    if (!this.targetMarker || this.targetMarker.getData("artifactId") !== target.id) {
+      this.targetMarker?.destroy(true);
+      const ring = this.add.circle(0, 0, 44, 0xffd56a, 0.08).setStrokeStyle(4, 0xffd56a, 0.9);
+      const pointer = this.add.triangle(0, -62, 0, -18, -16, 12, 16, 12, 0xffd56a, 0.92);
+      const label = this.add
+        .text(0, -88, "TARGET", {
+          color: "#ffd56a",
+          fontFamily: "Inter, Arial, sans-serif",
+          fontSize: "13px",
+          fontStyle: "900",
+          stroke: "#050811",
+          strokeThickness: 5
+        })
+        .setOrigin(0.5);
+      this.targetMarker = this.add.container(target.x, target.y, [ring, pointer, label]).setDepth(16);
+      this.targetMarker.setData("artifactId", target.id);
+      this.tweens.add({
+        targets: ring,
+        scale: { from: 0.9, to: 1.2 },
+        alpha: { from: 0.65, to: 1 },
+        duration: 780,
+        yoyo: true,
+        repeat: -1,
+        ease: "Sine.easeInOut"
+      });
+      return;
+    }
+
+    this.targetMarker.setPosition(target.x, target.y);
   }
 
   private finish(outcome: "escaped" | "sealed" | "caught") {

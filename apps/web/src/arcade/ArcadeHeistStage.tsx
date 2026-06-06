@@ -9,6 +9,9 @@ declare global {
   interface Window {
     __AGENT_ALIBI_FINISH_ARCADE__?: () => void;
     __AGENT_ALIBI_ARCADE_STATE__?: () => ReturnType<ArcadeHeistScene["getDebugState"]>;
+    __AGENT_ALIBI_ARCADE_DEBUG__?: {
+      teleportToTarget: () => void;
+    };
   }
 }
 
@@ -50,6 +53,9 @@ export function ArcadeHeistStage({ state, runId, onHudUpdate, onFinish }: Arcade
     });
     window.__AGENT_ALIBI_FINISH_ARCADE__ = () => scene.finishForDebug();
     window.__AGENT_ALIBI_ARCADE_STATE__ = () => scene.getDebugState();
+    window.__AGENT_ALIBI_ARCADE_DEBUG__ = {
+      teleportToTarget: () => scene.teleportToTargetForDebug()
+    };
     hostRef.current.focus({ preventScroll: true });
 
     return () => {
@@ -58,6 +64,9 @@ export function ArcadeHeistStage({ state, runId, onHudUpdate, onFinish }: Arcade
       }
       if (window.__AGENT_ALIBI_ARCADE_STATE__) {
         delete window.__AGENT_ALIBI_ARCADE_STATE__;
+      }
+      if (window.__AGENT_ALIBI_ARCADE_DEBUG__) {
+        delete window.__AGENT_ALIBI_ARCADE_DEBUG__;
       }
       gameRef.current?.destroy(true);
       gameRef.current = null;
