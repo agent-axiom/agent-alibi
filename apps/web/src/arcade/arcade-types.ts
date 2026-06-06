@@ -39,6 +39,12 @@ export type ArcadeRivalIntercept = {
   distanceMeters: number;
 };
 
+export type ArcadeLootChainWindow = {
+  label: string;
+  detail: string;
+  secondsLeft: number;
+};
+
 export type ArcadeHudState = {
   phase: ArcadeHudPhase;
   timeLeftMs: number;
@@ -68,6 +74,7 @@ export type ArcadeHudState = {
   alibiPulseStatus: string;
   paceStatus: string;
   cleanBonusWindow: ArcadeCleanBonusWindow | null;
+  lootChainWindow: ArcadeLootChainWindow | null;
   spotlight: string | null;
   feed: string[];
 };

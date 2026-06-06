@@ -276,6 +276,7 @@ function makeInitialArcadeHud(state: GameState): ArcadeHudState {
       detail: "S-Rank +3",
       secondsLeft: 60
     },
+    lootChainWindow: null,
     spotlight: null,
     feed: ["Moon Vault breach started.", "Rival agents enter in 5 seconds.", "Move fast. Steal clean. Escape before lockdown."]
   };

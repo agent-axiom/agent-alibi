@@ -1662,6 +1662,36 @@ p {
   color: #ffd56a;
 }
 
+.arcade-loot-chain {
+  width: fit-content;
+  border: 1px solid rgba(255, 213, 106, 0.68);
+  border-radius: 6px;
+  padding: 6px 9px;
+  background: linear-gradient(135deg, rgba(255, 213, 106, 0.2), rgba(255, 79, 123, 0.1));
+  box-shadow: 0 0 28px rgba(255, 213, 106, 0.2);
+  color: #fff4c2;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.arcade-loot-chain span,
+.arcade-loot-chain strong,
+.arcade-loot-chain small {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 950;
+}
+
+.arcade-loot-chain strong {
+  margin-top: 4px;
+  color: #fffaf2;
+}
+
+.arcade-loot-chain small {
+  margin-top: 4px;
+  color: #ffd56a;
+}
+
 .arcade-escape-payout {
   width: fit-content;
   border: 1px solid rgba(126, 255, 223, 0.56);
@@ -2128,6 +2158,12 @@ p {
   .arcade-rival-intercept span,
   .arcade-rival-intercept strong,
   .arcade-rival-intercept small {
+    font-size: 0.7rem;
+  }
+
+  .arcade-loot-chain span,
+  .arcade-loot-chain strong,
+  .arcade-loot-chain small {
     font-size: 0.7rem;
   }
 

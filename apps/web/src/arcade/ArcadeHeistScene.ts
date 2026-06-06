@@ -17,6 +17,7 @@ const EXIT_RADIUS = 74;
 const INTERCEPT_RADIUS = 64;
 const DASH_COOLDOWN_MS = 1150;
 const AI_GRACE_MS = 5_500;
+const LOOT_CHAIN_WINDOW_MS = 12_000;
 
 const TEAM_COLORS: Record<TeamId, number> = {
   blue: 0x4cf4f0,
@@ -108,6 +109,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private artifactsStolen = 0;
   private stolenRelicNames: string[] = [];
   private rivalRelicNames: string[] = [];
+  private lastLootChainAtMs = Number.NEGATIVE_INFINITY;
   private aiLootValue = 0;
   private lastHudAt = -1;
   private feed: string[] = [];
@@ -289,6 +291,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.artifactsStolen = 0;
     this.stolenRelicNames = [];
     this.rivalRelicNames = [];
+    this.lastLootChainAtMs = Number.NEGATIVE_INFINITY;
     this.aiLootValue = 0;
     this.lastHudAt = -1;
     this.feed = ["Moon Vault breach started.", "Rival agents enter in 5 seconds.", "Move fast. Steal clean. Escape before lockdown."];
@@ -642,6 +645,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       this.lootValue += artifact.value;
       this.artifactsStolen += 1;
       this.stolenRelicNames.push(artifact.name);
+      this.lastLootChainAtMs = this.elapsedMs;
       this.alarm = Math.min(5, this.alarm + (artifact.size === "major" ? 0.34 : 0.18));
       this.feedLine(`You stole ${artifact.name}. Escape route unlocked.`);
       this.routeMode = "escape";
@@ -706,6 +710,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.lootValue += recoveredValue;
     this.artifactsStolen += recovered.length;
     this.stolenRelicNames.push(...recoveredNames);
+    this.lastLootChainAtMs = this.elapsedMs;
     for (const relicName of recoveredNames) {
       const index = this.rivalRelicNames.indexOf(relicName);
       if (index >= 0) this.rivalRelicNames.splice(index, 1);
@@ -907,6 +912,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       }),
       paceStatus: this.paceStatus(),
       cleanBonusWindow: this.cleanBonusWindow(),
+      lootChainWindow: this.lootChainWindow(),
       spotlight: this.spotlight,
       feed: this.feed.slice(-5)
     };
@@ -1066,6 +1072,17 @@ export class ArcadeHeistScene extends Phaser.Scene {
       };
     }
     return null;
+  }
+
+  private lootChainWindow() {
+    if (this.artifactsStolen <= 0 || !this.primaryTargetArtifact()) return null;
+    const remainingMs = LOOT_CHAIN_WINDOW_MS - (this.elapsedMs - this.lastLootChainAtMs);
+    if (remainingMs <= 0) return null;
+    return {
+      label: `Loot chain x${this.artifactsStolen}`,
+      detail: "Next relic keeps streak",
+      secondsLeft: Math.max(0, Math.ceil(remainingMs / 1000))
+    };
   }
 
   private rivalIntercept() {

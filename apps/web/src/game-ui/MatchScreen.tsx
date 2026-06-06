@@ -211,6 +211,13 @@ export function MatchScreen({ match }: MatchScreenProps) {
                 <small>{hud.cleanBonusWindow.secondsLeft}s left</small>
               </div>
             ) : null}
+            {hud?.lootChainWindow ? (
+              <div className="arcade-loot-chain" aria-label="Loot chain window">
+                <span>{hud.lootChainWindow.label}</span>
+                <strong>{hud.lootChainWindow.detail}</strong>
+                <small>{hud.lootChainWindow.secondsLeft}s left</small>
+              </div>
+            ) : null}
             <div className={`arcade-dash ${hud?.dashReady === false ? "cooling" : ""}`} aria-label="Dash status">
               {hud?.dashReady === false ? "Dash cooling" : "Dash ready"}
             </div>

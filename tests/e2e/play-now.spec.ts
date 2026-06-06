@@ -63,6 +63,10 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(page.getByText(/moon pearl secured/i)).toBeVisible();
   await expect(page.getByText(/2 escape/i)).toBeVisible();
   await expect(page.getByText(/exit \d+m/i)).toBeVisible();
+  const lootChainWindow = page.getByLabel(/loot chain window/i);
+  await expect(lootChainWindow.getByText(/loot chain x1/i)).toBeVisible();
+  await expect(lootChainWindow.getByText(/next relic keeps streak/i)).toBeVisible();
+  await expect(lootChainWindow.getByText(/\d+s left/i)).toBeVisible();
   await expect(page.getByText(/optional relic/i)).toBeVisible();
   await expect(heistRace.getByText(/blue 3/i)).toBeVisible();
   await expect(heistRace.getByText(/red 0/i)).toBeVisible();
@@ -91,7 +95,8 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget());
   await expect(page.getByText(/press e \/ space to steal/i)).toBeVisible();
   await page.keyboard.press("KeyE");
-  await expect(page.getByText(/loot chain x2/i)).toBeVisible();
+  await expect(page.locator(".arcade-spotlight").getByText(/loot chain x2/i)).toBeVisible();
+  await expect(lootChainWindow.getByText(/loot chain x2/i)).toBeVisible();
   const afterGreedSteal = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());
   expect(afterGreedSteal?.lootValue).toBeGreaterThan(afterSteal ?? 0);
   expect(afterGreedSteal?.target?.kind).toBe("escape");
