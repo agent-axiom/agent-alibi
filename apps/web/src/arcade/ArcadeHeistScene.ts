@@ -92,6 +92,7 @@ type RivalCarrierRun = {
 };
 
 type ImpactKind = "steal" | "intercept" | "alibi" | "escape" | "lockdown";
+type CameraKickKind = ImpactKind | "dash";
 
 type MotionTrailPoint = {
   x: number;
@@ -180,6 +181,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private motionTrailActiveUntilMs = 0;
   private impactCount = 0;
   private lastImpact: { kind: ImpactKind; count: number; atMs: number } | null = null;
+  private cameraKickCount = 0;
+  private lastCameraKick: { kind: CameraKickKind; count: number; atMs: number } | null = null;
 
   constructor() {
     super("arcade-heist");
@@ -295,7 +298,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
       lastRivalSteal: this.lastRivalSteal,
       rivalIntercept: this.rivalIntercept(),
       impulse: this.keyboardImpulse ?? null,
-      lastImpact: this.lastImpact
+      lastImpact: this.lastImpact,
+      lastCameraKick: this.lastCameraKick
     };
   }
 
@@ -415,6 +419,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.motionTrailActiveUntilMs = 0;
     this.impactCount = 0;
     this.lastImpact = null;
+    this.cameraKickCount = 0;
+    this.lastCameraKick = null;
     this.playerName = config.state.players.find((player) => player.kind === "human")?.name ?? "Agent You";
 
     this.tweens.killAll();
@@ -670,6 +676,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
         speed = DASH_SPEED;
         this.dashCooldownMs = DASH_COOLDOWN_MS;
         this.addTrail(this.player.x, this.player.y, vector);
+        this.cameraKick("dash");
       }
       this.moveAgent(this.player, vector.x * speed * (delta / 1000), vector.y * speed * (delta / 1000));
       this.player.ship.rotation = Phaser.Math.Angle.Between(0, 0, vector.x, vector.y) + Math.PI / 2;
@@ -856,18 +863,26 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private impactPulse(kind: ImpactKind) {
     this.impactCount += 1;
     this.lastImpact = { kind, count: this.impactCount, atMs: Math.round(this.elapsedMs) };
+    this.cameraKick(kind);
+  }
 
+  private cameraKick(kind: CameraKickKind) {
+    this.cameraKickCount += 1;
+    this.lastCameraKick = { kind, count: this.cameraKickCount, atMs: Math.round(this.elapsedMs) };
     const camera = this.cameras.main;
     const settings = {
+      dash: { duration: 110, intensity: 0.0028, color: null },
       steal: { duration: 130, intensity: 0.0045, color: [255, 213, 106] },
       intercept: { duration: 170, intensity: 0.0062, color: [255, 79, 123] },
       alibi: { duration: 150, intensity: 0.0048, color: [76, 244, 240] },
       escape: { duration: 190, intensity: 0.0055, color: [126, 255, 223] },
       lockdown: { duration: 220, intensity: 0.007, color: [255, 79, 123] }
-    } satisfies Record<ImpactKind, { duration: number; intensity: number; color: [number, number, number] }>;
-    const impact = settings[kind];
-    camera.shake(impact.duration, impact.intensity, true);
-    camera.flash(impact.duration, impact.color[0], impact.color[1], impact.color[2], true);
+    } satisfies Record<CameraKickKind, { duration: number; intensity: number; color: [number, number, number] | null }>;
+    const kick = settings[kind];
+    camera.shake(kick.duration, kick.intensity, true);
+    if (kick.color) {
+      camera.flash(kick.duration, kick.color[0], kick.color[1], kick.color[2], true);
+    }
   }
 
   private buildEscapeBanner(includeGreedHint: boolean): ArcadeObjectiveBanner {

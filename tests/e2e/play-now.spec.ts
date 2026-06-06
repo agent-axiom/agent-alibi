@@ -228,6 +228,7 @@ test("on-screen arcade controls move, dash, interact, and switch route", async (
   expect(afterDash?.dashCooldownMs).toBeGreaterThan(0);
   expect(afterDash?.motionTrail?.active).toBe(true);
   expect(afterDash?.motionTrail?.burstCount).toBeGreaterThan(0);
+  expect(afterDash?.lastCameraKick?.kind).toBe("dash");
 
   await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget());
   await expect(page.getByText(/press e \/ space to steal/i)).toBeVisible();
