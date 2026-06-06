@@ -295,6 +295,28 @@ test("mobile arcade controls stay clear of the objective panel", async ({ page }
   expect(layout.overlaps).toBe(false);
 });
 
+test("desktop arcade HUD leaves the playfield center open", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await startSoloArcade(page);
+
+  const layout = await page.evaluate(() => {
+    const objective = document.querySelector('[aria-label="Current objective"]')?.getBoundingClientRect();
+    return objective
+      ? {
+          objective: {
+            y: Math.round(objective.y),
+            height: Math.round(objective.height)
+          },
+          viewportHeight: window.innerHeight
+        }
+      : null;
+  });
+
+  expect(layout).not.toBeNull();
+  expect(layout!.objective.height).toBeLessThanOrEqual(310);
+  expect(layout!.objective.y).toBeGreaterThanOrEqual(Math.round(layout!.viewportHeight * 0.58));
+});
+
 test("rival steals trigger a clear red loot alert", async ({ page }) => {
   await startSoloArcade(page);
   await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_STATE__ === "function");
