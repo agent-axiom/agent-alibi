@@ -186,7 +186,13 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await page.keyboard.press("KeyE");
   await expect(scorePopup.getByText(/\+2 escape bonus/i)).toBeVisible();
 
-  await expect(page.getByText(/agent alibi case file/i)).toBeVisible();
+  await expect(page.locator(".case-file pre").getByText(/agent alibi case file/i)).toBeVisible();
+  const shareStamp = page.getByLabel(/share case stamp/i);
+  await expect(shareStamp.getByText(/agent alibi case file/i)).toBeVisible();
+  await expect(shareStamp.getByText(/blue crew wins/i)).toBeVisible();
+  await expect(shareStamp.getByText(/s-rank/i)).toBeVisible();
+  await expect(shareStamp.getByText(/loot chain x2/i)).toBeVisible();
+  await expect(shareStamp.getByText(/stole moon pearl \+ argent crown/i)).toBeVisible();
   const finalScores = page.getByLabel(/final scores/i);
   await expect(finalScores).toBeVisible();
   await expect(finalScores.getByText(/score margin/i)).toBeVisible();

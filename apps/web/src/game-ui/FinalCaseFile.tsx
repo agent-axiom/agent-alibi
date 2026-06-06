@@ -16,6 +16,7 @@ export function FinalCaseFile({ summary, onRematch, onHome }: FinalCaseFileProps
   const escapeBonus = blueScore?.escape ?? 0;
   const rematchHook = buildRematchHook(summary);
   const scoreMargin = buildScoreMarginLabel(summary.teamScores);
+  const caseStamp = buildCaseStamp(summary);
 
   async function copyResult() {
     await navigator.clipboard?.writeText(buildCaseShareText(summary)).catch(() => undefined);
@@ -33,6 +34,12 @@ export function FinalCaseFile({ summary, onRematch, onHome }: FinalCaseFileProps
       <section className="case-file">
         <p className="eyebrow">Final Case File</p>
         <h1>{summary.title}</h1>
+        <section className="case-stamp" aria-label="Share case stamp">
+          <span>{caseStamp.kicker}</span>
+          <strong>{caseStamp.title}</strong>
+          <small>{caseStamp.result}</small>
+          <p>{caseStamp.quote}</p>
+        </section>
         <section className="final-scoreboard" aria-label="Final scores">
           <div className="final-score">
             <span>Winner</span>
@@ -175,6 +182,26 @@ export function buildCaseShareText(summary: MatchSummary): string {
 
   lines.push("", "NEXT RUN", buildRematchHook(summary));
   return lines.join("\n");
+}
+
+export function buildCaseStamp(summary: MatchSummary) {
+  const winner = summary.winnerTeamId === "tie" ? "Tie run" : summary.winnerTeamId === "blue" ? "Blue Crew wins" : "Red Crew wins";
+  const resultParts = [winner];
+
+  if (summary.runRating) {
+    resultParts.push(summary.runRating);
+  }
+
+  if (summary.lootChain && summary.lootChain > 1) {
+    resultParts.push(`Loot chain x${summary.lootChain}`);
+  }
+
+  return {
+    kicker: "Agent Alibi Case File",
+    title: summary.title,
+    result: resultParts.join(" · "),
+    quote: summary.highlightLines?.[0] ?? buildRematchHook(summary)
+  };
 }
 
 export function buildScoreMarginLabel(teamScores: TeamScore[]): string {

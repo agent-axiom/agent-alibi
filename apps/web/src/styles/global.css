@@ -589,6 +589,42 @@ p {
   white-space: pre-wrap;
 }
 
+.case-stamp {
+  display: grid;
+  gap: 8px;
+  border: 2px solid #171717;
+  border-radius: 8px;
+  padding: 18px;
+  background:
+    linear-gradient(135deg, rgba(23, 23, 23, 0.96), rgba(67, 30, 58, 0.92)),
+    radial-gradient(circle at 82% 18%, rgba(57, 229, 192, 0.2), transparent 32%);
+  color: #fffaf2;
+  box-shadow: 0 10px 0 rgba(57, 229, 192, 0.28);
+}
+
+.case-stamp span,
+.case-stamp small {
+  color: #ffd56a;
+  font-size: 0.78rem;
+  font-weight: 950;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.case-stamp strong {
+  overflow-wrap: anywhere;
+  font-size: clamp(1.5rem, 4vw, 3rem);
+  line-height: 0.95;
+  text-transform: uppercase;
+}
+
+.case-stamp p {
+  max-width: 760px;
+  color: #d8fcff;
+  font-weight: 850;
+  line-height: 1.25;
+}
+
 .final-scoreboard {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(178px, 1fr));

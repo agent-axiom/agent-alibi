@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { MatchSummary } from "@agent-alibi/shared";
-import { buildCaseShareText, buildRematchHook, buildScoreMarginLabel } from "./FinalCaseFile";
+import { buildCaseShareText, buildCaseStamp, buildRematchHook, buildScoreMarginLabel } from "./FinalCaseFile";
 
 function summary(overrides: Partial<MatchSummary> = {}): MatchSummary {
   return {
@@ -53,6 +53,26 @@ describe("buildCaseShareText", () => {
     expect(text).toContain("02. Escaped with 6 loot");
     expect(text).toContain("NEXT RUN");
     expect(text).toContain("Next run: run it back and make the case file louder.");
+  });
+});
+
+describe("buildCaseStamp", () => {
+  it("turns the final summary into a compact share stamp", () => {
+    expect(
+      buildCaseStamp(
+        summary({
+          title: "Profitable Disaster",
+          runRating: "S-Rank",
+          highlightLines: ["GremlinBot promised loyalty, then escaped alone with Moon Pearl"],
+          lootChain: 2
+        })
+      )
+    ).toEqual({
+      kicker: "Agent Alibi Case File",
+      title: "Profitable Disaster",
+      result: "Blue Crew wins · S-Rank · Loot chain x2",
+      quote: "GremlinBot promised loyalty, then escaped alone with Moon Pearl"
+    });
   });
 });
 
