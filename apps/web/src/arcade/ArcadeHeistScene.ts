@@ -108,6 +108,21 @@ type RuntimeArenaCallout = {
   container: Phaser.GameObjects.Container;
 };
 
+type RouteLaneSpec = {
+  laneLabel: string;
+  detail: string;
+  pulseCount: number;
+  laneWidth: number;
+};
+
+type CameraLookaheadState = {
+  targetKind: ArcadeObjectiveTarget["kind"] | null;
+  offsetX: number;
+  offsetY: number;
+  magnitude: number;
+  distanceMeters: number;
+};
+
 type MotionTrailPoint = {
   x: number;
   y: number;
@@ -194,6 +209,10 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private escapePayoutBadgeLabel?: Phaser.GameObjects.Text;
   private targetMarker?: Phaser.GameObjects.Container;
   private targetBeam?: Phaser.GameObjects.Graphics;
+  private routeSignal?: Phaser.GameObjects.Container;
+  private routeSignalPlate?: Phaser.GameObjects.Rectangle;
+  private routeSignalLabel?: Phaser.GameObjects.Text;
+  private routeSignalDetail?: Phaser.GameObjects.Text;
   private threatHalo?: Phaser.GameObjects.Graphics;
   private carrierRoute?: Phaser.GameObjects.Graphics;
   private motionTrail?: Phaser.GameObjects.Graphics;
@@ -204,6 +223,13 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private lastImpact: { kind: ImpactKind; count: number; atMs: number } | null = null;
   private cameraKickCount = 0;
   private lastCameraKick: { kind: CameraKickKind; count: number; atMs: number } | null = null;
+  private cameraLookahead: CameraLookaheadState = {
+    targetKind: null,
+    offsetX: 0,
+    offsetY: 0,
+    magnitude: 0,
+    distanceMeters: 0
+  };
   private arenaCalloutCount = 0;
   private arenaCallouts: RuntimeArenaCallout[] = [];
 
@@ -296,6 +322,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
         scrollY: this.cameras.main.scrollY,
         zoom: this.cameras.main.zoom
       },
+      cameraLookahead: this.cameraLookahead,
       lootValue: this.lootValue,
       aiLootValue: this.aiLootValue,
       alarmRaw: Number(this.alarm.toFixed(3)),
@@ -314,6 +341,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       targetMarker: this.targetMarkerDebug(),
       hasTargetBeam: Boolean(this.targetBeam),
       routeGuide,
+      routeSignal: this.routeSignalDebug(),
       threatHalo: this.threatHaloDebug(),
       carrierCashoutRoute: this.carrierCashoutRouteDebug(),
       carrierBadges: this.carrierBadgesDebug(),
@@ -425,6 +453,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.updateRivalPressureFeed();
     this.updateRivalScan(delta);
     this.updateTargetMarker();
+    this.updateCameraLookahead(delta);
     this.updateThreatHalo();
     this.updateCarrierCashoutRoute();
     this.updateEscapePayoutBadge();
@@ -485,6 +514,10 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.routeMode = "escape";
     this.targetMarker = undefined;
     this.targetBeam = undefined;
+    this.routeSignal = undefined;
+    this.routeSignalPlate = undefined;
+    this.routeSignalLabel = undefined;
+    this.routeSignalDetail = undefined;
     this.threatHalo = undefined;
     this.escapePayoutBadge = undefined;
     this.escapePayoutBadgeLabel = undefined;
@@ -497,6 +530,13 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.lastImpact = null;
     this.cameraKickCount = 0;
     this.lastCameraKick = null;
+    this.cameraLookahead = {
+      targetKind: null,
+      offsetX: 0,
+      offsetY: 0,
+      magnitude: 0,
+      distanceMeters: 0
+    };
     this.arenaCalloutCount = 0;
     this.arenaCallouts = [];
     this.playerName = config.state.players.find((player) => player.kind === "human")?.name ?? "Agent You";
@@ -507,6 +547,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.createActors(config.state);
     this.resizeCamera();
     this.updateTargetMarker();
+    this.updateCameraLookahead(16);
     this.updateThreatHalo();
     this.updateCarrierCashoutRoute();
     this.updateCarrierBadges();
@@ -930,6 +971,47 @@ export class ArcadeHeistScene extends Phaser.Scene {
     agent.x = Phaser.Math.Clamp(agent.x + dx, 82, WORLD_WIDTH - 82);
     agent.y = Phaser.Math.Clamp(agent.y + dy, 82, WORLD_HEIGHT - 82);
     agent.body.setPosition(agent.x, agent.y);
+  }
+
+  private updateCameraLookahead(delta: number) {
+    const target = this.currentObjectiveTarget();
+    if (!this.player || !target) {
+      this.cameraLookahead = this.lerpCameraLookahead(null, 0, 0, 0, delta);
+      this.cameras.main.setFollowOffset(this.cameraLookahead.offsetX, this.cameraLookahead.offsetY);
+      return;
+    }
+
+    const dx = target.x - this.player.x;
+    const dy = target.y - this.player.y;
+    const distance = Math.max(1, Phaser.Math.Distance.Between(this.player.x, this.player.y, target.x, target.y));
+    const distanceMeters = Math.max(0, Math.round(distance / 8));
+    const viewportMax = this.scale.width < 720 ? 76 : 132;
+    const kindBoost = target.kind === "carrier" ? 1.18 : target.kind === "escape" ? 0.92 : 1;
+    const magnitude = Phaser.Math.Clamp(distance * 0.16 * kindBoost, 0, viewportMax);
+    const desiredX = (dx / distance) * magnitude;
+    const desiredY = (dy / distance) * magnitude;
+
+    this.cameraLookahead = this.lerpCameraLookahead(target.kind, desiredX, desiredY, distanceMeters, delta);
+    this.cameras.main.setFollowOffset(this.cameraLookahead.offsetX, this.cameraLookahead.offsetY);
+  }
+
+  private lerpCameraLookahead(
+    targetKind: ArcadeObjectiveTarget["kind"] | null,
+    desiredX: number,
+    desiredY: number,
+    distanceMeters: number,
+    delta: number
+  ): CameraLookaheadState {
+    const ease = Phaser.Math.Clamp(delta / 170, 0.08, 0.42);
+    const offsetX = Phaser.Math.Linear(this.cameraLookahead.offsetX, desiredX, ease);
+    const offsetY = Phaser.Math.Linear(this.cameraLookahead.offsetY, desiredY, ease);
+    return {
+      targetKind,
+      offsetX: Math.round(offsetX),
+      offsetY: Math.round(offsetY),
+      magnitude: Math.round(Math.hypot(offsetX, offsetY)),
+      distanceMeters
+    };
   }
 
   private stealArtifact(artifact: RuntimeArtifact, actor: RuntimeAgent, actorLabel: string) {
@@ -2165,6 +2247,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       this.targetMarker = undefined;
       this.targetBeam?.destroy();
       this.targetBeam = undefined;
+      this.destroyRouteSignal();
       return;
     }
 
@@ -2212,7 +2295,9 @@ export class ArcadeHeistScene extends Phaser.Scene {
 
     const color = target.kind === "escape" ? 0x7effdf : target.kind === "carrier" ? 0xff4f7b : 0xffd56a;
     const distance = Phaser.Math.Distance.Between(this.player.x, this.player.y, target.x, target.y);
+    const lane = this.routeLaneSpec(target, distance);
     this.targetBeam.clear();
+    this.drawRouteLane(target, color, lane);
     this.targetBeam.lineStyle(8, color, 0.1);
     this.targetBeam.strokeLineShape(new Phaser.Geom.Line(this.player.x, this.player.y, target.x, target.y));
     this.targetBeam.lineStyle(3, color, 0.45);
@@ -2220,6 +2305,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.drawRouteChevrons(target, color, distance);
     this.targetBeam.fillStyle(color, 0.14);
     this.targetBeam.fillCircle(target.x, target.y, target.kind === "escape" ? 68 : target.kind === "carrier" ? 58 : 50);
+    this.updateRouteSignal(target, lane, color, distance);
   }
 
   private targetMarkerLabel(target: ArcadeObjectiveTarget): string {
@@ -2234,16 +2320,166 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private routeGuideDebug(target: ArcadeObjectiveTarget | undefined) {
     if (!this.player || !target) return null;
     const distance = Phaser.Math.Distance.Between(this.player.x, this.player.y, target.x, target.y);
+    const lane = this.routeLaneSpec(target, distance);
     return {
       kind: target.kind,
       distanceMeters: Math.max(0, Math.round(distance / 8)),
-      chevronCount: this.routeChevronCount(distance)
+      chevronCount: this.routeChevronCount(distance),
+      laneLabel: lane.laneLabel,
+      laneWidth: lane.laneWidth,
+      pulseCount: lane.pulseCount,
+      signalVisible: Boolean(this.routeSignal?.getData("visible"))
     };
   }
 
   private routeChevronCount(distance: number) {
     if (distance < 72) return 0;
     return Phaser.Math.Clamp(Math.floor(distance / 92), 1, 7);
+  }
+
+  private routePulseCount(distance: number) {
+    if (distance < 56) return 0;
+    return Phaser.Math.Clamp(Math.floor(distance / 78), 2, 9);
+  }
+
+  private routeLaneSpec(target: ArcadeObjectiveTarget, distance: number): RouteLaneSpec {
+    const distanceMeters = Math.max(0, Math.round(distance / 8));
+    const pulseCount = this.routePulseCount(distance);
+    const laneWidth = target.kind === "carrier" ? 54 : 46;
+
+    if (target.kind === "carrier") {
+      return {
+        laneLabel: "INTERCEPT ROUTE",
+        detail: `${distanceMeters}m to carrier`,
+        pulseCount,
+        laneWidth
+      };
+    }
+
+    if (target.kind === "escape") {
+      return {
+        laneLabel: this.lootValue > 0 ? `BANK +${this.lootValue + 2}` : "EXIT ROUTE",
+        detail: `${distanceMeters}m to lift`,
+        pulseCount,
+        laneWidth
+      };
+    }
+
+    return {
+      laneLabel: this.aiLootValue > this.lootValue ? "COMEBACK ROUTE" : "STEAL ROUTE",
+      detail: `${distanceMeters}m to relic`,
+      pulseCount,
+      laneWidth
+    };
+  }
+
+  private drawRouteLane(target: ArcadeObjectiveTarget, color: number, lane: RouteLaneSpec) {
+    if (!this.player || !this.targetBeam) return;
+    const angle = Phaser.Math.Angle.Between(this.player.x, this.player.y, target.x, target.y);
+    const normalX = Math.cos(angle + Math.PI / 2);
+    const normalY = Math.sin(angle + Math.PI / 2);
+    const halfLane = lane.laneWidth / 2;
+    const fromX = this.player.x;
+    const fromY = this.player.y;
+    const toX = target.x;
+    const toY = target.y;
+
+    this.targetBeam.lineStyle(2, color, 0.16);
+    this.targetBeam.lineBetween(fromX + normalX * halfLane, fromY + normalY * halfLane, toX + normalX * halfLane, toY + normalY * halfLane);
+    this.targetBeam.lineBetween(fromX - normalX * halfLane, fromY - normalY * halfLane, toX - normalX * halfLane, toY - normalY * halfLane);
+
+    if (lane.pulseCount <= 0) return;
+    const phase = (this.elapsedMs / (target.kind === "carrier" ? 520 : 760)) % 1;
+    const pulseRadius = target.kind === "carrier" ? 7 : 5;
+    this.targetBeam.fillStyle(color, target.kind === "carrier" ? 0.84 : 0.68);
+    for (let index = 0; index < lane.pulseCount; index += 1) {
+      const progress = 0.1 + (((index + phase) / lane.pulseCount) % 1) * 0.8;
+      const x = Phaser.Math.Linear(fromX, toX, progress);
+      const y = Phaser.Math.Linear(fromY, toY, progress);
+      this.targetBeam.fillCircle(x, y, pulseRadius);
+      this.targetBeam.fillCircle(x + normalX * halfLane, y + normalY * halfLane, 2.6);
+      this.targetBeam.fillCircle(x - normalX * halfLane, y - normalY * halfLane, 2.6);
+    }
+  }
+
+  private updateRouteSignal(target: ArcadeObjectiveTarget, lane: RouteLaneSpec, color: number, distance: number) {
+    if (!this.player) return;
+    if (!this.routeSignal || !this.routeSignalPlate || !this.routeSignalLabel || !this.routeSignalDetail) {
+      this.createRouteSignal();
+    }
+
+    if (!this.routeSignal || !this.routeSignalPlate || !this.routeSignalLabel || !this.routeSignalDetail) return;
+
+    const angle = Phaser.Math.Angle.Between(this.player.x, this.player.y, target.x, target.y);
+    const normalX = Math.cos(angle - Math.PI / 2);
+    const normalY = Math.sin(angle - Math.PI / 2);
+    const progress = distance < 180 ? 0.5 : 0.42;
+    const labelX = Phaser.Math.Linear(this.player.x, target.x, progress) + normalX * 42;
+    const labelY = Phaser.Math.Linear(this.player.y, target.y, progress) + normalY * 42;
+    const width = Math.max(144, lane.laneLabel.length * 8.5 + 34, lane.detail.length * 7 + 26);
+
+    this.routeSignalLabel.setText(lane.laneLabel);
+    this.routeSignalLabel.setColor(this.hexCss(color));
+    this.routeSignalDetail.setText(lane.detail.toUpperCase());
+    this.routeSignalPlate.setSize(width, 46);
+    this.routeSignalPlate.setStrokeStyle(1, color, target.kind === "carrier" ? 0.8 : 0.56);
+    this.routeSignal.setPosition(Phaser.Math.Clamp(labelX, 112, WORLD_WIDTH - 112), Phaser.Math.Clamp(labelY, 104, WORLD_HEIGHT - 104));
+    this.routeSignal.setAlpha(target.kind === "carrier" ? 0.96 : 0.84);
+    this.routeSignal.setData("visible", true);
+    this.routeSignal.setData("laneLabel", lane.laneLabel);
+    this.routeSignal.setData("detail", lane.detail);
+  }
+
+  private createRouteSignal() {
+    const plate = this.add.rectangle(0, 0, 150, 46, 0x050811, 0.82).setStrokeStyle(1, 0x7effdf, 0.56);
+    const label = this.add
+      .text(0, -8, "STEAL ROUTE", {
+        color: "#ffd56a",
+        fontFamily: "Inter, Arial, sans-serif",
+        fontSize: "12px",
+        fontStyle: "900",
+        letterSpacing: 0
+      })
+      .setOrigin(0.5);
+    const detail = this.add
+      .text(0, 10, "0M TO RELIC", {
+        color: "#d9f7ff",
+        fontFamily: "Inter, Arial, sans-serif",
+        fontSize: "10px",
+        fontStyle: "800",
+        letterSpacing: 0
+      })
+      .setOrigin(0.5)
+      .setAlpha(0.72);
+
+    this.routeSignalPlate = plate;
+    this.routeSignalLabel = label;
+    this.routeSignalDetail = detail;
+    this.routeSignal = this.add.container(0, 0, [plate, label, detail]).setDepth(18);
+    this.routeSignal.setData("visible", true);
+  }
+
+  private destroyRouteSignal() {
+    this.routeSignal?.destroy(true);
+    this.routeSignal = undefined;
+    this.routeSignalPlate = undefined;
+    this.routeSignalLabel = undefined;
+    this.routeSignalDetail = undefined;
+  }
+
+  private routeSignalDebug() {
+    if (!this.routeSignal?.getData("visible")) return null;
+    return {
+      visible: true,
+      laneLabel: String(this.routeSignal.getData("laneLabel") ?? ""),
+      detail: String(this.routeSignal.getData("detail") ?? ""),
+      x: Math.round(this.routeSignal.x),
+      y: Math.round(this.routeSignal.y)
+    };
+  }
+
+  private hexCss(color: number) {
+    return `#${color.toString(16).padStart(6, "0")}`;
   }
 
   private drawRouteChevrons(target: ArcadeObjectiveTarget, color: number, distance: number) {

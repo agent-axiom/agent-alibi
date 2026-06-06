@@ -1981,12 +1981,12 @@ p {
 .arcade-opening-contract {
   top: 98px;
   left: 24px;
-  width: min(330px, calc(100vw - 48px));
+  width: min(260px, calc(100vw - 48px));
   display: grid;
-  gap: 8px;
+  gap: 6px;
   border: 1px solid rgba(255, 213, 106, 0.54);
   border-radius: 8px;
-  padding: 14px;
+  padding: 10px;
   background: rgba(7, 16, 28, 0.78);
   box-shadow: 0 18px 50px rgba(0, 0, 0, 0.32), 0 0 30px rgba(255, 213, 106, 0.14);
   backdrop-filter: blur(14px);
@@ -1995,7 +1995,7 @@ p {
 
 .arcade-opening-contract > span {
   color: #ffd56a;
-  font-size: 0.72rem;
+  font-size: 0.66rem;
   font-weight: 950;
   line-height: 1;
   text-transform: uppercase;
@@ -2003,39 +2003,40 @@ p {
 
 .arcade-opening-contract > strong {
   color: #f8fdff;
-  font-size: clamp(1.25rem, 2.2vw, 1.9rem);
+  font-size: clamp(1.05rem, 1.7vw, 1.38rem);
   line-height: 0.98;
+  white-space: nowrap;
   text-transform: uppercase;
 }
 
 .arcade-opening-contract div {
-  min-height: 34px;
+  min-height: 28px;
   display: grid;
-  grid-template-columns: 28px minmax(0, 1fr);
+  grid-template-columns: 22px minmax(0, 1fr);
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   border: 1px solid rgba(216, 252, 255, 0.18);
   border-radius: 7px;
-  padding: 6px;
+  padding: 5px;
   background: rgba(216, 252, 255, 0.08);
 }
 
 .arcade-opening-contract small {
-  width: 26px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   display: grid;
   place-items: center;
   border-radius: 5px;
   background: #ffd56a;
   color: #07101c;
-  font-size: 0.72rem;
+  font-size: 0.66rem;
   font-weight: 950;
 }
 
 .arcade-opening-contract b {
   min-width: 0;
   color: #dffcff;
-  font-size: 0.78rem;
+  font-size: 0.68rem;
   line-height: 1.05;
   overflow-wrap: anywhere;
   text-transform: uppercase;
@@ -2060,18 +2061,24 @@ p {
 }
 
 .arcade-shell.compact-opening .arcade-objective {
-  width: min(760px, calc(100vw - 380px));
-  max-height: 252px;
+  width: min(700px, calc(100vw - 310px));
+  max-height: 218px;
   border-color: rgba(255, 213, 106, 0.34);
   background: rgba(7, 16, 28, 0.78);
   box-shadow: 0 20px 54px rgba(0, 0, 0, 0.34), 0 0 26px rgba(255, 213, 106, 0.12);
 }
 
 .arcade-shell.compact-opening .arcade-mission-meta {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  display: none;
 }
 
-.arcade-shell.compact-opening .arcade-mission-meta > :not(.arcade-race):not(.arcade-route):not(.arcade-rivals) {
+.arcade-shell.compact-opening .arcade-mission-beat {
+  min-height: 34px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.arcade-shell.compact-opening .arcade-mission-beat p {
   display: none;
 }
 
