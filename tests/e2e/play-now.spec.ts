@@ -68,7 +68,7 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget());
   await expect(page.getByText(/press e \/ space to steal/i)).toBeVisible();
   await expect(page.getByLabel(/active action/i).getByText(/e \/ space/i)).toBeVisible();
-  await expect(page.getByLabel(/active action/i).getByText(/steal relic/i)).toBeVisible();
+  await expect(page.getByLabel(/active action/i).getByText(/steal moon pearl \+3/i)).toBeVisible();
   await page.keyboard.press("KeyE");
   await expect(currentObjective.getByText(/escape with/i)).toBeVisible();
   await expect(page.getByText(/moon pearl secured/i)).toBeVisible();
@@ -265,8 +265,8 @@ test("on-screen action buttons expose live context and cooldown state", async ({
   await expect(controls.getByRole("button", { name: /dash cooling/i })).toBeVisible();
 
   await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget());
-  await expect(controls.getByRole("button", { name: /interact: steal relic/i })).toBeVisible();
-  await controls.getByRole("button", { name: /interact: steal relic/i }).click();
+  await expect(controls.getByRole("button", { name: /interact: steal moon pearl \+3/i })).toBeVisible();
+  await controls.getByRole("button", { name: /interact: steal moon pearl \+3/i }).click();
   await expect(controls.getByRole("button", { name: /switch route: greed route available/i })).toBeVisible();
   await controls.getByRole("button", { name: /switch route: greed route available/i }).click();
   await expect(controls.getByRole("button", { name: /switch route: greed route armed/i })).toBeVisible();

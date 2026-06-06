@@ -126,12 +126,13 @@ describe("buildArcadeGuidance", () => {
     const hint = buildActiveActionHint({
       alibiPulseReady: false,
       nearArtifactName: "Moon Pearl",
+      nearArtifactValue: 3,
       nearExit: false,
       canEscape: false
     });
 
     expect(hint.key).toBe("E / Space");
-    expect(hint.label).toBe("Steal relic");
+    expect(hint.label).toBe("Steal Moon Pearl +3");
     expect(hint.tone).toBe("success");
   });
 
