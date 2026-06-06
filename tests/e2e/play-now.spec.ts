@@ -435,7 +435,7 @@ test("rival carriers only score after cashout", async ({ page }) => {
   const missionBeat = page.getByLabel(/mission beat/i);
   await expect(missionBeat.getByText(/score pressure/i)).toBeVisible();
   await expect(missionBeat.getByText(/red leads by 3/i)).toBeVisible();
-  await expect(missionBeat.getByText(/steal it, then cash out/i)).toBeVisible();
+  await expect(missionBeat.getByText(/argent crown \+3 plus lift bonus can beat red/i)).toBeVisible();
 });
 
 test("rival carrier near cashout triggers an imminent warning", async ({ page }) => {

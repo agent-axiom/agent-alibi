@@ -2,6 +2,7 @@ import type { ArcadeMissionBeat, ArcadeRivalIntercept } from "./arcade-types";
 
 export type MissionBeatInput = {
   targetArtifactName: string | null;
+  targetArtifactValue: number | null;
   lootValue: number;
   rivalLootValue: number;
   canEscape: boolean;
@@ -47,7 +48,7 @@ export function buildMissionBeat(input: MissionBeatInput): ArcadeMissionBeat {
       tone: "danger",
       kicker: "Score pressure",
       title: `Red leads by ${lead}`,
-      detail: `${targetName} can swing the race. Steal it, then cash out.`,
+      detail: buildComebackDetail(targetName, input.targetArtifactValue, lead),
       action: "Follow the gold marker before the next red carrier run"
     };
   }
@@ -69,4 +70,14 @@ export function buildMissionBeat(input: MissionBeatInput): ArcadeMissionBeat {
     detail: "The gold marker points to the score. Rivals arrive fast.",
     action: "Move with WASD / arrows"
   };
+}
+
+function buildComebackDetail(targetName: string, targetArtifactValue: number | null, lead: number): string {
+  if (targetArtifactValue && targetArtifactValue > 0) {
+    const swingValue = targetArtifactValue + 2;
+    const swingOutcome = swingValue > lead ? "can beat Red" : swingValue === lead ? "can tie Red" : "cuts the lead";
+    return `${targetName} +${targetArtifactValue} plus lift bonus ${swingOutcome}. Steal it, then cash out.`;
+  }
+
+  return `${targetName} can swing the race. Steal it, then cash out.`;
 }

@@ -5,6 +5,7 @@ describe("buildMissionBeat", () => {
   it("starts the heist with one concrete objective beat", () => {
     const beat = buildMissionBeat({
       targetArtifactName: "Moon Pearl",
+      targetArtifactValue: 3,
       lootValue: 0,
       rivalLootValue: 0,
       canEscape: false,
@@ -28,6 +29,7 @@ describe("buildMissionBeat", () => {
   it("prioritizes a rival carrier over cashout guidance", () => {
     const beat = buildMissionBeat({
       targetArtifactName: "Argent Crown",
+      targetArtifactValue: 3,
       lootValue: 3,
       rivalLootValue: 0,
       canEscape: true,
@@ -59,6 +61,7 @@ describe("buildMissionBeat", () => {
   it("turns critical carrier runs into an imminent cashout beat", () => {
     const beat = buildMissionBeat({
       targetArtifactName: "Argent Crown",
+      targetArtifactValue: 3,
       lootValue: 3,
       rivalLootValue: 0,
       canEscape: true,
@@ -90,6 +93,7 @@ describe("buildMissionBeat", () => {
   it("turns secured loot into a clear cashout decision", () => {
     const beat = buildMissionBeat({
       targetArtifactName: "Argent Crown",
+      targetArtifactValue: 3,
       lootValue: 3,
       rivalLootValue: 0,
       canEscape: true,
@@ -113,6 +117,7 @@ describe("buildMissionBeat", () => {
   it("turns a rival cashout lead into a comeback beat", () => {
     const beat = buildMissionBeat({
       targetArtifactName: "Argent Crown",
+      targetArtifactValue: 3,
       lootValue: 0,
       rivalLootValue: 3,
       canEscape: false,
@@ -128,7 +133,7 @@ describe("buildMissionBeat", () => {
       tone: "danger",
       kicker: "Score pressure",
       title: "Red leads by 3",
-      detail: "Argent Crown can swing the race. Steal it, then cash out.",
+      detail: "Argent Crown +3 plus lift bonus can beat Red. Steal it, then cash out.",
       action: "Follow the gold marker before the next red carrier run"
     });
   });
@@ -136,6 +141,7 @@ describe("buildMissionBeat", () => {
   it("keeps the comeback beat when a scan threat is also active", () => {
     const beat = buildMissionBeat({
       targetArtifactName: "Argent Crown",
+      targetArtifactValue: 3,
       lootValue: 0,
       rivalLootValue: 3,
       canEscape: false,
