@@ -93,6 +93,15 @@ type RivalCarrierRun = {
 
 type ImpactKind = "steal" | "intercept" | "alibi" | "escape" | "lockdown";
 
+type MotionTrailPoint = {
+  x: number;
+  y: number;
+  ageMs: number;
+  ttlMs: number;
+  radius: number;
+  color: number;
+};
+
 type MovementKeys = {
   w: Phaser.Input.Keyboard.Key;
   a: Phaser.Input.Keyboard.Key;
@@ -163,6 +172,10 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private targetMarker?: Phaser.GameObjects.Container;
   private targetBeam?: Phaser.GameObjects.Graphics;
   private threatHalo?: Phaser.GameObjects.Graphics;
+  private motionTrail?: Phaser.GameObjects.Graphics;
+  private motionTrailPoints: MotionTrailPoint[] = [];
+  private motionTrailBurstCount = 0;
+  private motionTrailActiveUntilMs = 0;
   private impactCount = 0;
   private lastImpact: { kind: ImpactKind; count: number; atMs: number } | null = null;
 
@@ -273,6 +286,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       hasTargetBeam: Boolean(this.targetBeam),
       routeGuide,
       threatHalo: this.threatHaloDebug(),
+      motionTrail: this.motionTrailDebug(),
       routeMode: this.routeMode,
       nearestRival,
       lastRivalSteal: this.lastRivalSteal,
@@ -332,6 +346,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.alibiPulseCooldownMs = Math.max(0, this.alibiPulseCooldownMs - delta);
 
     this.updatePlayer(delta);
+    this.updateMotionTrail(delta);
     this.updateAi(delta);
     this.updateRivalPressureFeed();
     this.updateRivalScan(delta);
@@ -389,6 +404,10 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.targetMarker = undefined;
     this.targetBeam = undefined;
     this.threatHalo = undefined;
+    this.motionTrail = undefined;
+    this.motionTrailPoints = [];
+    this.motionTrailBurstCount = 0;
+    this.motionTrailActiveUntilMs = 0;
     this.impactCount = 0;
     this.lastImpact = null;
     this.playerName = config.state.players.find((player) => player.kind === "human")?.name ?? "Agent You";
@@ -608,7 +627,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       if ((this.shiftHeld || this.keys?.shift.isDown) && this.dashCooldownMs <= 0) {
         speed = DASH_SPEED;
         this.dashCooldownMs = DASH_COOLDOWN_MS;
-        this.addTrail(this.player.x, this.player.y);
+        this.addTrail(this.player.x, this.player.y, vector);
       }
       this.moveAgent(this.player, vector.x * speed * (delta / 1000), vector.y * speed * (delta / 1000));
       this.player.ship.rotation = Phaser.Math.Angle.Between(0, 0, vector.x, vector.y) + Math.PI / 2;
@@ -1567,6 +1586,15 @@ export class ArcadeHeistScene extends Phaser.Scene {
     };
   }
 
+  private motionTrailDebug() {
+    return {
+      active: this.motionTrailActive(),
+      burstCount: this.motionTrailBurstCount,
+      pointCount: this.motionTrailPoints.length,
+      activeMs: Math.max(0, Math.round(this.motionTrailActiveUntilMs - this.elapsedMs))
+    };
+  }
+
   private updateTargetMarker() {
     const target = this.currentObjectiveTarget();
     if (!target) {
@@ -1705,16 +1733,74 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.emitHudIfNeeded(true);
   }
 
-  private addTrail(x: number, y: number) {
-    const trail = this.add.circle(x, y, 28, 0xffd56a, 0.24).setDepth(8);
-    this.tweens.add({
-      targets: trail,
-      scale: 2.8,
-      alpha: 0,
-      duration: 360,
-      ease: "Cubic.easeOut",
-      onComplete: () => trail.destroy()
-    });
+  private addTrail(x: number, y: number, direction: Phaser.Math.Vector2) {
+    if (!this.motionTrail) {
+      this.motionTrail = this.add.graphics().setDepth(9);
+    }
+
+    const heading = direction.clone();
+    if (heading.lengthSq() === 0) heading.set(0, -1);
+    heading.normalize();
+    const side = new Phaser.Math.Vector2(-heading.y, heading.x);
+    const colors = [0x7effdf, 0xffd56a, 0xffffff];
+
+    this.motionTrailBurstCount += 1;
+    this.motionTrailActiveUntilMs = this.elapsedMs + 560;
+    for (let index = 0; index < 7; index += 1) {
+      const lag = index * 18;
+      const sideOffset = (index % 2 === 0 ? 1 : -1) * Math.min(10, index * 2.4);
+      this.motionTrailPoints.push({
+        x: x - heading.x * lag + side.x * sideOffset,
+        y: y - heading.y * lag + side.y * sideOffset,
+        ageMs: index * 18,
+        ttlMs: 420 + index * 28,
+        radius: 25 - index * 1.8,
+        color: colors[index % colors.length]!
+      });
+    }
+    if (this.motionTrailPoints.length > 40) {
+      this.motionTrailPoints.splice(0, this.motionTrailPoints.length - 40);
+    }
+    this.renderMotionTrail();
+  }
+
+  private updateMotionTrail(delta: number) {
+    if (!this.motionTrail) return;
+    this.motionTrailPoints = this.motionTrailPoints
+      .map((point) => ({ ...point, ageMs: point.ageMs + delta }))
+      .filter((point) => point.ageMs <= point.ttlMs);
+
+    if (!this.motionTrailActive()) {
+      this.motionTrail.clear();
+      return;
+    }
+
+    this.renderMotionTrail();
+  }
+
+  private renderMotionTrail() {
+    if (!this.motionTrail) return;
+    this.motionTrail.clear();
+
+    for (let index = 0; index < this.motionTrailPoints.length; index += 1) {
+      const point = this.motionTrailPoints[index]!;
+      const progress = Phaser.Math.Clamp(point.ageMs / point.ttlMs, 0, 1);
+      const alpha = (1 - progress) * 0.42;
+      const radius = Math.max(4, point.radius * (1 + progress * 1.4));
+      this.motionTrail.fillStyle(point.color, alpha * 0.36);
+      this.motionTrail.fillCircle(point.x, point.y, radius + 12);
+      this.motionTrail.fillStyle(point.color, alpha);
+      this.motionTrail.fillCircle(point.x, point.y, radius);
+
+      const next = this.motionTrailPoints[index + 1];
+      if (!next) continue;
+      this.motionTrail.lineStyle(5, point.color, alpha * 0.36);
+      this.motionTrail.lineBetween(point.x, point.y, next.x, next.y);
+    }
+  }
+
+  private motionTrailActive() {
+    return this.motionTrailPoints.length > 0 || this.elapsedMs < this.motionTrailActiveUntilMs;
   }
 
   private resizeCamera = () => {
