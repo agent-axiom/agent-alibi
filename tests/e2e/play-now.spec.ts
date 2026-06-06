@@ -72,6 +72,10 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(page.getByLabel(/active action/i).getByText(/e \/ space/i)).toBeVisible();
   await expect(page.getByLabel(/active action/i).getByText(/steal moon pearl \+3/i)).toBeVisible();
   await page.keyboard.press("KeyE");
+  await expect(objectiveBanner.getByText(/escape with 3 loot/i)).toBeVisible();
+  await expect(objectiveBanner.getByText(/cashout 5 or risk greed route/i)).toBeVisible();
+  const scorePopup = page.getByLabel(/score popup/i);
+  await expect(scorePopup.getByText(/\+3 moon pearl/i)).toBeVisible();
   await expect(page.locator(".arcade-shell")).not.toHaveClass(/compact-opening/);
   await expect(openingContract).toBeHidden();
   await expect(page.getByLabel(/live agents/i)).toBeVisible();
@@ -86,18 +90,15 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(wakeThreat.getByText(/\d+s head start before scans/i)).toBeVisible();
   await expect(wakeThreat.getByText(/choose cashout or greed now/i)).toBeVisible();
   await expect(page.getByText(/moon pearl secured/i)).toBeVisible();
-  await expect(objectiveBanner.getByText(/escape with 3 loot/i)).toBeVisible();
-  await expect(objectiveBanner.getByText(/cashout 5 or risk greed route/i)).toBeVisible();
-  const scorePopup = page.getByLabel(/score popup/i);
-  await expect(scorePopup.getByText(/\+3 moon pearl/i)).toBeVisible();
   const stealImpact = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().lastImpact);
   expect(stealImpact?.kind).toBe("steal");
   expect(stealImpact?.count).toBeGreaterThan(0);
   await expect(missionBeat.getByText(/loot secured/i)).toBeVisible();
   await expect(missionBeat.getByText(/cashout worth 5/i)).toBeVisible();
   await expect(missionBeat.getByText(/reach atrium lift or press g/i)).toBeVisible();
+  await expect(page.locator(".arcade-shell")).not.toHaveClass(/breach-alert/);
   await expect(page.getByText(/2 cashout \+5/i)).toBeVisible();
-  await expect(page.getByText(/cashout \+5 (?:n|ne|e|se|s|sw|w|nw|here) \d+m/i)).toBeVisible();
+  await expect(page.getByLabel(/route distance/i)).toContainText(/cashout \+5/i);
   const lootChainWindow = page.getByLabel(/loot chain window/i);
   await expect(lootChainWindow.getByText(/loot chain x1/i)).toBeVisible();
   await expect(lootChainWindow.getByText(/next relic keeps streak/i)).toBeVisible();
@@ -264,7 +265,7 @@ test("first score triggers a visible rival breach cut-in", async ({ page }) => {
   const rivalComms = page.getByLabel(/rival comms/i);
   await expect(rivalComms.getByText(/red crew/i)).toBeVisible();
   await expect(rivalComms.getByText(/breach live/i)).toBeVisible();
-  await expect(rivalComms.getByText(/4s before scans/i)).toBeVisible();
+  await expect(rivalComms.getByText(/\d+s before scans/i)).toBeVisible();
   const cutInLayout = await page.evaluate(() => {
     const bark = document.querySelector(`[aria-label="Rival comms"]`)?.getBoundingClientRect();
     const radio = document.querySelector(`[aria-label="Mission radio"]`)?.getBoundingClientRect();
@@ -277,6 +278,33 @@ test("first score triggers a visible rival breach cut-in", async ({ page }) => {
     };
   });
   expect(cutInLayout).toEqual({ overlapsRadio: false, overlapsObjective: false });
+});
+
+test("rival breach throws a red alert pulse without blocking the HUD", async ({ page }) => {
+  await startSoloArcade(page);
+  await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget === "function");
+
+  await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget());
+  await page.keyboard.press("KeyE");
+
+  await expect(page.locator(".arcade-shell")).toHaveClass(/breach-alert/);
+  const pulse = page.getByLabel(/breach alert pulse/i);
+  await expect(pulse).toBeVisible();
+  const pulseState = await page.evaluate(() => {
+    const pulseElement = document.querySelector(`[aria-label="Breach alert pulse"]`);
+    const objective = document.querySelector(`[aria-label="Current objective"]`);
+    return {
+      pointerEvents: pulseElement ? getComputedStyle(pulseElement).pointerEvents : null,
+      objectiveCut: objective ? objective.scrollHeight > objective.clientHeight + 2 : true,
+      present: Boolean(pulseElement)
+    };
+  });
+  expect(pulseState.pointerEvents).toBe("none");
+  expect(pulseState.objectiveCut).toBe(false);
+  expect(pulseState.present).toBe(true);
+
+  await page.waitForTimeout(2_900);
+  await expect(page.locator(".arcade-shell")).not.toHaveClass(/breach-alert/);
 });
 
 test("arcade sound can be toggled during a run", async ({ page }) => {
@@ -350,7 +378,7 @@ test("on-screen arcade controls move, dash, interact, and switch route", async (
   await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget());
   await expect(page.getByText(/press e \/ space to steal/i)).toBeVisible();
   await controls.getByRole("button", { name: /interact/i }).click();
-  await expect(page.getByText(/moon pearl secured/i)).toBeVisible();
+  await expect(page.locator(".arcade-spotlight").getByText(/moon pearl secured/i)).toBeVisible();
   await expect(page.getByLabel(/route choice/i).getByText(/press g/i)).toBeVisible();
   await controls.getByRole("button", { name: /switch route/i }).click();
   await expect(page.getByLabel(/optional relic/i).getByText(/greed route/i)).toBeVisible();

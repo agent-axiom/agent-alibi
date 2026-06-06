@@ -46,8 +46,9 @@ export function MatchScreen({ match, soundEnabled = false, onToggleSound }: Matc
     const blueRaceLabel = carriedLoot ? `Blue carrying +${carriedLoot.loot}` : `Blue ${blueLoot}`;
     const raceStatusLabel = carriedLoot ? `Bank +${carriedLoot.cashout} at lift` : (hud?.raceStatus ?? "Loot race is tied");
     const SoundIcon = soundEnabled ? Volume2 : VolumeX;
+    const breachAlert = hud?.rivalBark?.agentName === "Red Crew" && /breach live/i.test(hud.rivalBark.line);
     return (
-      <main className={`arcade-shell ${hud?.phase ?? "stealth"} ${hudDensity === "opening" ? "compact-opening" : ""}`}>
+      <main className={`arcade-shell ${hud?.phase ?? "stealth"} ${hudDensity === "opening" ? "compact-opening" : ""} ${breachAlert ? "breach-alert" : ""}`}>
         <Suspense
           fallback={
             <div className="arcade-stage arcade-loading" aria-label="Loading Moon Vault arcade scene">
@@ -64,6 +65,7 @@ export function MatchScreen({ match, soundEnabled = false, onToggleSound }: Matc
           />
         </Suspense>
         <div className="arcade-vignette" />
+        {breachAlert ? <div className="arcade-breach-pulse" aria-label="Breach alert pulse" /> : null}
 
         {hudDensity === "opening" ? (
           <aside className="arcade-opening-contract" aria-label="Opening contract">
