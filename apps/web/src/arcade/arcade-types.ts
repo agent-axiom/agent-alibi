@@ -1,6 +1,6 @@
 import type { GameState } from "@agent-alibi/shared";
 import type { ArcadeMissionResult } from "./arcade-rules";
-import type { ActiveActionHint, ArcadeLoopStep, RivalPressureLevel } from "./guidance";
+import type { ActiveActionHint, ArcadeLoopStep, ObjectiveCompass, RivalPressureLevel } from "./guidance";
 import type { RivalScanStatus } from "./rival-scan";
 
 export const ARCADE_MISSION_DURATION_MS = 150_000;
@@ -116,6 +116,7 @@ export type ArcadeHudState = {
   dashReady: boolean;
   objective: string;
   prompt: string;
+  objectiveCompass: ObjectiveCompass;
   activeAction: ActiveActionHint;
   loopStep: ArcadeLoopStep;
   raceStatus: string;

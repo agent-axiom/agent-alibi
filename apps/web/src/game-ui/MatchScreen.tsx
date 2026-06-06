@@ -228,6 +228,14 @@ export function MatchScreen({ match, soundEnabled = false, onToggleSound }: Matc
             <kbd>{hud?.activeAction.key ?? "Move"}</kbd>
             <span>{hud?.activeAction.label ?? "Follow marker"}</span>
           </div>
+          {hud?.objectiveCompass ? (
+            <div className={`arcade-objective-compass ${hud.objectiveCompass.tone}`} aria-label="Objective compass">
+              <span>{hud.objectiveCompass.verb}</span>
+              <strong>{hud.objectiveCompass.target}</strong>
+              <i>{hud.objectiveCompass.route}</i>
+              <small>{hud.objectiveCompass.detail}</small>
+            </div>
+          ) : null}
           {hud?.missionBeat ? (
             <div className={`arcade-mission-beat ${hud.missionBeat.tone}`} aria-label="Mission beat">
               <span>{hud.missionBeat.kicker}</span>

@@ -1,7 +1,83 @@
 import { describe, expect, it } from "vitest";
-import { buildActiveActionHint, buildArcadeGuidance, buildRivalPressure } from "./guidance";
+import { buildActiveActionHint, buildArcadeGuidance, buildObjectiveCompass, buildRivalPressure } from "./guidance";
 
 describe("buildArcadeGuidance", () => {
+  it("builds a compact steal compass with the target, direction, and distance", () => {
+    const compass = buildObjectiveCompass({
+      kind: "artifact",
+      targetLabel: "Moon Pearl +3",
+      directionLabel: "Target NE 43m",
+      distanceMeters: 43,
+      cashoutValue: null,
+      timeLeftMs: 140_000
+    });
+
+    expect(compass).toEqual({
+      tone: "focus",
+      verb: "STEAL",
+      target: "Moon Pearl +3",
+      route: "NE 43m",
+      detail: "Follow gold beam"
+    });
+  });
+
+  it("switches the compass to a cashout call after loot is secured", () => {
+    const compass = buildObjectiveCompass({
+      kind: "escape",
+      targetLabel: "Atrium Lift",
+      directionLabel: "Cashout +5 SW 12m",
+      distanceMeters: 12,
+      cashoutValue: 5,
+      timeLeftMs: 90_000
+    });
+
+    expect(compass).toEqual({
+      tone: "success",
+      verb: "CASHOUT",
+      target: "+5 at Atrium Lift",
+      route: "SW 12m",
+      detail: "Follow cyan ring"
+    });
+  });
+
+  it("makes carrier runs read like urgent chases", () => {
+    const compass = buildObjectiveCompass({
+      kind: "carrier",
+      targetLabel: "Rook +3",
+      directionLabel: "Carrier W 18m",
+      distanceMeters: 18,
+      cashoutValue: null,
+      timeLeftMs: 80_000
+    });
+
+    expect(compass).toEqual({
+      tone: "danger",
+      verb: "CHASE",
+      target: "Rook +3",
+      route: "W 18m",
+      detail: "Recover before Red cashout"
+    });
+  });
+
+  it("keeps scan compass routes short so rival status text is not duplicated", () => {
+    const compass = buildObjectiveCompass({
+      kind: "scan",
+      targetLabel: "Rook scan",
+      directionLabel: "Rival on you: Rook E 8m",
+      distanceMeters: 8,
+      cashoutValue: null,
+      timeLeftMs: 80_000
+    });
+
+    expect(compass).toEqual({
+      tone: "danger",
+      verb: "JAM",
+      target: "Rook scan",
+      route: "E 8m",
+      detail: "Press E / Space"
+    });
+  });
+
   it("starts with a concrete theft objective instead of a vague instruction", () => {
     const guidance = buildArcadeGuidance({
       lootValue: 0,

@@ -1,6 +1,8 @@
 export type ArcadeLoopStep = "steal" | "escape" | "survive";
 export type RivalPressureLevel = "standby" | "clear" | "closing" | "danger";
 export type ActiveActionTone = "neutral" | "success" | "danger";
+export type ObjectiveCompassKind = "artifact" | "escape" | "carrier" | "scan";
+export type ObjectiveCompassTone = "focus" | "success" | "danger";
 
 export type ArcadeGuidanceInput = {
   lootValue: number;
@@ -52,6 +54,65 @@ export type ActiveActionHint = {
   label: string;
   tone: ActiveActionTone;
 };
+
+export type ObjectiveCompassInput = {
+  kind: ObjectiveCompassKind;
+  targetLabel: string | null;
+  directionLabel: string | null;
+  distanceMeters: number | null;
+  cashoutValue?: number | null;
+  timeLeftMs: number;
+};
+
+export type ObjectiveCompass = {
+  tone: ObjectiveCompassTone;
+  verb: string;
+  target: string;
+  route: string;
+  detail: string;
+};
+
+export function buildObjectiveCompass(input: ObjectiveCompassInput): ObjectiveCompass {
+  if (input.kind === "carrier") {
+    return {
+      tone: "danger",
+      verb: "CHASE",
+      target: input.targetLabel ?? "Rival carrier",
+      route: compactRouteLabel(input.directionLabel),
+      detail: "Recover before Red cashout"
+    };
+  }
+
+  if (input.kind === "scan") {
+    return {
+      tone: "danger",
+      verb: "JAM",
+      target: input.targetLabel ?? "Rival scan",
+      route: compactRouteLabel(input.directionLabel),
+      detail: "Press E / Space"
+    };
+  }
+
+  if (input.kind === "escape") {
+    const cashoutValue = input.cashoutValue ?? 0;
+    const hasCashout = cashoutValue > 0;
+    return {
+      tone: input.timeLeftMs <= 30_000 ? "danger" : "success",
+      verb: hasCashout ? "CASHOUT" : "ESCAPE",
+      target: hasCashout ? `+${cashoutValue} at Atrium Lift` : "Atrium Lift",
+      route: compactRouteLabel(input.directionLabel),
+      detail: input.distanceMeters !== null && input.distanceMeters <= 6 ? "Press E / Space" : "Follow cyan ring"
+    };
+  }
+
+  return {
+    tone: "focus",
+    verb: "STEAL",
+    target: input.targetLabel ?? "Marked relic",
+    route: compactRouteLabel(input.directionLabel),
+    detail: input.distanceMeters !== null && input.distanceMeters <= 6 ? "Press E / Space" : "Follow gold beam"
+  };
+}
 
 export function buildArcadeGuidance(input: ArcadeGuidanceInput): ArcadeGuidance {
   const raceStatus = buildRaceStatus(input.lootValue, input.aiLootValue);
@@ -189,4 +250,16 @@ function buildCashoutActionLabel(cashoutValue: number | null): string {
 
 function buildCashoutPrompt(cashoutValue: number | null): string {
   return cashoutValue && cashoutValue > 0 ? `Press E / Space to cashout +${cashoutValue}` : "Press E / Space to escape";
+}
+
+function compactRouteLabel(label: string | null): string {
+  if (!label) return "Marker live";
+  return label
+    .replace(/^Rival on you:\s+\S+\s+/i, "")
+    .replace(/^Rival close:\s+\S+\s+/i, "")
+    .replace(/^Target\s+/i, "")
+    .replace(/^Exit\s+/i, "")
+    .replace(/^Carrier\s+/i, "")
+    .replace(/^Nearest rival\s+/i, "")
+    .replace(/^Cashout\s+\+\d+\s+/i, "");
 }

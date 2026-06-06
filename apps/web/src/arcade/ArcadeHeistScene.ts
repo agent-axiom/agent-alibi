@@ -17,7 +17,7 @@ import {
   type ArcadeScorePopup,
   type ArcadeThreatCue
 } from "./arcade-types";
-import { buildActiveActionHint, buildArcadeGuidance, buildRivalPressure, type RivalPressure } from "./guidance";
+import { buildActiveActionHint, buildArcadeGuidance, buildObjectiveCompass, buildRivalPressure, type RivalPressure } from "./guidance";
 import { buildMissionBeat } from "./mission-beats";
 import { nextMovementImpulse, selectMovementVector, type MovementImpulse, type MovementVector } from "./movement";
 import { buildObjectiveDirectionLabel } from "./navigation";
@@ -1326,6 +1326,24 @@ export class ArcadeHeistScene extends Phaser.Scene {
       ?.replace(/^Optional relic:\s*/i, "")
       .replace(/^Greed route:\s*/i, "")
       .replace(/\s*·\s*press G$/i, "");
+    const targetDirectionLabel =
+      objectiveTarget && targetDistanceMeters !== null && this.player
+        ? buildObjectiveDirectionLabel({
+            kind: objectiveTarget.kind === "escape" ? "exit" : objectiveTarget.kind === "carrier" ? "carrier" : "target",
+            cashoutValue: objectiveTarget.kind === "escape" ? (escapePayout?.cashout ?? null) : null,
+            dx: objectiveTarget.x - this.player.x,
+            dy: objectiveTarget.y - this.player.y,
+            distanceMeters: targetDistanceMeters
+          })
+        : null;
+    const objectiveCompass = buildObjectiveCompass({
+      kind: alibiPulseReady ? "scan" : (objectiveTarget?.kind ?? "artifact"),
+      targetLabel: alibiPulseReady ? `${nearestRival?.name ?? "Rival"} scan` : this.objectiveCompassTargetLabel(objectiveTarget, targetArtifactLabel),
+      directionLabel: alibiPulseReady ? this.rivalDirectionLabel(nearestRival, rivalPressure) : targetDirectionLabel,
+      distanceMeters: alibiPulseReady ? (nearestRival?.distanceMeters ?? null) : targetDistanceMeters,
+      cashoutValue: escapePayout?.cashout ?? null,
+      timeLeftMs: this.timeLeftMs()
+    });
 
     const hud: ArcadeHudState = {
       phase: this.phase(),
@@ -1339,6 +1357,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       dashReady: this.dashCooldownMs <= 0,
       objective: rivalCarrier ? `Intercept ${rivalCarrier.name}'s carrier run` : alibiPulseReady ? "Jam the rival scan" : greedPromptActive ? `Greed route: steal ${this.artifactTargetLabel(targetArtifact!)}` : guidance.objective,
       prompt,
+      objectiveCompass,
       activeAction: buildActiveActionHint({
         alibiPulseReady,
         nearRivalCarrierName: rivalCarrier?.name ?? null,
@@ -1361,16 +1380,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       routePulse: this.routePulse,
       radarBlips: this.buildRadarBlips(objectiveTarget),
       greedStatus,
-      targetDistanceLabel:
-        objectiveTarget && targetDistanceMeters !== null && this.player
-          ? buildObjectiveDirectionLabel({
-              kind: objectiveTarget.kind === "escape" ? "exit" : objectiveTarget.kind === "carrier" ? "carrier" : "target",
-              cashoutValue: objectiveTarget.kind === "escape" ? (escapePayout?.cashout ?? null) : null,
-              dx: objectiveTarget.x - this.player.x,
-              dy: objectiveTarget.y - this.player.y,
-              distanceMeters: targetDistanceMeters
-            })
-          : null,
+      targetDistanceLabel: targetDirectionLabel,
       rivalStatus: this.rivalStatus(),
       rivalDistanceLabel: this.rivalDirectionLabel(nearestRival, rivalPressure),
       rivalPressureLevel: rivalPressure.level,
@@ -1405,6 +1415,13 @@ export class ArcadeHeistScene extends Phaser.Scene {
       feed: this.feed.slice(-5)
     };
     this.config.onHudUpdate(hud);
+  }
+
+  private objectiveCompassTargetLabel(target: ArcadeObjectiveTarget | undefined, fallbackArtifactLabel: string | null): string | null {
+    if (!target) return fallbackArtifactLabel;
+    if (target.kind === "escape") return "Atrium Lift";
+    if (target.kind === "carrier") return this.targetMarkerLabel(target);
+    return target.label ?? fallbackArtifactLabel;
   }
 
   private updateRivalPressureFeed() {
