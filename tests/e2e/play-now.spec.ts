@@ -18,7 +18,7 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(page.getByText(/1 steal/i)).toBeVisible();
   await expect(page.getByText(/target (?:n|ne|e|se|s|sw|w|nw|here) \d+m/i)).toBeVisible();
   await expect(page.getByText(/rivals enter in \d+s/i)).toBeVisible();
-  await expect(page.getByText(/nearest rival \d+m/i)).toBeVisible();
+  await expect(page.getByText(/nearest rival (?:n|ne|e|se|s|sw|w|nw|here) \d+m/i)).toBeVisible();
   await expect(page.getByText(/s-rank pace/i)).toBeVisible();
   const bonusWindow = page.getByLabel(/clean bonus window/i);
   await expect(bonusWindow.getByText(/clean bonus/i)).toBeVisible();
@@ -126,7 +126,7 @@ test("close rivals burn the player's alibi if contact is not broken", async ({ p
   await startSoloArcade(page);
   await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_STATE__ === "function");
   await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.forceRivalPressure(8));
-  await expect(page.getByText(/rival on you: .+ 8m/i)).toBeVisible();
+  await expect(page.getByText(/rival on you: .+ (?:n|ne|e|se|s|sw|w|nw|here) 8m/i)).toBeVisible();
   await expect(page.getByText(/dash or break line/i)).toBeVisible();
   await expect(page.getByLabel(/rival scan meter/i).getByText(/scan charg/i)).toBeVisible();
 

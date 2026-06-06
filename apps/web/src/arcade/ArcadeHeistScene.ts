@@ -66,6 +66,8 @@ type RouteMode = "escape" | "greed";
 type RivalScan = {
   name: string;
   distanceMeters: number;
+  dx: number;
+  dy: number;
 };
 
 type MovementKeys = {
@@ -915,7 +917,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
             })
           : null,
       rivalStatus: this.rivalStatus(),
-      rivalDistanceLabel: rivalPressure.label,
+      rivalDistanceLabel: this.rivalDirectionLabel(nearestRival, rivalPressure),
       rivalPressureLevel: rivalPressure.level,
       rivalScanStatus: buildRivalScanStatus(this.rivalScanState, rivalPressure.level),
       alibiPulseStatus: buildAlibiPulseStatus({
@@ -958,10 +960,26 @@ export class ArcadeHeistScene extends Phaser.Scene {
     const nearest = this.aiAgents
       .map((agent) => ({
         name: agent.name,
-        distanceMeters: Math.max(0, Math.round(Phaser.Math.Distance.Between(this.player!.x, this.player!.y, agent.x, agent.y) / 8))
+        distanceMeters: Math.max(0, Math.round(Phaser.Math.Distance.Between(this.player!.x, this.player!.y, agent.x, agent.y) / 8)),
+        dx: agent.x - this.player!.x,
+        dy: agent.y - this.player!.y
       }))
       .sort((left, right) => left.distanceMeters - right.distanceMeters)[0];
     return nearest ?? null;
+  }
+
+  private rivalDirectionLabel(scan: RivalScan | null, pressure: RivalPressure): string | null {
+    if (!scan) return pressure.label;
+    const nearestLabel = buildObjectiveDirectionLabel({
+      kind: "rival",
+      dx: scan.dx,
+      dy: scan.dy,
+      distanceMeters: scan.distanceMeters
+    });
+    const directionText = nearestLabel.replace(/^Nearest rival\s+/i, "");
+    if (pressure.level === "danger") return `Rival on you: ${scan.name} ${directionText}`;
+    if (pressure.level === "closing") return `Rival close: ${scan.name} ${directionText}`;
+    return nearestLabel;
   }
 
   private rivalPressure(scan = this.nearestRivalScan()): RivalPressure {
