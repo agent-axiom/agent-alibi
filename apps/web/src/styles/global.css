@@ -627,6 +627,39 @@ p {
   font-weight: 800;
 }
 
+.case-highlights {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 10px;
+}
+
+.case-highlight {
+  min-height: 78px;
+  display: grid;
+  align-content: center;
+  gap: 7px;
+  border: 2px solid #171717;
+  border-radius: 8px;
+  padding: 12px 14px;
+  background: #171717;
+  color: #fffaf2;
+  box-shadow: 0 8px 0 rgba(57, 229, 192, 0.32);
+}
+
+.case-highlight span {
+  color: #39e5c0;
+  font-size: 0.72rem;
+  font-weight: 950;
+  line-height: 1;
+}
+
+.case-highlight strong {
+  overflow-wrap: anywhere;
+  font-size: clamp(1rem, 2vw, 1.35rem);
+  line-height: 1.05;
+  text-transform: uppercase;
+}
+
 .final-rating {
   border-color: #ffd56a;
   background: #171717;

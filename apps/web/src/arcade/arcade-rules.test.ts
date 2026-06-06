@@ -85,6 +85,23 @@ describe("buildArcadeMatchSummary", () => {
     expect(summary.caseFile).toContain("Relics Stolen: Moon Pearl, Argent Crown");
   });
 
+  it("builds short case highlights for the final share card", () => {
+    const summary = buildArcadeMatchSummary({
+      outcome: "escaped",
+      playerName: "Agent You",
+      lootValue: 6,
+      artifactsStolen: 2,
+      aiLootValue: 0,
+      alarm: 2,
+      elapsedMs: 50_000,
+      stolenRelicNames: ["Moon Pearl", "Argent Crown"]
+    });
+
+    expect(summary.highlightLines).toContain("Stole Moon Pearl + Argent Crown");
+    expect(summary.highlightLines).toContain("Escaped with 6 loot");
+    expect(summary.highlightLines).toContain("Clean exit bonus +3");
+  });
+
   it("records alibi pulse saves and scan burns in the shareable case file", () => {
     const summary = buildArcadeMatchSummary({
       outcome: "escaped",
