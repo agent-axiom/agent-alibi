@@ -115,6 +115,8 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   const escapeGuide = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().routeGuide);
   expect(escapeGuide?.kind).toBe("escape");
   expect(escapeGuide?.chevronCount).toBeGreaterThan(0);
+  const escapeZoneBadge = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().escapeZoneBadge);
+  expect(escapeZoneBadge).toEqual({ visible: true, label: "Cashout +5" });
   await page.keyboard.press("KeyG");
   await expect(page.getByLabel(/optional relic/i).getByText(/greed route/i)).toBeVisible();
   await expect(objectiveBanner.getByText(/greed route armed/i)).toBeVisible();
@@ -132,6 +134,7 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   const afterGreedSteal = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());
   expect(afterGreedSteal?.lootValue).toBeGreaterThan(afterSteal ?? 0);
   expect(afterGreedSteal?.target?.kind).toBe("escape");
+  expect(afterGreedSteal?.escapeZoneBadge).toEqual({ visible: true, label: "Cashout +8" });
 
   await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget());
   await expect(page.getByText(/press e \/ space to escape/i)).toBeVisible();
