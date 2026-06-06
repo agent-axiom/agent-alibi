@@ -174,6 +174,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private playerName = "Agent You";
   private routeMode: RouteMode = "escape";
   private escapeZone?: Phaser.GameObjects.Container;
+  private escapePayoutBadge?: Phaser.GameObjects.Container;
+  private escapePayoutBadgeLabel?: Phaser.GameObjects.Text;
   private targetMarker?: Phaser.GameObjects.Container;
   private targetBeam?: Phaser.GameObjects.Graphics;
   private threatHalo?: Phaser.GameObjects.Graphics;
@@ -296,6 +298,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       threatHalo: this.threatHaloDebug(),
       carrierCashoutRoute: this.carrierCashoutRouteDebug(),
       carrierBadges: this.carrierBadgesDebug(),
+      escapeZoneBadge: this.escapeZoneBadgeDebug(),
       motionTrail: this.motionTrailDebug(),
       arenaLabels: this.arenaLabelsDebug(),
       routeMode: this.routeMode,
@@ -390,6 +393,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.updateTargetMarker();
     this.updateThreatHalo();
     this.updateCarrierCashoutRoute();
+    this.updateEscapePayoutBadge();
     this.updateAlarm(delta);
     this.emitHudIfNeeded(false);
 
@@ -444,6 +448,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.targetMarker = undefined;
     this.targetBeam = undefined;
     this.threatHalo = undefined;
+    this.escapePayoutBadge = undefined;
+    this.escapePayoutBadgeLabel = undefined;
     this.carrierRoute = undefined;
     this.motionTrail = undefined;
     this.motionTrailPoints = [];
@@ -464,6 +470,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.updateThreatHalo();
     this.updateCarrierCashoutRoute();
     this.updateCarrierBadges();
+    this.updateEscapePayoutBadge();
     this.scale.off("resize", this.resizeCamera, this);
     this.scale.on("resize", this.resizeCamera, this);
     this.flashObjectiveBanner({
@@ -632,7 +639,19 @@ export class ArcadeHeistScene extends Phaser.Scene {
         strokeThickness: 5
       })
       .setOrigin(0.5);
-    this.escapeZone = this.add.container(atrium.x, atrium.y + 92, [ring, extract, label]);
+    const badgePlate = this.add.rectangle(0, 0, 126, 30, 0x07101c, 0.86).setStrokeStyle(2, 0x7effdf, 0.82);
+    this.escapePayoutBadgeLabel = this.add
+      .text(0, 0, "CASHOUT +0", {
+        color: "#d9fff6",
+        fontFamily: "Inter, Arial, sans-serif",
+        fontSize: "13px",
+        fontStyle: "950",
+        stroke: "#050811",
+        strokeThickness: 4
+      })
+      .setOrigin(0.5);
+    this.escapePayoutBadge = this.add.container(0, -EXIT_RADIUS - 58, [badgePlate, this.escapePayoutBadgeLabel]).setVisible(false);
+    this.escapeZone = this.add.container(atrium.x, atrium.y + 92, [ring, extract, label, this.escapePayoutBadge]);
   }
 
   private createActors(state: GameState) {
@@ -882,6 +901,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       this.flashObjectiveBanner(this.buildEscapeBanner(this.artifactsStolen === 1));
       this.impactPulse("steal");
       this.collectArtifactVisual(artifact, 0xffd56a);
+      this.updateEscapePayoutBadge();
       this.updateTargetMarker();
       this.updateThreatHalo();
       return;
@@ -1381,6 +1401,30 @@ export class ArcadeHeistScene extends Phaser.Scene {
     return {
       escapeBonus,
       cashout: this.lootValue + escapeBonus
+    };
+  }
+
+  private updateEscapePayoutBadge() {
+    if (!this.escapePayoutBadge || !this.escapePayoutBadgeLabel) return;
+    if (this.lootValue <= 0 || this.finished) {
+      this.escapePayoutBadge.setVisible(false);
+      this.escapePayoutBadge.setData("visible", false);
+      this.escapePayoutBadge.setData("label", "");
+      return;
+    }
+
+    const label = `Cashout +${this.lootValue + 2}`;
+    this.escapePayoutBadgeLabel.setText(label.toUpperCase());
+    this.escapePayoutBadge.setVisible(true);
+    this.escapePayoutBadge.setData("visible", true);
+    this.escapePayoutBadge.setData("label", label);
+  }
+
+  private escapeZoneBadgeDebug() {
+    if (!this.escapePayoutBadge?.getData("visible")) return { visible: false, label: "" };
+    return {
+      visible: true,
+      label: String(this.escapePayoutBadge.getData("label") ?? "")
     };
   }
 
