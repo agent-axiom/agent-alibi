@@ -6,6 +6,7 @@ describe("buildMissionBeat", () => {
     const beat = buildMissionBeat({
       targetArtifactName: "Moon Pearl",
       lootValue: 0,
+      rivalLootValue: 0,
       canEscape: false,
       cashoutValue: null,
       routeChoiceRelic: null,
@@ -28,6 +29,7 @@ describe("buildMissionBeat", () => {
     const beat = buildMissionBeat({
       targetArtifactName: "Argent Crown",
       lootValue: 3,
+      rivalLootValue: 0,
       canEscape: true,
       cashoutValue: 5,
       routeChoiceRelic: "Argent Crown +3",
@@ -58,6 +60,7 @@ describe("buildMissionBeat", () => {
     const beat = buildMissionBeat({
       targetArtifactName: "Argent Crown",
       lootValue: 3,
+      rivalLootValue: 0,
       canEscape: true,
       cashoutValue: 5,
       routeChoiceRelic: "Argent Crown +3",
@@ -88,6 +91,7 @@ describe("buildMissionBeat", () => {
     const beat = buildMissionBeat({
       targetArtifactName: "Argent Crown",
       lootValue: 3,
+      rivalLootValue: 0,
       canEscape: true,
       cashoutValue: 5,
       routeChoiceRelic: "Argent Crown +3",
@@ -104,5 +108,46 @@ describe("buildMissionBeat", () => {
       detail: "Argent Crown +3 can extend the chain, but the lift is paying now.",
       action: "Reach Atrium Lift or press G for greed route"
     });
+  });
+
+  it("turns a rival cashout lead into a comeback beat", () => {
+    const beat = buildMissionBeat({
+      targetArtifactName: "Argent Crown",
+      lootValue: 0,
+      rivalLootValue: 3,
+      canEscape: false,
+      cashoutValue: null,
+      routeChoiceRelic: null,
+      routeMode: "escape",
+      rivalCarrier: null,
+      alibiPulseReady: false,
+      nearestRivalName: null
+    });
+
+    expect(beat).toEqual({
+      tone: "danger",
+      kicker: "Score pressure",
+      title: "Red leads by 3",
+      detail: "Argent Crown can swing the race. Steal it, then cash out.",
+      action: "Follow the gold marker before the next red carrier run"
+    });
+  });
+
+  it("keeps the comeback beat when a scan threat is also active", () => {
+    const beat = buildMissionBeat({
+      targetArtifactName: "Argent Crown",
+      lootValue: 0,
+      rivalLootValue: 3,
+      canEscape: false,
+      cashoutValue: null,
+      routeChoiceRelic: null,
+      routeMode: "escape",
+      rivalCarrier: null,
+      alibiPulseReady: true,
+      nearestRivalName: "Rook"
+    });
+
+    expect(beat.kicker).toBe("Score pressure");
+    expect(beat.title).toBe("Red leads by 3");
   });
 });

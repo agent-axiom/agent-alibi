@@ -282,6 +282,7 @@ function makeInitialArcadeHud(state: GameState): ArcadeHudState {
     missionBeat: buildMissionBeat({
       targetArtifactName: "Moon Pearl",
       lootValue: 0,
+      rivalLootValue: 0,
       canEscape: false,
       cashoutValue: null,
       routeChoiceRelic: null,

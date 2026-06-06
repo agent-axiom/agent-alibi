@@ -432,6 +432,10 @@ test("rival carriers only score after cashout", async ({ page }) => {
   await expect(page.getByLabel(/score popup/i).getByText(/red \+3 cashout/i)).toBeVisible();
   await expect(page.getByLabel(/score popup/i).getByText(/rook reached atrium lift/i)).toBeVisible();
   await expect(page.getByLabel(/heist race/i).getByText(/red 3/i)).toBeVisible();
+  const missionBeat = page.getByLabel(/mission beat/i);
+  await expect(missionBeat.getByText(/score pressure/i)).toBeVisible();
+  await expect(missionBeat.getByText(/red leads by 3/i)).toBeVisible();
+  await expect(missionBeat.getByText(/steal it, then cash out/i)).toBeVisible();
 });
 
 test("rival carrier near cashout triggers an imminent warning", async ({ page }) => {
