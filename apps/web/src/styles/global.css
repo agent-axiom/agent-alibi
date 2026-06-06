@@ -1332,6 +1332,19 @@ p {
   text-transform: uppercase;
 }
 
+.arcade-rival-scan {
+  width: fit-content;
+  border: 1px solid rgba(255, 79, 123, 0.44);
+  border-radius: 6px;
+  padding: 6px 9px;
+  background: rgba(255, 79, 123, 0.12);
+  color: #ffd8e2;
+  font-size: 0.82rem;
+  font-weight: 900;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
 .arcade-pace {
   width: fit-content;
   border: 1px solid rgba(255, 213, 106, 0.42);
@@ -1579,6 +1592,10 @@ p {
   }
 
   .arcade-rivals {
+    font-size: 0.72rem;
+  }
+
+  .arcade-rival-scan {
     font-size: 0.72rem;
   }
 

@@ -52,6 +52,11 @@ type ArcadeObjectiveTarget =
 
 type RouteMode = "escape" | "greed";
 
+type RivalScan = {
+  name: string;
+  distanceMeters: number;
+};
+
 type MovementKeys = {
   w: Phaser.Input.Keyboard.Key;
   a: Phaser.Input.Keyboard.Key;
@@ -159,6 +164,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
 
   getDebugState() {
     const target = this.currentObjectiveTarget();
+    const nearestRival = this.nearestRivalScan();
     return {
       player: this.player ? { x: this.player.x, y: this.player.y } : null,
       camera: {
@@ -179,6 +185,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       target,
       hasTargetBeam: Boolean(this.targetBeam),
       routeMode: this.routeMode,
+      nearestRival,
       impulse: this.keyboardImpulse ?? null
     };
   }
@@ -690,6 +697,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       this.player && objectiveTarget
         ? Math.max(0, Math.round(Phaser.Math.Distance.Between(this.player.x, this.player.y, objectiveTarget.x, objectiveTarget.y) / 8))
         : null;
+    const nearestRival = this.nearestRivalScan();
     const guidance = buildArcadeGuidance({
       lootValue: this.lootValue,
       aiLootValue: this.aiLootValue,
@@ -723,11 +731,23 @@ export class ArcadeHeistScene extends Phaser.Scene {
           ? `${objectiveTarget.kind === "escape" ? "Exit" : "Target"} ${targetDistanceMeters}m`
           : null,
       rivalStatus: this.rivalStatus(),
+      rivalDistanceLabel: nearestRival ? `Nearest rival ${nearestRival.distanceMeters}m` : null,
       paceStatus: this.paceStatus(),
       spotlight: this.spotlight,
       feed: this.feed.slice(-5)
     };
     this.config.onHudUpdate(hud);
+  }
+
+  private nearestRivalScan(): RivalScan | null {
+    if (!this.player || this.aiAgents.length === 0) return null;
+    const nearest = this.aiAgents
+      .map((agent) => ({
+        name: agent.name,
+        distanceMeters: Math.max(0, Math.round(Phaser.Math.Distance.Between(this.player!.x, this.player!.y, agent.x, agent.y) / 8))
+      }))
+      .sort((left, right) => left.distanceMeters - right.distanceMeters)[0];
+    return nearest ?? null;
   }
 
   private greedStatus(baseStatus: string | null): string | null {

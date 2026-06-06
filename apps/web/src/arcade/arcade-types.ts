@@ -23,6 +23,7 @@ export type ArcadeHudState = {
   greedStatus: string | null;
   targetDistanceLabel: string | null;
   rivalStatus: string;
+  rivalDistanceLabel: string | null;
   paceStatus: string;
   spotlight: string | null;
   feed: string[];

@@ -11,6 +11,7 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(page.getByText(/1 steal/i)).toBeVisible();
   await expect(page.getByText(/target \d+m/i)).toBeVisible();
   await expect(page.getByText(/rivals enter in \d+s/i)).toBeVisible();
+  await expect(page.getByText(/nearest rival \d+m/i)).toBeVisible();
   await expect(page.getByText(/s-rank pace/i)).toBeVisible();
   await expect(page.getByText(/dash ready/i)).toBeVisible();
   await expect(page.getByText(/rival agents enter in 5 seconds/i)).toBeVisible();
@@ -19,6 +20,7 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   const initialTarget = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());
   expect(initialTarget?.target?.kind).toBe("artifact");
   expect(initialTarget?.hasTargetBeam).toBe(true);
+  expect(initialTarget?.nearestRival?.distanceMeters).toBeGreaterThan(0);
   await page.waitForTimeout(1_600);
   const graceState = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());
   expect(graceState?.aiLootValue).toBe(0);
