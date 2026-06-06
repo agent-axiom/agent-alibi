@@ -646,6 +646,16 @@ p {
   overflow-wrap: anywhere;
 }
 
+.final-rival-relics {
+  border-color: #ff4f7b;
+  background: #fff0f4;
+  box-shadow: 0 8px 0 rgba(255, 79, 123, 0.3);
+}
+
+.final-rival-relics small {
+  overflow-wrap: anywhere;
+}
+
 .final-alibi {
   border-color: #4cf4f0;
   background: #e8feff;

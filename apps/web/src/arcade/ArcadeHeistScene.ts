@@ -100,6 +100,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private lootValue = 0;
   private artifactsStolen = 0;
   private stolenRelicNames: string[] = [];
+  private rivalRelicNames: string[] = [];
   private aiLootValue = 0;
   private lastHudAt = -1;
   private feed: string[] = [];
@@ -279,6 +280,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.lootValue = 0;
     this.artifactsStolen = 0;
     this.stolenRelicNames = [];
+    this.rivalRelicNames = [];
     this.aiLootValue = 0;
     this.lastHudAt = -1;
     this.feed = ["Moon Vault breach started.", "Rival agents enter in 5 seconds.", "Move fast. Steal clean. Escape before lockdown."];
@@ -641,6 +643,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     }
 
     this.aiLootValue += artifact.value;
+    this.rivalRelicNames.push(artifact.name);
     this.alarm = Math.min(5, this.alarm + 0.12);
     this.lastRivalSteal = `Red +${artifact.value}: ${actorLabel} stole ${artifact.name}`;
     this.feedLine(`${actorLabel} stole ${artifact.name}.`);
@@ -1112,6 +1115,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       lootValue: this.lootValue,
       artifactsStolen: this.artifactsStolen,
       stolenRelicNames: this.stolenRelicNames,
+      rivalRelicNames: this.rivalRelicNames,
       aiLootValue: this.aiLootValue,
       alarm: Math.ceil(this.alarm),
       elapsedMs: this.elapsedMs,

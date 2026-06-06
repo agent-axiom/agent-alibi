@@ -50,6 +50,13 @@ export function FinalCaseFile({ summary, onRematch, onHome }: FinalCaseFileProps
               <small>{summary.stolenRelicNames.join(" + ")}</small>
             </div>
           ) : null}
+          {summary.rivalRelicNames && summary.rivalRelicNames.length > 0 ? (
+            <div className="final-score final-rival-relics">
+              <span>Rival Relics</span>
+              <strong>{summary.rivalRelicNames.length}</strong>
+              <small>{summary.rivalRelicNames.join(" + ")}</small>
+            </div>
+          ) : null}
           {summary.alibiPulsesUsed && summary.alibiPulsesUsed > 0 ? (
             <div className="final-score final-alibi">
               <span>Alibi Pulses</span>

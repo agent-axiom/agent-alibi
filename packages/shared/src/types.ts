@@ -106,6 +106,7 @@ export type MatchSummary = {
   lootChain?: number;
   greedRoute?: "successful" | "skipped";
   stolenRelicNames?: string[];
+  rivalRelicNames?: string[];
   alibiPulsesUsed?: number;
   scanBurns?: number;
   caseFile: string;

@@ -140,6 +140,12 @@ test("rival steals trigger a clear red loot alert", async ({ page }) => {
   await expect(rivalLootAlert.getByText(/stole/i)).toBeVisible();
   const afterSteal = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().aiLootValue);
   expect(afterSteal).toBeGreaterThan(0);
+
+  await page.evaluate(() => window.__AGENT_ALIBI_FINISH_ARCADE__?.());
+  const finalScores = page.getByLabel(/final scores/i);
+  await expect(finalScores.getByText(/rival relics/i)).toBeVisible();
+  await expect(finalScores.getByText(/moon pearl/i)).toBeVisible();
+  await expect(page.getByText(/rival relics: moon pearl/i)).toBeVisible();
 });
 
 test("lockdown phase triggers an unmistakable vault warning", async ({ page }) => {
