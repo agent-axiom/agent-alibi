@@ -20,6 +20,9 @@ export type ArcadeHudState = {
   prompt: string;
   loopStep: ArcadeLoopStep;
   raceStatus: string;
+  targetDistanceLabel: string | null;
+  rivalStatus: string;
+  spotlight: string | null;
   feed: string[];
 };
 

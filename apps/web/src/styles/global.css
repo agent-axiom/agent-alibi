@@ -585,6 +585,44 @@ p {
   white-space: pre-wrap;
 }
 
+.final-scoreboard {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.final-score {
+  min-height: 106px;
+  display: grid;
+  align-content: center;
+  gap: 6px;
+  border: 2px solid #171717;
+  border-radius: 8px;
+  padding: 14px;
+  background: #fffaf2;
+  box-shadow: 0 8px 0 rgba(209, 73, 91, 0.26);
+}
+
+.final-score span {
+  color: #7b2d26;
+  font-size: 0.76rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.final-score strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: #171717;
+  font-size: clamp(1.25rem, 3vw, 2.1rem);
+  line-height: 1;
+}
+
+.final-score small {
+  color: #51453f;
+  font-weight: 800;
+}
+
 .slot-list {
   display: grid;
   gap: 8px;
@@ -646,6 +684,10 @@ p {
   .final-actions {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .final-scoreboard {
+    grid-template-columns: 1fr;
   }
 
   .primary-action,
@@ -1018,7 +1060,8 @@ p {
 .arcade-topbar,
 .arcade-roster,
 .arcade-feed,
-.arcade-objective {
+.arcade-objective,
+.arcade-spotlight {
   position: absolute;
   z-index: 2;
 }
@@ -1090,6 +1133,42 @@ p {
 .arcade-alarm i.lit {
   background: #ff4f7b;
   box-shadow: 0 0 18px rgba(255, 79, 123, 0.72);
+}
+
+.arcade-spotlight {
+  top: 94px;
+  left: 50%;
+  border: 1px solid rgba(255, 213, 106, 0.55);
+  border-radius: 8px;
+  padding: 11px 16px;
+  background: rgba(7, 16, 28, 0.82);
+  box-shadow: 0 0 40px rgba(255, 213, 106, 0.28), 0 18px 50px rgba(0, 0, 0, 0.34);
+  color: #ffd56a;
+  font-size: clamp(1rem, 2vw, 1.45rem);
+  font-weight: 950;
+  letter-spacing: 0;
+  line-height: 1;
+  text-transform: uppercase;
+  transform: translateX(-50%);
+  animation: arcade-spotlight-pop 1.8s ease-out both;
+}
+
+@keyframes arcade-spotlight-pop {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px) scale(0.96);
+  }
+
+  14%,
+  72% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-8px) scale(0.99);
+  }
 }
 
 .arcade-roster {
@@ -1173,6 +1252,71 @@ p {
   font-size: clamp(1.15rem, 2.2vw, 1.85rem);
   line-height: 1.05;
   overflow-wrap: anywhere;
+}
+
+.arcade-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.arcade-steps span {
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 1px solid rgba(216, 252, 255, 0.2);
+  border-radius: 999px;
+  padding: 5px 10px;
+  background: rgba(216, 252, 255, 0.08);
+  color: #c8d9e8;
+  font-size: 0.78rem;
+  font-weight: 900;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.arcade-steps span.active {
+  border-color: #ffd56a;
+  background: #ffd56a;
+  color: #07101c;
+  box-shadow: 0 0 24px rgba(255, 213, 106, 0.28);
+}
+
+.arcade-steps b {
+  font-size: 0.72rem;
+}
+
+.arcade-mission-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.arcade-route {
+  width: fit-content;
+  border: 1px solid rgba(76, 244, 240, 0.34);
+  border-radius: 6px;
+  padding: 6px 9px;
+  background: rgba(76, 244, 240, 0.1);
+  color: #d8fcff;
+  font-size: 0.82rem;
+  font-weight: 900;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.arcade-rivals {
+  width: fit-content;
+  border: 1px solid rgba(255, 79, 123, 0.32);
+  border-radius: 6px;
+  padding: 6px 9px;
+  background: rgba(255, 79, 123, 0.1);
+  color: #ffd8e2;
+  font-size: 0.82rem;
+  font-weight: 900;
+  line-height: 1;
+  text-transform: uppercase;
 }
 
 .arcade-objective small {
@@ -1346,6 +1490,12 @@ p {
     display: none;
   }
 
+  .arcade-spotlight {
+    top: 154px;
+    max-width: calc(100vw - 36px);
+    text-align: center;
+  }
+
   .arcade-objective {
     bottom: 10px;
     width: calc(100vw - 20px);
@@ -1354,5 +1504,23 @@ p {
 
   .arcade-objective small {
     font-size: 0.78rem;
+  }
+
+  .arcade-steps {
+    gap: 6px;
+  }
+
+  .arcade-steps span {
+    min-height: 28px;
+    padding: 5px 8px;
+    font-size: 0.7rem;
+  }
+
+  .arcade-route {
+    font-size: 0.72rem;
+  }
+
+  .arcade-rivals {
+    font-size: 0.72rem;
   }
 }

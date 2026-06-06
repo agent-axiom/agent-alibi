@@ -60,6 +60,12 @@ export function MatchScreen({ match }: MatchScreenProps) {
           </div>
         </header>
 
+        {hud?.spotlight ? (
+          <div className="arcade-spotlight" aria-live="polite">
+            {hud.spotlight}
+          </div>
+        ) : null}
+
         <aside className="arcade-roster" aria-label="Live agents">
           {state.players.map((player) => (
             <button
@@ -87,6 +93,25 @@ export function MatchScreen({ match }: MatchScreenProps) {
         <section className="arcade-objective" aria-label="Current objective">
           <span>{hud?.prompt ?? (hud?.phase === "lockdown" ? "Lockdown" : hud?.phase === "alarm" ? "Alarm rising" : "Heist live")}</span>
           <strong>{hud?.objective ?? "Steal a relic before the vault learns your name"}</strong>
+          <div className="arcade-steps" aria-label="Mission loop">
+            <span className={hud?.loopStep === "steal" ? "active" : ""}>
+              <b>1</b> Steal
+            </span>
+            <span className={hud?.loopStep === "escape" ? "active" : ""}>
+              <b>2</b> Escape
+            </span>
+            <span>
+              <b>3</b> Case File
+            </span>
+          </div>
+          <div className="arcade-mission-meta">
+            <div className="arcade-route" aria-label="Route distance">
+              {hud?.targetDistanceLabel ?? "Target plotting"}
+            </div>
+            <div className="arcade-rivals" aria-label="Rival crew status">
+              {hud?.rivalStatus ?? "Rivals scanning"}
+            </div>
+          </div>
           <small>
             {hud?.raceStatus ?? "Loot race is tied"} · WASD / arrows move · click to run · Shift dash · E / Space interact
           </small>

@@ -45,6 +45,10 @@ type RuntimeAgent = {
   ship: Phaser.GameObjects.Container;
 };
 
+type ArcadeObjectiveTarget =
+  | { kind: "artifact"; id: string; label: string; x: number; y: number }
+  | { kind: "escape"; id: "escape"; label: string; x: number; y: number };
+
 type MovementKeys = {
   w: Phaser.Input.Keyboard.Key;
   a: Phaser.Input.Keyboard.Key;
@@ -88,6 +92,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private aiLootValue = 0;
   private lastHudAt = -1;
   private feed: string[] = [];
+  private spotlight: string | null = null;
+  private spotlightUntilMs = 0;
   private finished = false;
   private aiReleased = false;
   private playerName = "Agent You";
@@ -147,6 +153,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
   }
 
   getDebugState() {
+    const target = this.currentObjectiveTarget();
     return {
       player: this.player ? { x: this.player.x, y: this.player.y } : null,
       camera: {
@@ -164,15 +171,17 @@ export class ArcadeHeistScene extends Phaser.Scene {
             y: this.primaryTargetArtifact()!.y
           }
         : null,
+      target,
       impulse: this.keyboardImpulse ?? null
     };
   }
 
   teleportToTargetForDebug() {
     if (!this.player) return;
-    const target = this.primaryTargetArtifact();
+    const target = this.currentObjectiveTarget();
     if (!target) return;
-    this.moveAgent(this.player, target.x - this.player.x, target.y + 28 - this.player.y);
+    const offsetY = target.kind === "artifact" ? 28 : 0;
+    this.moveAgent(this.player, target.x - this.player.x, target.y + offsetY - this.player.y);
     this.pointerTarget = undefined;
     this.emitHudIfNeeded(true);
   }
@@ -213,6 +222,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.aiLootValue = 0;
     this.lastHudAt = -1;
     this.feed = ["Moon Vault breach started.", "Rival agents enter in 5 seconds.", "Move fast. Steal clean. Escape before lockdown."];
+    this.spotlight = null;
+    this.spotlightUntilMs = 0;
     this.finished = false;
     this.aiReleased = false;
     this.targetMarker = undefined;
@@ -546,6 +557,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       this.artifactsStolen += 1;
       this.alarm = Math.min(5, this.alarm + (artifact.size === "major" ? 0.34 : 0.18));
       this.feedLine(`You stole ${artifact.name}. Escape route unlocked.`);
+      this.flashSpotlight(`${artifact.name} secured`);
       this.collectArtifactVisual(artifact, 0xffd56a);
       this.updateTargetMarker();
       return;
@@ -556,6 +568,12 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.feedLine(`${actorLabel} stole ${artifact.name}.`);
     this.collectArtifactVisual(artifact, TEAM_COLORS[actor.teamId]);
     this.updateTargetMarker();
+  }
+
+  private flashSpotlight(text: string) {
+    this.spotlight = text;
+    this.spotlightUntilMs = this.elapsedMs + 1_800;
+    this.emitHudIfNeeded(true);
   }
 
   private tryInteract() {
@@ -645,7 +663,15 @@ export class ArcadeHeistScene extends Phaser.Scene {
     if (!force && this.elapsedMs - this.lastHudAt < 180) return;
     this.lastHudAt = this.elapsedMs;
     const canEscape = this.lootValue > 0 || this.timeLeftMs() <= 30_000;
+    if (this.spotlight && this.elapsedMs >= this.spotlightUntilMs) {
+      this.spotlight = null;
+    }
     const targetArtifact = this.primaryTargetArtifact();
+    const objectiveTarget = this.currentObjectiveTarget();
+    const targetDistanceMeters =
+      this.player && objectiveTarget
+        ? Math.max(0, Math.round(Phaser.Math.Distance.Between(this.player.x, this.player.y, objectiveTarget.x, objectiveTarget.y) / 8))
+        : null;
     const guidance = buildArcadeGuidance({
       lootValue: this.lootValue,
       aiLootValue: this.aiLootValue,
@@ -672,9 +698,21 @@ export class ArcadeHeistScene extends Phaser.Scene {
       prompt: guidance.prompt,
       loopStep: guidance.loopStep,
       raceStatus: guidance.raceStatus,
+      targetDistanceLabel:
+        objectiveTarget && targetDistanceMeters !== null
+          ? `${objectiveTarget.kind === "escape" ? "Exit" : "Target"} ${targetDistanceMeters}m`
+          : null,
+      rivalStatus: this.rivalStatus(),
+      spotlight: this.spotlight,
       feed: this.feed.slice(-5)
     };
     this.config.onHudUpdate(hud);
+  }
+
+  private rivalStatus(): string {
+    if (this.aiReleased) return "Rivals active";
+    const seconds = Math.max(1, Math.ceil(Math.max(0, AI_GRACE_MS - this.elapsedMs - 500) / 1000));
+    return `Rivals enter in ${seconds}s`;
   }
 
   private primaryTargetArtifact(): RuntimeArtifact | undefined {
@@ -684,6 +722,29 @@ export class ArcadeHeistScene extends Phaser.Scene {
         if (a.size !== b.size) return a.size === "major" ? -1 : 1;
         return b.value - a.value;
       })[0];
+  }
+
+  private currentObjectiveTarget(): ArcadeObjectiveTarget | undefined {
+    if ((this.lootValue > 0 || this.timeLeftMs() <= 30_000) && this.escapeZone) {
+      return {
+        kind: "escape",
+        id: "escape",
+        label: "Atrium Lift",
+        x: this.escapeZone.x,
+        y: this.escapeZone.y
+      };
+    }
+
+    const artifact = this.primaryTargetArtifact();
+    return artifact
+      ? {
+          kind: "artifact",
+          id: artifact.id,
+          label: artifact.name,
+          x: artifact.x,
+          y: artifact.y
+        }
+      : undefined;
   }
 
   private nearPlayerArtifact(): RuntimeArtifact | undefined {
@@ -696,19 +757,20 @@ export class ArcadeHeistScene extends Phaser.Scene {
   }
 
   private updateTargetMarker() {
-    const target = this.primaryTargetArtifact();
+    const target = this.currentObjectiveTarget();
     if (!target) {
       this.targetMarker?.destroy(true);
       this.targetMarker = undefined;
       return;
     }
 
-    if (!this.targetMarker || this.targetMarker.getData("artifactId") !== target.id) {
+    const targetKey = `${target.kind}:${target.id}`;
+    if (!this.targetMarker || this.targetMarker.getData("targetKey") !== targetKey) {
       this.targetMarker?.destroy(true);
       const ring = this.add.circle(0, 0, 44, 0xffd56a, 0.08).setStrokeStyle(4, 0xffd56a, 0.9);
       const pointer = this.add.triangle(0, -62, 0, -18, -16, 12, 16, 12, 0xffd56a, 0.92);
       const label = this.add
-        .text(0, -88, "TARGET", {
+        .text(0, -88, target.kind === "escape" ? "ESCAPE" : "TARGET", {
           color: "#ffd56a",
           fontFamily: "Inter, Arial, sans-serif",
           fontSize: "13px",
@@ -718,7 +780,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
         })
         .setOrigin(0.5);
       this.targetMarker = this.add.container(target.x, target.y, [ring, pointer, label]).setDepth(16);
-      this.targetMarker.setData("artifactId", target.id);
+      this.targetMarker.setData("targetKey", targetKey);
       this.tweens.add({
         targets: ring,
         scale: { from: 0.9, to: 1.2 },
