@@ -656,7 +656,45 @@ test("lockdown phase triggers an unmistakable vault warning", async ({ page }) =
   const vaultCondition = page.getByLabel(/vault condition/i);
   await expect(vaultCondition.getByText(/vault lockdown/i)).toBeVisible();
   await expect(vaultCondition.getByText(/lockdown imminent/i)).toBeVisible();
-  await expect(page.getByText(/lockdown is closing/i)).toBeVisible();
+  await expect(page.locator(".arcade-shell")).toHaveClass(/countdown-pulse-active/);
+  const countdownPulse = page.getByLabel(/final countdown pulse/i);
+  await expect(countdownPulse.getByText(/final 30s/i)).toBeVisible();
+  await expect(countdownPulse.getByText(/cashout now/i)).toBeVisible();
+  const countdownState = await page.evaluate(() => {
+    const pulse = document.querySelector(`[aria-label="Final countdown pulse"]`);
+    const objective = document.querySelector(`[aria-label="Current objective"]`);
+    const pulseRect = pulse?.getBoundingClientRect();
+    const objectiveRect = objective?.getBoundingClientRect();
+    const overlapsObjective = Boolean(
+      pulseRect &&
+        objectiveRect &&
+        pulseRect.left < objectiveRect.right &&
+        pulseRect.right > objectiveRect.left &&
+        pulseRect.top < objectiveRect.bottom &&
+        pulseRect.bottom > objectiveRect.top
+    );
+    return {
+      pointerEvents: pulse ? getComputedStyle(pulse).pointerEvents : null,
+      overlapsObjective,
+      present: Boolean(pulse)
+    };
+  });
+  expect(countdownState).toEqual({ pointerEvents: "none", overlapsObjective: false, present: true });
+  const missionBeat = page.getByLabel(/mission beat/i);
+  await expect(missionBeat.getByText(/final countdown/i)).toBeVisible();
+  await expect(missionBeat.getByText(/lockdown is closing/i)).toBeVisible();
+  await expect(missionBeat.getByText(/cashout or escape now/i)).toBeVisible();
+  await expect(missionBeat).not.toContainText(/first objective|steal moon pearl/i);
+  await expect(page.locator('[aria-label="Current objective"] > strong')).toContainText(/lockdown is closing/i);
+  const threatVector = page.getByLabel(/threat vector/i);
+  await expect(threatVector.getByText(/vault sealing/i)).toBeVisible();
+  await expect(threatVector.getByText(/cashout before the doors close/i)).toBeVisible();
+  await expect(threatVector).not.toContainText(/rivals waking|choose cashout or greed/i);
+  const rivalCrewStatus = page.getByLabel(/rival crew status/i);
+  await expect(rivalCrewStatus).toContainText(/vault sealing/i);
+  await expect(rivalCrewStatus).not.toContainText(/rivals waking/i);
+  await expect(page.getByLabel(/rival comms/i)).toBeHidden();
+  await expect(page.locator(".arcade-shell")).not.toHaveClass(/breach-alert/);
 });
 
 test("alibi pulse jams a close rival scan", async ({ page }) => {

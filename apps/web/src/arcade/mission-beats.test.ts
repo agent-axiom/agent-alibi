@@ -2,6 +2,34 @@ import { describe, expect, it } from "vitest";
 import { buildMissionBeat } from "./mission-beats";
 
 describe("buildMissionBeat", () => {
+  it("turns lockdown into an escape-first beat instead of a relic objective", () => {
+    const input = {
+      targetArtifactName: "Moon Pearl",
+      targetArtifactValue: 3,
+      lootValue: 0,
+      rivalLootValue: 0,
+      canEscape: false,
+      cashoutValue: null,
+      routeChoiceRelic: null,
+      routeMode: "escape" as const,
+      rivalCarrier: null,
+      alibiPulseReady: false,
+      nearestRivalName: null,
+      phase: "lockdown" as const,
+      timeLeftMs: 29_000
+    };
+
+    const beat = buildMissionBeat(input);
+
+    expect(beat).toEqual({
+      tone: "danger",
+      kicker: "Final countdown",
+      title: "Lockdown is closing",
+      detail: "The Moon Vault seals soon. Stop chasing relics and reach the lift.",
+      action: "Cashout or escape now"
+    });
+  });
+
   it("starts the heist with one concrete objective beat", () => {
     const beat = buildMissionBeat({
       targetArtifactName: "Moon Pearl",

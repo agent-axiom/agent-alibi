@@ -1,4 +1,4 @@
-import type { ArcadeMissionBeat, ArcadeRivalIntercept } from "./arcade-types";
+import type { ArcadeHudPhase, ArcadeMissionBeat, ArcadeRivalIntercept } from "./arcade-types";
 
 export type MissionBeatInput = {
   targetArtifactName: string | null;
@@ -12,9 +12,21 @@ export type MissionBeatInput = {
   rivalCarrier: ArcadeRivalIntercept | null;
   alibiPulseReady: boolean;
   nearestRivalName: string | null;
+  phase?: ArcadeHudPhase;
+  timeLeftMs?: number;
 };
 
 export function buildMissionBeat(input: MissionBeatInput): ArcadeMissionBeat {
+  if (input.phase === "lockdown" || (input.timeLeftMs !== undefined && input.timeLeftMs <= 30_000)) {
+    return {
+      tone: "danger",
+      kicker: "Final countdown",
+      title: "Lockdown is closing",
+      detail: "The Moon Vault seals soon. Stop chasing relics and reach the lift.",
+      action: "Cashout or escape now"
+    };
+  }
+
   if (input.rivalCarrier) {
     return {
       tone: "danger",

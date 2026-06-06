@@ -46,12 +46,14 @@ export function MatchScreen({ match, soundEnabled = false, onToggleSound }: Matc
     const blueRaceLabel = carriedLoot ? `Blue carrying +${carriedLoot.loot}` : `Blue ${blueLoot}`;
     const raceStatusLabel = carriedLoot ? `Bank +${carriedLoot.cashout} at lift` : (hud?.raceStatus ?? "Loot race is tied");
     const SoundIcon = soundEnabled ? Volume2 : VolumeX;
-    const breachAlert = hud?.rivalBark?.agentName === "Red Crew" && /breach live/i.test(hud.rivalBark.line);
     const routePulse = hud?.routePulse ?? null;
     const scanLockActive = hud?.threatCue?.label === "Scan lock" && /jam/i.test(hud.threatCue.action);
+    const countdownPulseActive = hud?.phase === "lockdown";
+    const visibleRivalBark = countdownPulseActive ? null : (hud?.rivalBark ?? null);
+    const breachAlert = visibleRivalBark?.agentName === "Red Crew" && /breach live/i.test(visibleRivalBark.line);
     return (
       <main
-        className={`arcade-shell ${hud?.phase ?? "stealth"} ${hudDensity === "opening" ? "compact-opening" : ""} ${breachAlert ? "breach-alert" : ""} ${routePulse ? "route-pulse-active" : ""} ${scanLockActive ? "scan-lock-active" : ""}`}
+        className={`arcade-shell ${hud?.phase ?? "stealth"} ${hudDensity === "opening" ? "compact-opening" : ""} ${breachAlert ? "breach-alert" : ""} ${routePulse ? "route-pulse-active" : ""} ${scanLockActive ? "scan-lock-active" : ""} ${countdownPulseActive ? "countdown-pulse-active" : ""}`}
       >
         <Suspense
           fallback={
@@ -75,6 +77,13 @@ export function MatchScreen({ match, soundEnabled = false, onToggleSound }: Matc
             <span>Scan lock</span>
             <strong>Press E / Space</strong>
             <small>Jam scan before alarm burns</small>
+          </div>
+        ) : null}
+        {countdownPulseActive ? (
+          <div className="arcade-countdown-pulse" aria-label="Final countdown pulse">
+            <span>Final 30s</span>
+            <strong>Cashout now</strong>
+            <small>{formatClock(hud.timeLeftMs)} before the vault seals</small>
           </div>
         ) : null}
         {routePulse ? (
@@ -180,10 +189,10 @@ export function MatchScreen({ match, soundEnabled = false, onToggleSound }: Matc
           </div>
         ) : null}
 
-        {hud?.rivalBark ? (
-          <div className={`arcade-rival-bark ${hud.rivalBark.tone}`} aria-label="Rival comms" aria-live="polite">
-            <span>{hud.rivalBark.agentName}</span>
-            <strong>{hud.rivalBark.line}</strong>
+        {visibleRivalBark ? (
+          <div className={`arcade-rival-bark ${visibleRivalBark.tone}`} aria-label="Rival comms" aria-live="polite">
+            <span>{visibleRivalBark.agentName}</span>
+            <strong>{visibleRivalBark.line}</strong>
           </div>
         ) : null}
 
