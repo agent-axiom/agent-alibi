@@ -177,7 +177,10 @@ export function useLocalMatch(): LocalMatchController {
             aiLootValue: result.aiLootValue,
             artifactsStolen: result.artifactsStolen,
             timeLeftMs: Math.max(0, ARCADE_MISSION_DURATION_MS - result.elapsedMs),
-            objective: result.outcome === "escaped" ? "Case closed. Exit route burned clean." : "Case closed. The vault kept its receipt."
+            objective: result.outcome === "escaped" ? "Case closed. Exit route burned clean." : "Case closed. The vault kept its receipt.",
+            prompt: "Review the case file",
+            loopStep: result.outcome === "escaped" ? "escape" : "survive",
+            raceStatus: result.lootValue >= result.aiLootValue ? "You won the loot race" : "AI crew won the loot race"
           }
         : current
     );
@@ -238,7 +241,10 @@ function makeInitialArcadeHud(state: GameState): ArcadeHudState {
     totalArtifacts: state.artifacts.length,
     canEscape: false,
     dashReady: true,
-    objective: "Steal a relic before the vault learns your name",
+    objective: "Steal the Moon Pearl",
+    prompt: "Follow the gold marker",
+    loopStep: "steal",
+    raceStatus: "Loot race is tied",
     feed: ["Moon Vault breach started.", "Move fast. Steal clean. Escape before lockdown."]
   };
 }

@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import type { ArtifactState, GameState, PlayerState, Room, TeamId } from "@agent-alibi/shared";
 import { ARCADE_MISSION_DURATION_MS, type ArcadeHudPhase, type ArcadeHudState, type ArcadeMissionConfig } from "./arcade-types";
+import { buildArcadeGuidance } from "./guidance";
 import { nextMovementImpulse, selectMovementVector, type MovementImpulse, type MovementVector } from "./movement";
 
 const WORLD_WIDTH = 1680;
@@ -599,11 +600,18 @@ export class ArcadeHeistScene extends Phaser.Scene {
     if (!force && this.elapsedMs - this.lastHudAt < 180) return;
     this.lastHudAt = this.elapsedMs;
     const canEscape = this.lootValue > 0 || this.timeLeftMs() <= 30_000;
-    const objective = canEscape
-      ? this.isNearExit()
-        ? "Press E / Space to vanish through the lift"
-        : "Return to the Atrium lift and escape"
-      : "Steal a relic before the vault learns your name";
+    const targetArtifact = this.primaryTargetArtifact();
+    const guidance = buildArcadeGuidance({
+      lootValue: this.lootValue,
+      aiLootValue: this.aiLootValue,
+      artifactsStolen: this.artifactsStolen,
+      totalArtifacts: this.artifacts.length,
+      targetArtifactName: targetArtifact?.name ?? null,
+      nearArtifactName: this.nearPlayerArtifact()?.name ?? null,
+      nearExit: this.isNearExit(),
+      canEscape,
+      timeLeftMs: this.timeLeftMs()
+    });
 
     const hud: ArcadeHudState = {
       phase: this.phase(),
@@ -615,10 +623,31 @@ export class ArcadeHeistScene extends Phaser.Scene {
       totalArtifacts: this.artifacts.length,
       canEscape,
       dashReady: this.dashCooldownMs <= 0,
-      objective,
+      objective: guidance.objective,
+      prompt: guidance.prompt,
+      loopStep: guidance.loopStep,
+      raceStatus: guidance.raceStatus,
       feed: this.feed.slice(-5)
     };
     this.config.onHudUpdate(hud);
+  }
+
+  private primaryTargetArtifact(): RuntimeArtifact | undefined {
+    return this.artifacts
+      .filter((artifact) => !artifact.takenBy)
+      .sort((a, b) => {
+        if (a.size !== b.size) return a.size === "major" ? -1 : 1;
+        return b.value - a.value;
+      })[0];
+  }
+
+  private nearPlayerArtifact(): RuntimeArtifact | undefined {
+    if (!this.player) return undefined;
+    return this.artifacts.find(
+      (artifact) =>
+        !artifact.takenBy &&
+        Phaser.Math.Distance.Between(this.player!.x, this.player!.y, artifact.x, artifact.y) <= PICKUP_RADIUS + 18
+    );
   }
 
   private finish(outcome: "escaped" | "sealed" | "caught") {
