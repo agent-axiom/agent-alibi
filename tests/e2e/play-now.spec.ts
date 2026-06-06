@@ -1,10 +1,15 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
-test("solo match starts and reaches final case file", async ({ page }) => {
+async function startSoloArcade(page: Page) {
   await page.goto("/");
   await page.getByRole("button", { name: /play now vs ai/i }).click();
 
   await expect(page.getByLabel(/playable moon vault arcade scene/i)).toBeVisible();
+}
+
+test("solo match starts and reaches final case file", async ({ page }) => {
+  await startSoloArcade(page);
+
   await expect(page.getByText(/moon vault run/i)).toBeVisible();
   await expect(page.getByText(/timer/i)).toBeVisible();
   await expect(page.getByText(/steal the moon pearl/i)).toBeVisible();
@@ -24,9 +29,6 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await page.waitForTimeout(1_600);
   const graceState = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());
   expect(graceState?.aiLootValue).toBe(0);
-  await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.forceRivalPressure(8));
-  await expect(page.getByText(/rival on you: .+ 8m/i)).toBeVisible();
-  await expect(page.getByText(/dash or break line/i)).toBeVisible();
 
   const beforeMove = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().player);
   await page.keyboard.down("ArrowRight");
@@ -74,4 +76,23 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await page.getByRole("button", { name: /copy result/i }).click();
   await expect(page.getByText(/copied/i)).toBeVisible();
   await expect(page.getByRole("button", { name: /rematch/i })).toBeVisible();
+});
+
+test("close rivals burn the player's alibi if contact is not broken", async ({ page }) => {
+  await startSoloArcade(page);
+  await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_STATE__ === "function");
+  await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.forceRivalPressure(8));
+  await expect(page.getByText(/rival on you: .+ 8m/i)).toBeVisible();
+  await expect(page.getByText(/dash or break line/i)).toBeVisible();
+
+  const alarmBeforeScan = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().alarmRaw);
+  for (let tick = 0; tick < 5; tick += 1) {
+    await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.forceRivalPressure(8));
+    await page.waitForTimeout(240);
+  }
+
+  await expect(page.getByText(/alibi scan \+1 alarm/i)).toBeVisible();
+  await expect(page.getByText(/rival scan burned your alibi/i)).toBeVisible();
+  const alarmAfterScan = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().alarmRaw);
+  expect(alarmAfterScan).toBeGreaterThan((alarmBeforeScan ?? 0) + 0.4);
 });

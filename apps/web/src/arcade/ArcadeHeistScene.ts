@@ -4,6 +4,7 @@ import { rateArcadeRun } from "./arcade-rules";
 import { ARCADE_MISSION_DURATION_MS, type ArcadeHudPhase, type ArcadeHudState, type ArcadeMissionConfig } from "./arcade-types";
 import { buildArcadeGuidance, buildRivalPressure, type RivalPressure } from "./guidance";
 import { nextMovementImpulse, selectMovementVector, type MovementImpulse, type MovementVector } from "./movement";
+import { updateRivalScan as advanceRivalScan, type RivalScanState } from "./rival-scan";
 
 const WORLD_WIDTH = 1680;
 const WORLD_HEIGHT = 1040;
@@ -105,6 +106,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private finished = false;
   private aiReleased = false;
   private lastRivalPressureLevel: RivalPressure["level"] = "standby";
+  private rivalScanState: RivalScanState = { chargeMs: 0, cooldownMs: 0 };
   private playerName = "Agent You";
   private routeMode: RouteMode = "escape";
   private escapeZone?: Phaser.GameObjects.Container;
@@ -175,6 +177,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       },
       lootValue: this.lootValue,
       aiLootValue: this.aiLootValue,
+      alarmRaw: Number(this.alarm.toFixed(3)),
       targetArtifact: this.primaryTargetArtifact()
         ? {
             id: this.primaryTargetArtifact()!.id,
@@ -221,6 +224,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.updatePlayer(delta);
     this.updateAi(delta);
     this.updateRivalPressureFeed();
+    this.updateRivalScan(delta);
     this.updateTargetMarker();
     this.updateAlarm(delta);
     this.emitHudIfNeeded(false);
@@ -254,6 +258,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.finished = false;
     this.aiReleased = false;
     this.lastRivalPressureLevel = "standby";
+    this.rivalScanState = { chargeMs: 0, cooldownMs: 0 };
     this.routeMode = "escape";
     this.targetMarker = undefined;
     this.targetBeam = undefined;
@@ -764,6 +769,16 @@ export class ArcadeHeistScene extends Phaser.Scene {
     if (this.lastRivalPressureLevel === pressure.level || !pressure.radioLine) return;
     this.lastRivalPressureLevel = pressure.level;
     this.feedLine(pressure.radioLine);
+  }
+
+  private updateRivalScan(delta: number) {
+    const pressure = this.rivalPressure();
+    const result = advanceRivalScan(this.rivalScanState, pressure.level, delta);
+    this.rivalScanState = result.state;
+    if (result.alarmDelta <= 0) return;
+    this.alarm = Math.min(5, this.alarm + result.alarmDelta);
+    if (result.spotlight) this.flashSpotlight(result.spotlight);
+    if (result.radioLine) this.feedLine(result.radioLine);
   }
 
   private nearestRivalScan(): RivalScan | null {
