@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import type { MusicTrackId } from "../arcade/music";
+import { buildPublicAssetPath } from "../deploy/base-path";
 import { fadeProgress } from "./fade";
 
 const TRACK_SOURCES: Record<MusicTrackId, string> = {
-  menu: "/audio/agent_alibi_main_loop.mp3",
-  stealth: "/audio/music_stealth_loop.mp3",
-  alarm: "/audio/music_alarm_loop.mp3",
-  lockdown: "/audio/music_lockdown_loop.mp3"
+  menu: buildPublicAssetPath(import.meta.env.BASE_URL, "audio/agent_alibi_main_loop.mp3"),
+  stealth: buildPublicAssetPath(import.meta.env.BASE_URL, "audio/music_stealth_loop.mp3"),
+  alarm: buildPublicAssetPath(import.meta.env.BASE_URL, "audio/music_alarm_loop.mp3"),
+  lockdown: buildPublicAssetPath(import.meta.env.BASE_URL, "audio/music_lockdown_loop.mp3")
 };
 
 const TRACK_VOLUME: Record<MusicTrackId, number> = {
