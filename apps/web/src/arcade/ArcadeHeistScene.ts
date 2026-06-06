@@ -89,6 +89,8 @@ type RivalCarrierRun = {
   directionLabel: string;
 };
 
+type ImpactKind = "steal" | "intercept" | "alibi" | "escape" | "lockdown";
+
 type MovementKeys = {
   w: Phaser.Input.Keyboard.Key;
   a: Phaser.Input.Keyboard.Key;
@@ -156,6 +158,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private escapeZone?: Phaser.GameObjects.Container;
   private targetMarker?: Phaser.GameObjects.Container;
   private targetBeam?: Phaser.GameObjects.Graphics;
+  private impactCount = 0;
+  private lastImpact: { kind: ImpactKind; count: number; atMs: number } | null = null;
 
   constructor() {
     super("arcade-heist");
@@ -267,7 +271,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
       nearestRival,
       lastRivalSteal: this.lastRivalSteal,
       rivalIntercept: this.rivalIntercept(),
-      impulse: this.keyboardImpulse ?? null
+      impulse: this.keyboardImpulse ?? null,
+      lastImpact: this.lastImpact
     };
   }
 
@@ -306,6 +311,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
   forceLockdownForDebug() {
     this.elapsedMs = Math.max(this.elapsedMs, ARCADE_MISSION_DURATION_MS - 25_000);
     this.flashSpotlight("Vault lockdown");
+    this.impactPulse("lockdown");
     this.feedLine("Vault lockdown imminent. Escape route priority.");
     this.emitHudIfNeeded(true);
   }
@@ -371,6 +377,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.routeMode = "escape";
     this.targetMarker = undefined;
     this.targetBeam = undefined;
+    this.impactCount = 0;
+    this.lastImpact = null;
     this.playerName = config.state.players.find((player) => player.kind === "human")?.name ?? "Agent You";
 
     this.tweens.killAll();
@@ -724,6 +732,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
         detail: this.artifactsStolen > 1 ? `Loot chain x${this.artifactsStolen}` : "Relic secured"
       });
       this.flashObjectiveBanner(this.buildEscapeBanner(this.artifactsStolen === 1));
+      this.impactPulse("steal");
       this.collectArtifactVisual(artifact, 0xffd56a);
       this.updateTargetMarker();
       return;
@@ -755,6 +764,23 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.objectiveBanner = banner;
     this.objectiveBannerUntilMs = this.elapsedMs + durationMs;
     this.emitHudIfNeeded(true);
+  }
+
+  private impactPulse(kind: ImpactKind) {
+    this.impactCount += 1;
+    this.lastImpact = { kind, count: this.impactCount, atMs: Math.round(this.elapsedMs) };
+
+    const camera = this.cameras.main;
+    const settings = {
+      steal: { duration: 130, intensity: 0.0045, color: [255, 213, 106] },
+      intercept: { duration: 170, intensity: 0.0062, color: [255, 79, 123] },
+      alibi: { duration: 150, intensity: 0.0048, color: [76, 244, 240] },
+      escape: { duration: 190, intensity: 0.0055, color: [126, 255, 223] },
+      lockdown: { duration: 220, intensity: 0.007, color: [255, 79, 123] }
+    } satisfies Record<ImpactKind, { duration: number; intensity: number; color: [number, number, number] }>;
+    const impact = settings[kind];
+    camera.shake(impact.duration, impact.intensity, true);
+    camera.flash(impact.duration, impact.color[0], impact.color[1], impact.color[2], true);
   }
 
   private buildEscapeBanner(includeGreedHint: boolean): ArcadeObjectiveBanner {
@@ -821,6 +847,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       label: `Recovered +${recoveredValue}`,
       detail: this.relicListLabel(recovered)
     });
+    this.impactPulse("intercept");
     this.feedLine(`Intercepted ${rival.name}. Recovered ${this.relicListLabel(recovered)}.`);
     this.addInterceptVisual(rival.x, rival.y);
     this.updateTargetMarker();
@@ -839,6 +866,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.shoveRivalAway(rival);
     this.addAlibiPulseVisual();
     this.flashSpotlight("Alibi pulse: scanner jammed");
+    this.impactPulse("alibi");
     this.feedLine(`You jammed ${rival.name}'s scan. Break for the exit.`);
     return true;
   }
@@ -1521,6 +1549,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     if (!this.config || this.finished) return;
     this.finished = true;
     if (outcome === "escaped") {
+      this.impactPulse("escape");
       this.scorePopup = {
         tone: "bonus",
         label: "+2 Escape bonus",

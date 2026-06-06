@@ -74,6 +74,9 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(objectiveBanner.getByText(/cashout 5 or risk greed route/i)).toBeVisible();
   const scorePopup = page.getByLabel(/score popup/i);
   await expect(scorePopup.getByText(/\+3 moon pearl/i)).toBeVisible();
+  const stealImpact = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().lastImpact);
+  expect(stealImpact?.kind).toBe("steal");
+  expect(stealImpact?.count).toBeGreaterThan(0);
   await expect(missionBeat.getByText(/loot secured/i)).toBeVisible();
   await expect(missionBeat.getByText(/cashout worth 5/i)).toBeVisible();
   await expect(missionBeat.getByText(/reach atrium lift or press g/i)).toBeVisible();
@@ -320,6 +323,7 @@ test("rival steals trigger a clear red loot alert", async ({ page }) => {
   const afterIntercept = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());
   expect(afterIntercept?.lootValue).toBeGreaterThan(0);
   expect(afterIntercept?.aiLootValue).toBe(0);
+  expect(afterIntercept?.lastImpact?.kind).toBe("intercept");
 
   await page.evaluate(() => window.__AGENT_ALIBI_FINISH_ARCADE__?.());
   const finalScores = page.getByLabel(/final scores/i);
@@ -375,6 +379,7 @@ test("alibi pulse jams a close rival scan", async ({ page }) => {
   const afterPulse = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());
   expect(afterPulse?.alibiPulseCooldownMs).toBeGreaterThan(0);
   expect(afterPulse?.rivalScanChargeMs).toBe(0);
+  expect(afterPulse?.lastImpact?.kind).toBe("alibi");
 
   for (let tick = 0; tick < 3; tick += 1) {
     await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.forceRivalPressure(8));
