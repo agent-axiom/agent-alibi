@@ -3,6 +3,7 @@ import { Eye, Footprints, Gem, Hand, LockKeyhole, Radio, Shield, Sparkles, Volum
 import type { ActionKind } from "@agent-alibi/shared";
 import { selectArcadeHudDensity } from "../arcade/hud-density";
 import type { LocalMatchController } from "../local/useLocalMatch";
+import { buildArcadeMomentumMeter } from "./arcade-momentum";
 
 type MatchScreenProps = {
   match: LocalMatchController;
@@ -78,6 +79,13 @@ export function MatchScreen({ match, soundEnabled = false, onToggleSound }: Matc
         status: contractCurrent === "cashout" ? "current" : "queued"
       }
     ];
+    const momentumMeter =
+      hudDensity === "opening"
+        ? null
+        : buildArcadeMomentumMeter({
+            cleanBonusWindow: hud?.cleanBonusWindow ?? null,
+            lootChainWindow: hud?.lootChainWindow ?? null
+          });
     return (
       <main
         className={`arcade-shell ${hud?.phase ?? "stealth"} ${hudDensity === "opening" ? "compact-opening" : ""} ${breachAlert ? "breach-alert" : ""} ${routePulse ? "route-pulse-active" : ""} ${scanLockActive ? "scan-lock-active" : ""} ${threatCueActive ? "threat-cue-active" : ""} ${denseThreatActive ? "dense-threat-active" : ""} ${countdownPulseActive ? "countdown-pulse-active" : ""}`}
@@ -366,6 +374,26 @@ export function MatchScreen({ match, soundEnabled = false, onToggleSound }: Matc
             <div className="arcade-pace" aria-label="Run pace">
               {hud?.paceStatus ?? "Pace unknown"}
             </div>
+            {momentumMeter ? (
+              <div
+                aria-label="Momentum meter"
+                aria-valuemax={100}
+                aria-valuemin={0}
+                aria-valuenow={momentumMeter.value}
+                className={`arcade-momentum-meter ${momentumMeter.tone}`}
+                role="progressbar"
+              >
+                <div>
+                  <span>Momentum</span>
+                  <strong>{momentumMeter.label}</strong>
+                  <small>{momentumMeter.detail}</small>
+                </div>
+                <i>
+                  <b style={{ width: `${momentumMeter.value}%` }} />
+                </i>
+                <em>{momentumMeter.action}</em>
+              </div>
+            ) : null}
             {hud?.cleanBonusWindow ? (
               <div className="arcade-clean-bonus" aria-label="Clean bonus window">
                 <span>{hud.cleanBonusWindow.label}</span>
