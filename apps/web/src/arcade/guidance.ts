@@ -50,6 +50,16 @@ export type ActiveActionHint = {
 export function buildArcadeGuidance(input: ArcadeGuidanceInput): ArcadeGuidance {
   const raceStatus = buildRaceStatus(input.lootValue, input.aiLootValue);
 
+  if (input.timeLeftMs <= 30_000 && input.lootValue <= 0) {
+    return {
+      objective: "Lockdown is closing",
+      prompt: input.nearExit ? "Press E / Space to escape" : "Reach the escape lift",
+      loopStep: "survive",
+      raceStatus,
+      greedStatus: null
+    };
+  }
+
   if (input.canEscape) {
     return {
       objective: `Escape with ${input.lootValue} loot`,
@@ -57,16 +67,6 @@ export function buildArcadeGuidance(input: ArcadeGuidanceInput): ArcadeGuidance 
       loopStep: "escape",
       raceStatus,
       greedStatus: input.targetArtifactName && input.timeLeftMs > 45_000 ? `Optional relic: ${input.targetArtifactName}` : null
-    };
-  }
-
-  if (input.timeLeftMs <= 30_000) {
-    return {
-      objective: "Lockdown is closing",
-      prompt: input.nearExit ? "Press E / Space to escape" : "Reach the escape lift",
-      loopStep: "survive",
-      raceStatus,
-      greedStatus: null
     };
   }
 

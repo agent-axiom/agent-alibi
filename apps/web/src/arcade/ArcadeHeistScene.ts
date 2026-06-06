@@ -235,6 +235,13 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.emitHudIfNeeded(true);
   }
 
+  forceLockdownForDebug() {
+    this.elapsedMs = Math.max(this.elapsedMs, ARCADE_MISSION_DURATION_MS - 25_000);
+    this.flashSpotlight("Vault lockdown");
+    this.feedLine("Vault lockdown imminent. Escape route priority.");
+    this.emitHudIfNeeded(true);
+  }
+
   override update(_time: number, delta: number) {
     if (!this.state || !this.player || this.finished) return;
 
@@ -822,6 +829,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       loopStep: alibiPulseReady ? "survive" : guidance.loopStep,
       raceStatus: guidance.raceStatus,
       lastRivalSteal: this.lastRivalSteal,
+      vaultCondition: this.vaultCondition(),
       radarBlips: this.buildRadarBlips(objectiveTarget),
       greedStatus: this.greedStatus(guidance.greedStatus),
       targetDistanceLabel:
@@ -882,6 +890,28 @@ export class ArcadeHeistScene extends Phaser.Scene {
       nearestRivalName: scan?.name ?? null,
       distanceMeters: scan?.distanceMeters ?? null
     });
+  }
+
+  private vaultCondition() {
+    if (this.phase() === "lockdown") {
+      return {
+        tone: "lockdown" as const,
+        label: "Vault Lockdown",
+        detail: "Lockdown imminent"
+      };
+    }
+    if (this.phase() === "alarm") {
+      return {
+        tone: "alarm" as const,
+        label: "Alarm Rising",
+        detail: "Guards triangulating"
+      };
+    }
+    return {
+      tone: "stable" as const,
+      label: "Vault Stable",
+      detail: "Low profile"
+    };
   }
 
   private buildRadarBlips(target?: ArcadeObjectiveTarget): ArcadeRadarBlip[] {

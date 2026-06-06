@@ -15,6 +15,12 @@ export type ArcadeRadarBlip = {
   y: number;
 };
 
+export type ArcadeVaultCondition = {
+  tone: "stable" | "alarm" | "lockdown";
+  label: string;
+  detail: string;
+};
+
 export type ArcadeHudState = {
   phase: ArcadeHudPhase;
   timeLeftMs: number;
@@ -31,6 +37,7 @@ export type ArcadeHudState = {
   loopStep: ArcadeLoopStep;
   raceStatus: string;
   lastRivalSteal: string | null;
+  vaultCondition: ArcadeVaultCondition;
   radarBlips: ArcadeRadarBlip[];
   greedStatus: string | null;
   targetDistanceLabel: string | null;

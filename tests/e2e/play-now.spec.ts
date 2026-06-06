@@ -142,6 +142,25 @@ test("rival steals trigger a clear red loot alert", async ({ page }) => {
   expect(afterSteal).toBeGreaterThan(0);
 });
 
+test("lockdown phase triggers an unmistakable vault warning", async ({ page }) => {
+  await startSoloArcade(page);
+  await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_STATE__ === "function");
+  await page.evaluate(() =>
+    (
+      window.__AGENT_ALIBI_ARCADE_DEBUG__ as
+        | {
+            forceLockdown?: () => void;
+          }
+        | undefined
+    )?.forceLockdown?.()
+  );
+
+  const vaultCondition = page.getByLabel(/vault condition/i);
+  await expect(vaultCondition.getByText(/vault lockdown/i)).toBeVisible();
+  await expect(vaultCondition.getByText(/lockdown imminent/i)).toBeVisible();
+  await expect(page.getByText(/lockdown is closing/i)).toBeVisible();
+});
+
 test("alibi pulse jams a close rival scan", async ({ page }) => {
   await startSoloArcade(page);
   await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_STATE__ === "function");

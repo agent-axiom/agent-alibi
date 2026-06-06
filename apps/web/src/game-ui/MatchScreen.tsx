@@ -75,6 +75,10 @@ export function MatchScreen({ match }: MatchScreenProps) {
               ))}
             </div>
           </div>
+          <div className={`arcade-condition ${hud?.vaultCondition.tone ?? "stable"}`} aria-label="Vault condition">
+            <span>{hud?.vaultCondition.label ?? "Vault Stable"}</span>
+            <strong>{hud?.vaultCondition.detail ?? "Low profile"}</strong>
+          </div>
         </header>
 
         <aside className="arcade-radar" aria-label="Mini radar">

@@ -1128,13 +1128,14 @@ p {
   right: 14px;
   min-height: 64px;
   display: grid;
-  grid-template-columns: minmax(210px, 1fr) 112px 150px minmax(170px, 220px);
+  grid-template-columns: minmax(210px, 1fr) 112px 150px minmax(170px, 220px) minmax(170px, 220px);
   gap: 10px;
 }
 
 .mission-title,
 .arcade-stat,
 .arcade-alarm,
+.arcade-condition,
 .arcade-agent,
 .arcade-radar,
 .arcade-feed,
@@ -1148,7 +1149,8 @@ p {
 
 .mission-title,
 .arcade-stat,
-.arcade-alarm {
+.arcade-alarm,
+.arcade-condition {
   display: grid;
   align-content: center;
   gap: 4px;
@@ -1158,6 +1160,7 @@ p {
 .mission-title span,
 .arcade-stat span,
 .arcade-alarm span,
+.arcade-condition span,
 .arcade-objective > span {
   color: #ffd56a;
   font-size: 0.76rem;
@@ -1173,6 +1176,35 @@ p {
 .arcade-stat strong {
   font-size: 1.3rem;
   line-height: 1;
+}
+
+.arcade-condition {
+  border-color: rgba(76, 244, 240, 0.3);
+}
+
+.arcade-condition strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: #d8fcff;
+  font-size: 0.95rem;
+  line-height: 1.05;
+  text-transform: uppercase;
+}
+
+.arcade-condition.alarm {
+  border-color: rgba(255, 213, 106, 0.58);
+  background: rgba(44, 28, 8, 0.76);
+}
+
+.arcade-condition.lockdown {
+  border-color: rgba(255, 79, 123, 0.72);
+  background: rgba(51, 8, 24, 0.78);
+  box-shadow: 0 0 32px rgba(255, 79, 123, 0.26), 0 18px 50px rgba(0, 0, 0, 0.28);
+}
+
+.arcade-condition.lockdown span,
+.arcade-condition.lockdown strong {
+  color: #ffd8e2;
 }
 
 .arcade-alarm div {
@@ -1800,7 +1832,7 @@ p {
   }
 
   .arcade-topbar {
-    grid-template-columns: minmax(0, 1fr) 96px 128px;
+    grid-template-columns: minmax(0, 1fr) 96px 128px 148px;
   }
 
   .arcade-alarm {
@@ -1904,6 +1936,10 @@ p {
   }
 
   .arcade-topbar .arcade-stat:nth-of-type(3) {
+    display: none;
+  }
+
+  .arcade-condition {
     display: none;
   }
 

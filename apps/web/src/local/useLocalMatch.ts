@@ -251,6 +251,11 @@ function makeInitialArcadeHud(state: GameState): ArcadeHudState {
     loopStep: "steal",
     raceStatus: "Loot race is tied",
     lastRivalSteal: null,
+    vaultCondition: {
+      tone: "stable",
+      label: "Vault Stable",
+      detail: "Low profile"
+    },
     radarBlips: [],
     greedStatus: null,
     targetDistanceLabel: "Target plotting",
