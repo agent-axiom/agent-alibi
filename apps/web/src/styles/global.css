@@ -660,6 +660,22 @@ p {
   text-transform: uppercase;
 }
 
+.rematch-hook {
+  border-left: 8px solid #ffd56a;
+  border-radius: 8px;
+  padding: 14px 16px;
+  background: #171717;
+  color: #fffaf2;
+  box-shadow: 0 8px 0 rgba(246, 189, 96, 0.34);
+}
+
+.rematch-hook strong {
+  display: block;
+  overflow-wrap: anywhere;
+  font-size: clamp(1.05rem, 2vw, 1.45rem);
+  line-height: 1.15;
+}
+
 .final-rating {
   border-color: #ffd56a;
   background: #171717;

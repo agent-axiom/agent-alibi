@@ -14,6 +14,7 @@ export function FinalCaseFile({ summary, onRematch, onHome }: FinalCaseFileProps
   const redScore = summary.teamScores.find((score) => score.teamId === "red");
   const winner = summary.winnerTeamId === "tie" ? "Tie" : summary.winnerTeamId === "blue" ? "Blue Crew" : "Red Crew";
   const escapeBonus = blueScore?.escape ?? 0;
+  const rematchHook = buildRematchHook(summary);
 
   async function copyResult() {
     await navigator.clipboard?.writeText(summary.caseFile).catch(() => undefined);
@@ -113,6 +114,9 @@ export function FinalCaseFile({ summary, onRematch, onHome }: FinalCaseFileProps
             ))}
           </section>
         ) : null}
+        <section className="rematch-hook" aria-label="Rematch hook">
+          <strong>{rematchHook}</strong>
+        </section>
         <pre>{summary.caseFile}</pre>
         <div className="final-actions">
           <button onClick={copyResult}>
@@ -131,4 +135,24 @@ export function FinalCaseFile({ summary, onRematch, onHome }: FinalCaseFileProps
       </section>
     </main>
   );
+}
+
+export function buildRematchHook(summary: MatchSummary): string {
+  const blueScore = summary.teamScores.find((score) => score.teamId === "blue");
+  const redScore = summary.teamScores.find((score) => score.teamId === "red");
+  const redWon = summary.winnerTeamId === "red" || (redScore?.total ?? 0) > (blueScore?.total ?? 0);
+
+  if (redWon || (summary.rivalRelicNames?.length ?? 0) > 0) {
+    return "Next run: deny the carrier before Red reaches the Atrium Lift.";
+  }
+
+  if (summary.runRating && summary.runRating !== "S-Rank") {
+    return "Next run: chase S-Rank with a faster, lower-alarm cashout.";
+  }
+
+  if ((summary.lootChain ?? 1) <= 1) {
+    return "Next run: press G after the first relic to push the loot chain.";
+  }
+
+  return "Next run: run it back and make the case file louder.";
 }
