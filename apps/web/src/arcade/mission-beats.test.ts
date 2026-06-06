@@ -54,6 +54,36 @@ describe("buildMissionBeat", () => {
     });
   });
 
+  it("turns critical carrier runs into an imminent cashout beat", () => {
+    const beat = buildMissionBeat({
+      targetArtifactName: "Argent Crown",
+      lootValue: 3,
+      canEscape: true,
+      cashoutValue: 5,
+      routeChoiceRelic: "Argent Crown +3",
+      routeMode: "escape",
+      rivalCarrier: {
+        agentName: "Rook",
+        relicName: "Moon Pearl",
+        value: 3,
+        distanceMeters: 11,
+        directionLabel: "Carrier E 11m",
+        cashoutSeconds: 3,
+        urgency: "critical"
+      },
+      alibiPulseReady: false,
+      nearestRivalName: "Rook"
+    });
+
+    expect(beat).toEqual({
+      tone: "danger",
+      kicker: "Carrier run",
+      title: "Rook has Moon Pearl",
+      detail: "11m away. Red cashout imminent for +3.",
+      action: "Press E / Space to recover it"
+    });
+  });
+
   it("turns secured loot into a clear cashout decision", () => {
     const beat = buildMissionBeat({
       targetArtifactName: "Argent Crown",
