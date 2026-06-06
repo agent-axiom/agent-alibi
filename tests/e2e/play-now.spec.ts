@@ -254,6 +254,31 @@ test("rival agents stay visually staged until the breach starts", async ({ page 
   expect(breached?.rivals?.every((rival) => rival.alpha > 0.95)).toBe(true);
 });
 
+test("first score triggers a visible rival breach cut-in", async ({ page }) => {
+  await startSoloArcade(page);
+  await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget === "function");
+
+  await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget());
+  await page.keyboard.press("KeyE");
+
+  const rivalComms = page.getByLabel(/rival comms/i);
+  await expect(rivalComms.getByText(/red crew/i)).toBeVisible();
+  await expect(rivalComms.getByText(/breach live/i)).toBeVisible();
+  await expect(rivalComms.getByText(/4s before scans/i)).toBeVisible();
+  const cutInLayout = await page.evaluate(() => {
+    const bark = document.querySelector(`[aria-label="Rival comms"]`)?.getBoundingClientRect();
+    const radio = document.querySelector(`[aria-label="Mission radio"]`)?.getBoundingClientRect();
+    const objective = document.querySelector(`[aria-label="Current objective"]`)?.getBoundingClientRect();
+    const overlaps = (left: DOMRect | undefined, right: DOMRect | undefined) =>
+      Boolean(left && right && !(left.right < right.left || left.left > right.right || left.bottom < right.top || left.top > right.bottom));
+    return {
+      overlapsRadio: overlaps(bark, radio),
+      overlapsObjective: overlaps(bark, objective)
+    };
+  });
+  expect(cutInLayout).toEqual({ overlapsRadio: false, overlapsObjective: false });
+});
+
 test("arcade sound can be toggled during a run", async ({ page }) => {
   await startSoloArcade(page);
 
