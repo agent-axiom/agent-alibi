@@ -105,7 +105,7 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(routeChoice.getByText(/greed route/i)).toBeVisible();
   await expect(routeChoice.getByText(/argent crown \+3/i)).toBeVisible();
   await expect(routeChoice.getByText(/press g/i)).toBeVisible();
-  await expect(miniRadar.getByText(/exit: atrium lift/i)).toBeVisible();
+  await expect(miniRadar.getByText(/cashout \+5: atrium lift/i)).toBeVisible();
   await expect(page.getByLabel(/radar exit: atrium lift/i)).toBeVisible();
   const afterSteal = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().lootValue);
   expect(afterSteal).toBeGreaterThan(0);
