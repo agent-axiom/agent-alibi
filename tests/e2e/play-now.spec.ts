@@ -52,6 +52,8 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   expect(initialTarget?.routeGuide?.kind).toBe("artifact");
   expect(initialTarget?.routeGuide?.chevronCount).toBeGreaterThan(1);
   expect(initialTarget?.nearestRival?.distanceMeters).toBeGreaterThan(0);
+  expect(initialTarget?.arenaLabels?.roomCount).toBeGreaterThanOrEqual(8);
+  expect(initialTarget?.arenaLabels?.zoneBeacons).toEqual(expect.arrayContaining(["HIGH VALUE", "EXTRACT", "RIVAL ENTRY"]));
   await page.waitForTimeout(1_600);
   const graceState = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());
   expect(graceState?.aiLootValue).toBe(0);
