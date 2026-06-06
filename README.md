@@ -2,6 +2,8 @@
 
 Agent Alibi is a neon sci-fi heist game where every seat can be human or AI. The first-click experience is a live top-down Moon Vault run: move through the vault, steal lunar relics, decide whether to bank or gamble for greed, dodge rival agents, and cash out before lockdown.
 
+Playable link: https://agent-axiom.github.io/agent-alibi/
+
 ## What I made
 
 I made a playable browser game with:
@@ -108,6 +110,14 @@ pnpm exec playwright test
 The game package includes a 100-match scripted simulation smoke test.
 
 ## Deployment
+
+GitHub Pages hosts the static Play Now vs AI arcade build:
+
+```text
+https://agent-axiom.github.io/agent-alibi/
+```
+
+The `Pages` workflow builds `apps/web` with `AGENT_ALIBI_BASE_PATH=/agent-alibi/`, so Vite assets and public audio files resolve correctly under the repository subpath.
 
 Recommended primary host: Railway or Render.
 
