@@ -8,8 +8,13 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(page.getByText(/moon vault run/i)).toBeVisible();
   await expect(page.getByText(/timer/i)).toBeVisible();
   await expect(page.getByText(/steal the moon pearl/i)).toBeVisible();
+  await expect(page.getByText(/rival agents enter in 5 seconds/i)).toBeVisible();
 
   await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_STATE__ === "function");
+  await page.waitForTimeout(1_600);
+  const graceState = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());
+  expect(graceState?.aiLootValue).toBe(0);
+
   const beforeMove = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().player);
   await page.keyboard.down("ArrowRight");
   await page.waitForTimeout(320);

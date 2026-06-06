@@ -212,7 +212,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.artifactsStolen = 0;
     this.aiLootValue = 0;
     this.lastHudAt = -1;
-    this.feed = ["Moon Vault breach started.", "Move fast. Steal clean. Escape before lockdown."];
+    this.feed = ["Moon Vault breach started.", "Rival agents enter in 5 seconds.", "Move fast. Steal clean. Escape before lockdown."];
     this.finished = false;
     this.aiReleased = false;
     this.targetMarker = undefined;

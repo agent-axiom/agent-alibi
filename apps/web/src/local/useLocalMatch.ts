@@ -245,6 +245,6 @@ function makeInitialArcadeHud(state: GameState): ArcadeHudState {
     prompt: "Follow the gold marker",
     loopStep: "steal",
     raceStatus: "Loot race is tied",
-    feed: ["Moon Vault breach started.", "Move fast. Steal clean. Escape before lockdown."]
+    feed: ["Moon Vault breach started.", "Rival agents enter in 5 seconds.", "Move fast. Steal clean. Escape before lockdown."]
   };
 }
