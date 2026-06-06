@@ -1253,6 +1253,17 @@ p {
   text-transform: uppercase;
 }
 
+.arcade-radar > small {
+  display: block;
+  margin-top: 8px;
+  color: #d8fcff;
+  font-size: 0.68rem;
+  font-weight: 950;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+  text-transform: uppercase;
+}
+
 .arcade-radar-map {
   position: relative;
   aspect-ratio: 1;

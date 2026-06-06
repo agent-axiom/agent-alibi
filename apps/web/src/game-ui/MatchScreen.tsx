@@ -32,6 +32,8 @@ export function MatchScreen({ match }: MatchScreenProps) {
     const blueLoot = hud?.lootValue ?? 0;
     const redLoot = hud?.aiLootValue ?? 0;
     const raceTone = blueLoot > redLoot ? "leading" : blueLoot < redLoot ? "trailing" : "tied";
+    const radarFocus = hud?.radarBlips.find((blip) => blip.kind === "target" || blip.kind === "exit");
+    const radarFocusLabel = radarFocus ? `${radarFocus.kind === "exit" ? "Exit" : "Target"}: ${radarFocus.label}` : "Sweep clear";
     return (
       <main className={`arcade-shell ${hud?.phase ?? "stealth"}`}>
         <Suspense
@@ -87,6 +89,7 @@ export function MatchScreen({ match }: MatchScreenProps) {
               />
             ))}
           </div>
+          <small>{radarFocusLabel}</small>
         </aside>
 
         {hud?.spotlight ? (
