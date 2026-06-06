@@ -201,6 +201,18 @@ test("start objective banner clears before it blocks the arena", async ({ page }
   expect(bannerOpacity).toBeLessThanOrEqual(0.05);
 });
 
+test("arcade sound can be toggled during a run", async ({ page }) => {
+  await startSoloArcade(page);
+
+  const soundOn = page.getByRole("button", { name: /sound on/i });
+  await expect(soundOn).toBeVisible();
+  await soundOn.click();
+  const soundOff = page.getByRole("button", { name: /sound off/i });
+  await expect(soundOff).toBeVisible();
+  await soundOff.click();
+  await expect(page.getByRole("button", { name: /sound on/i })).toBeVisible();
+});
+
 test("close rivals burn the player's alibi if contact is not broken", async ({ page }) => {
   await startSoloArcade(page);
   await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_STATE__ === "function");

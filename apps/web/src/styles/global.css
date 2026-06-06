@@ -1343,6 +1343,11 @@ p {
   padding: 10px 14px;
 }
 
+.mission-title {
+  position: relative;
+  padding-right: 62px;
+}
+
 .mission-title span,
 .arcade-stat span,
 .arcade-alarm span,
@@ -1357,6 +1362,28 @@ p {
 .mission-title strong {
   font-size: clamp(1.2rem, 2.3vw, 2rem);
   line-height: 1;
+}
+
+.arcade-sound-toggle {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(216, 252, 255, 0.28);
+  border-radius: 8px;
+  background: rgba(7, 16, 28, 0.72);
+  color: #dffcff;
+  transform: translateY(-50%);
+  backdrop-filter: blur(12px);
+}
+
+.arcade-sound-toggle.enabled {
+  border-color: rgba(255, 213, 106, 0.64);
+  color: #ffd56a;
+  box-shadow: 0 0 20px rgba(255, 213, 106, 0.16);
 }
 
 .arcade-stat strong {

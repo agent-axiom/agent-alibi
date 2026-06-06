@@ -38,6 +38,14 @@ export function App() {
     await music.unlock();
   }
 
+  function toggleSound() {
+    const nextEnabled = !soundEnabled;
+    setSoundEnabled(nextEnabled);
+    if (nextEnabled) {
+      void music.unlock();
+    }
+  }
+
   function startSolo() {
     void enableSound();
     localMatch.startSolo();
@@ -67,13 +75,7 @@ export function App() {
           { label: "AI vs AI Demo", icon: Radio, onClick: startDemo }
         ]}
         soundEnabled={soundEnabled}
-        onToggleSound={() => {
-          const nextEnabled = !soundEnabled;
-          setSoundEnabled(nextEnabled);
-          if (nextEnabled) {
-            void music.unlock();
-          }
-        }}
+        onToggleSound={toggleSound}
       />
     );
   }
@@ -111,6 +113,8 @@ export function App() {
             advanceAiOnly: onlineRoom.startMatch,
             reset: () => setScreen("home")
           }}
+          soundEnabled={soundEnabled}
+          onToggleSound={toggleSound}
         />
       );
     }
@@ -140,5 +144,5 @@ export function App() {
     );
   }
 
-  return <MatchScreen match={localMatch} />;
+  return <MatchScreen match={localMatch} soundEnabled={soundEnabled} onToggleSound={toggleSound} />;
 }

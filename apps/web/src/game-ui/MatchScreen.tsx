@@ -1,10 +1,12 @@
 import { lazy, Suspense } from "react";
-import { Eye, Footprints, Gem, Hand, LockKeyhole, Radio, Shield, Sparkles, Zap } from "lucide-react";
+import { Eye, Footprints, Gem, Hand, LockKeyhole, Radio, Shield, Sparkles, Volume2, VolumeX, Zap } from "lucide-react";
 import type { ActionKind } from "@agent-alibi/shared";
 import type { LocalMatchController } from "../local/useLocalMatch";
 
 type MatchScreenProps = {
   match: LocalMatchController;
+  soundEnabled?: boolean;
+  onToggleSound?: () => void;
 };
 
 const KIND_ICONS: Record<ActionKind, typeof Footprints> = {
@@ -23,7 +25,7 @@ const ArcadeHeistStage = lazy(() =>
 );
 const HeistStage = lazy(() => import("../heist/HeistStage").then((module) => ({ default: module.HeistStage })));
 
-export function MatchScreen({ match }: MatchScreenProps) {
+export function MatchScreen({ match, soundEnabled = false, onToggleSound }: MatchScreenProps) {
   if (!match.state) return null;
   const state = match.state;
 
@@ -41,6 +43,7 @@ export function MatchScreen({ match }: MatchScreenProps) {
     const carriedLoot = hud && hud.lootValue > 0 && hud.escapePayout ? { loot: hud.lootValue, cashout: hud.escapePayout.cashout } : null;
     const blueRaceLabel = carriedLoot ? `Blue carrying +${carriedLoot.loot}` : `Blue ${blueLoot}`;
     const raceStatusLabel = carriedLoot ? `Bank +${carriedLoot.cashout} at lift` : (hud?.raceStatus ?? "Loot race is tied");
+    const SoundIcon = soundEnabled ? Volume2 : VolumeX;
     return (
       <main className={`arcade-shell ${hud?.phase ?? "stealth"}`}>
         <Suspense
@@ -72,6 +75,17 @@ export function MatchScreen({ match }: MatchScreenProps) {
           <div className="mission-title">
             <span>Agent Alibi</span>
             <strong>Moon Vault Run</strong>
+            {onToggleSound ? (
+              <button
+                aria-label={soundEnabled ? "Sound On" : "Sound Off"}
+                className={`arcade-sound-toggle ${soundEnabled ? "enabled" : ""}`}
+                onClick={onToggleSound}
+                title={soundEnabled ? "Sound On" : "Sound Off"}
+                type="button"
+              >
+                <SoundIcon aria-hidden="true" size={18} />
+              </button>
+            ) : null}
           </div>
           <div className="arcade-stat">
             <span>Timer</span>
