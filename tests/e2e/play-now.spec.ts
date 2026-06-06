@@ -138,7 +138,7 @@ test("solo match starts and reaches final case file", async ({ page }) => {
 
   await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget());
   await expect(page.getByText(/press e \/ space to escape/i)).toBeVisible();
-  await expect(page.getByLabel(/active action/i).getByText(/escape/i)).toBeVisible();
+  await expect(page.getByLabel(/active action/i).getByText(/cashout \+8/i)).toBeVisible();
   await expect(extractionCue.getByText(/extract now/i)).toBeVisible();
   await expect(extractionCue.getByText(/press e \/ space/i)).toBeVisible();
   await page.keyboard.press("KeyE");

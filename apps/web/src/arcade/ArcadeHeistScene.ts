@@ -1268,7 +1268,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
         nearArtifactName: nearArtifact?.name ?? null,
         nearArtifactValue: nearArtifact?.value ?? null,
         nearExit: this.isNearExit(),
-        canEscape
+        canEscape,
+        cashoutValue: escapePayout?.cashout ?? null
       }),
       loopStep: rivalCarrier || alibiPulseReady ? "survive" : guidance.loopStep,
       raceStatus: guidance.raceStatus,
