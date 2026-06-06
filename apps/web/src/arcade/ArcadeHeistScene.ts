@@ -162,6 +162,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private escapeZone?: Phaser.GameObjects.Container;
   private targetMarker?: Phaser.GameObjects.Container;
   private targetBeam?: Phaser.GameObjects.Graphics;
+  private threatHalo?: Phaser.GameObjects.Graphics;
   private impactCount = 0;
   private lastImpact: { kind: ImpactKind; count: number; atMs: number } | null = null;
 
@@ -271,6 +272,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       target,
       hasTargetBeam: Boolean(this.targetBeam),
       routeGuide,
+      threatHalo: this.threatHaloDebug(),
       routeMode: this.routeMode,
       nearestRival,
       lastRivalSteal: this.lastRivalSteal,
@@ -298,6 +300,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.moveAgent(rival, this.player.x + direction * distancePx - rival.x, this.player.y - rival.y);
     this.aiReleased = true;
     this.updateRivalPressureFeed();
+    this.updateThreatHalo();
     this.emitHudIfNeeded(true);
   }
 
@@ -309,6 +312,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.aiReleased = true;
     this.moveAgent(rival, artifact.x - rival.x, artifact.y - rival.y);
     this.stealArtifact(artifact, rival, rival.name);
+    this.updateThreatHalo();
     this.emitHudIfNeeded(true);
   }
 
@@ -332,6 +336,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.updateRivalPressureFeed();
     this.updateRivalScan(delta);
     this.updateTargetMarker();
+    this.updateThreatHalo();
     this.updateAlarm(delta);
     this.emitHudIfNeeded(false);
 
@@ -383,6 +388,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.routeMode = "escape";
     this.targetMarker = undefined;
     this.targetBeam = undefined;
+    this.threatHalo = undefined;
     this.impactCount = 0;
     this.lastImpact = null;
     this.playerName = config.state.players.find((player) => player.kind === "human")?.name ?? "Agent You";
@@ -393,6 +399,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.createActors(config.state);
     this.resizeCamera();
     this.updateTargetMarker();
+    this.updateThreatHalo();
     this.scale.off("resize", this.resizeCamera, this);
     this.scale.on("resize", this.resizeCamera, this);
     this.flashObjectiveBanner({
@@ -741,6 +748,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       this.impactPulse("steal");
       this.collectArtifactVisual(artifact, 0xffd56a);
       this.updateTargetMarker();
+      this.updateThreatHalo();
       return;
     }
 
@@ -757,6 +765,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.feedLine(`${actorLabel} stole ${artifact.name}.`);
     this.collectArtifactVisual(artifact, TEAM_COLORS[actor.teamId]);
     this.updateTargetMarker();
+    this.updateThreatHalo();
   }
 
   private flashSpotlight(text: string) {
@@ -873,6 +882,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.feedLine(`Intercepted ${rival.name}. Recovered ${this.relicListLabel(recovered)}.`);
     this.addInterceptVisual(rival.x, rival.y);
     this.updateTargetMarker();
+    this.updateThreatHalo();
   }
 
   private tryAlibiPulse(): boolean {
@@ -1480,6 +1490,81 @@ export class ArcadeHeistScene extends Phaser.Scene {
     if (relics.length === 1) return `${relics[0]!.name} +${relics[0]!.value}`;
     const total = relics.reduce((sum, relic) => sum + relic.value, 0);
     return `${relics.length} relics +${total}`;
+  }
+
+  private updateThreatHalo() {
+    const carrier = this.nearestRivalCarrierRun();
+    if (carrier) {
+      this.drawThreatHalo(carrier.agent, "carrier", carrier.distanceMeters);
+      return;
+    }
+
+    const scan = this.nearestRivalScan();
+    const pressure = this.rivalPressure(scan);
+    if (!scan || pressure.level === "clear" || pressure.level === "standby") {
+      this.clearThreatHalo();
+      return;
+    }
+
+    const rival = this.aiAgents.find((agent) => agent.name === scan.name);
+    if (!rival) {
+      this.clearThreatHalo();
+      return;
+    }
+
+    this.drawThreatHalo(rival, "scan", scan.distanceMeters);
+  }
+
+  private drawThreatHalo(agent: RuntimeAgent, kind: "carrier" | "scan", distanceMeters: number) {
+    if (!this.threatHalo) {
+      this.threatHalo = this.add.graphics().setDepth(19);
+    }
+
+    const color = kind === "carrier" ? 0xff4f7b : 0xffd56a;
+    const coreRadius = kind === "carrier" ? 64 : 52;
+    const outerRadius = coreRadius + (kind === "carrier" ? 18 : 13);
+    const alpha = kind === "carrier" ? 0.82 : 0.64;
+
+    this.threatHalo.clear();
+    this.threatHalo.fillStyle(color, kind === "carrier" ? 0.12 : 0.09);
+    this.threatHalo.fillCircle(agent.x, agent.y, coreRadius);
+    this.threatHalo.lineStyle(kind === "carrier" ? 4 : 3, color, alpha);
+    this.threatHalo.strokeCircle(agent.x, agent.y, coreRadius);
+    this.threatHalo.lineStyle(1, color, kind === "carrier" ? 0.38 : 0.28);
+    this.threatHalo.strokeCircle(agent.x, agent.y, outerRadius);
+
+    const tickLength = kind === "carrier" ? 18 : 13;
+    this.threatHalo.lineStyle(2, color, kind === "carrier" ? 0.72 : 0.48);
+    for (let index = 0; index < 4; index += 1) {
+      const angle = index * (Math.PI / 2);
+      const innerX = agent.x + Math.cos(angle) * (coreRadius - tickLength);
+      const innerY = agent.y + Math.sin(angle) * (coreRadius - tickLength);
+      const outerX = agent.x + Math.cos(angle) * (coreRadius + tickLength * 0.45);
+      const outerY = agent.y + Math.sin(angle) * (coreRadius + tickLength * 0.45);
+      this.threatHalo.lineBetween(innerX, innerY, outerX, outerY);
+    }
+
+    this.threatHalo.setData("kind", kind);
+    this.threatHalo.setData("agentName", agent.name);
+    this.threatHalo.setData("distanceMeters", distanceMeters);
+  }
+
+  private clearThreatHalo() {
+    this.threatHalo?.clear();
+    this.threatHalo?.setData("kind", null);
+    this.threatHalo?.setData("agentName", null);
+    this.threatHalo?.setData("distanceMeters", null);
+  }
+
+  private threatHaloDebug() {
+    const kind = this.threatHalo?.getData("kind") as "carrier" | "scan" | null | undefined;
+    if (!kind) return null;
+    return {
+      kind,
+      visible: true,
+      agentName: String(this.threatHalo?.getData("agentName") ?? ""),
+      distanceMeters: Number(this.threatHalo?.getData("distanceMeters") ?? 0)
+    };
   }
 
   private updateTargetMarker() {
