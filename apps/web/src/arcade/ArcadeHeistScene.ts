@@ -12,6 +12,7 @@ import {
   type ArcadeRadarBlip,
   type ArcadeRivalBark,
   type ArcadeRivalIntercept,
+  type ArcadeRouteChoice,
   type ArcadeScorePopup,
   type ArcadeThreatCue
 } from "./arcade-types";
@@ -1279,6 +1280,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       vaultCondition: this.vaultCondition(),
       escapePayout,
       extractionCue: this.extractionCue(escapePayout),
+      routeChoice: this.routeChoice(escapePayout, targetArtifact),
       radarBlips: this.buildRadarBlips(objectiveTarget),
       greedStatus,
       targetDistanceLabel:
@@ -1445,6 +1447,17 @@ export class ArcadeHeistScene extends Phaser.Scene {
       label: ready ? "Extract now" : "Extraction armed",
       detail: `Atrium Lift · Cashout ${escapePayout.cashout}`,
       action: ready ? `Press E / Space to cashout +${escapePayout.cashout}` : "Follow the cyan ring"
+    };
+  }
+
+  private routeChoice(escapePayout: { cashout: number } | null, targetArtifact: RuntimeArtifact | undefined): ArcadeRouteChoice | null {
+    if (!escapePayout || !targetArtifact || !this.canGreedRoute()) return null;
+    return {
+      mode: this.routeMode,
+      cashoutNow: escapePayout.cashout,
+      greedRelicName: targetArtifact.name,
+      greedRelicValue: targetArtifact.value,
+      projectedCashout: escapePayout.cashout + targetArtifact.value
     };
   }
 
