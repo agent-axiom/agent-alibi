@@ -68,6 +68,7 @@ type RuntimeAgent = {
 
 type ArcadeObjectiveTarget =
   | { kind: "artifact"; id: string; label: string; x: number; y: number }
+  | { kind: "carrier"; id: string; label: string; x: number; y: number }
   | { kind: "escape"; id: "escape"; label: string; x: number; y: number };
 
 type RouteMode = "escape" | "greed";
@@ -77,6 +78,13 @@ type RivalScan = {
   distanceMeters: number;
   dx: number;
   dy: number;
+};
+
+type RivalCarrierRun = {
+  agent: RuntimeAgent;
+  relic: CarriedRelic;
+  distanceMeters: number;
+  directionLabel: string;
 };
 
 type MovementKeys = {
@@ -926,7 +934,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       targetDistanceLabel:
         objectiveTarget && targetDistanceMeters !== null && this.player
           ? buildObjectiveDirectionLabel({
-              kind: objectiveTarget.kind === "escape" ? "exit" : "target",
+              kind: objectiveTarget.kind === "escape" ? "exit" : objectiveTarget.kind === "carrier" ? "carrier" : "target",
               dx: objectiveTarget.x - this.player.x,
               dy: objectiveTarget.y - this.player.y,
               distanceMeters: targetDistanceMeters
@@ -1060,7 +1068,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
         y: this.radarY(this.player.y)
       });
     }
-    if (target) {
+    if (target && target.kind !== "carrier") {
       blips.push({
         id: target.id,
         kind: target.kind === "escape" ? "exit" : "target",
@@ -1146,30 +1154,14 @@ export class ArcadeHeistScene extends Phaser.Scene {
 
   private rivalIntercept(): ArcadeRivalIntercept | null {
     if (!this.player) return null;
-    const carrier = this.aiAgents
-      .filter((agent) => agent.carriedRelics.length > 0)
-      .map((agent) => ({
-        agent,
-        distance: Phaser.Math.Distance.Between(this.player!.x, this.player!.y, agent.x, agent.y)
-      }))
-      .sort((a, b) => a.distance - b.distance)[0];
+    const carrier = this.nearestRivalCarrierRun();
     if (!carrier) return null;
-    const relic = carrier.agent.carriedRelics.at(-1);
-    if (!relic) return null;
-    const dx = carrier.agent.x - this.player.x;
-    const dy = carrier.agent.y - this.player.y;
-    const distanceMeters = Math.max(0, Math.round(carrier.distance / 8));
     return {
       agentName: carrier.agent.name,
-      relicName: relic.name,
-      value: relic.value,
-      distanceMeters,
-      directionLabel: buildObjectiveDirectionLabel({
-        kind: "carrier",
-        dx,
-        dy,
-        distanceMeters
-      })
+      relicName: carrier.relic.name,
+      value: carrier.relic.value,
+      distanceMeters: carrier.distanceMeters,
+      directionLabel: carrier.directionLabel
     };
   }
 
@@ -1230,6 +1222,17 @@ export class ArcadeHeistScene extends Phaser.Scene {
   }
 
   private currentObjectiveTarget(): ArcadeObjectiveTarget | undefined {
+    const carrier = this.nearestRivalCarrierRun();
+    if (carrier) {
+      return {
+        kind: "carrier",
+        id: carrier.agent.id,
+        label: `${carrier.agent.name} carrier`,
+        x: carrier.agent.x,
+        y: carrier.agent.y
+      };
+    }
+
     const artifact = this.primaryTargetArtifact();
 
     if (this.routeMode === "greed" && this.canGreedRoute() && artifact) {
@@ -1276,6 +1279,33 @@ export class ArcadeHeistScene extends Phaser.Scene {
     );
   }
 
+  private nearestRivalCarrierRun(): RivalCarrierRun | undefined {
+    if (!this.player) return undefined;
+    return this.aiAgents
+      .filter((agent) => agent.carriedRelics.length > 0)
+      .map((agent) => {
+        const relic = agent.carriedRelics.at(-1);
+        if (!relic) return null;
+        const dx = agent.x - this.player!.x;
+        const dy = agent.y - this.player!.y;
+        const distance = Phaser.Math.Distance.Between(this.player!.x, this.player!.y, agent.x, agent.y);
+        const distanceMeters = Math.max(0, Math.round(distance / 8));
+        return {
+          agent,
+          relic,
+          distanceMeters,
+          directionLabel: buildObjectiveDirectionLabel({
+            kind: "carrier",
+            dx,
+            dy,
+            distanceMeters
+          })
+        };
+      })
+      .filter((carrier): carrier is RivalCarrierRun => Boolean(carrier))
+      .sort((a, b) => a.distanceMeters - b.distanceMeters)[0];
+  }
+
   private nearRivalCarrier(): RuntimeAgent | undefined {
     if (!this.player) return undefined;
     return this.aiAgents.find(
@@ -1309,7 +1339,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       const ring = this.add.circle(0, 0, 44, 0xffd56a, 0.08).setStrokeStyle(4, 0xffd56a, 0.9);
       const pointer = this.add.triangle(0, -62, 0, -18, -16, 12, 16, 12, 0xffd56a, 0.92);
       const label = this.add
-        .text(0, -88, target.kind === "escape" ? "ESCAPE" : "TARGET", {
+        .text(0, -88, target.kind === "escape" ? "ESCAPE" : target.kind === "carrier" ? "CARRIER" : "TARGET", {
           color: "#ffd56a",
           fontFamily: "Inter, Arial, sans-serif",
           fontSize: "13px",
@@ -1341,12 +1371,12 @@ export class ArcadeHeistScene extends Phaser.Scene {
       this.targetBeam = this.add.graphics().setDepth(5);
     }
 
-    const color = target.kind === "escape" ? 0x7effdf : 0xffd56a;
+    const color = target.kind === "escape" ? 0x7effdf : target.kind === "carrier" ? 0xff4f7b : 0xffd56a;
     this.targetBeam.clear();
     this.targetBeam.lineStyle(3, color, 0.32);
     this.targetBeam.strokeLineShape(new Phaser.Geom.Line(this.player.x, this.player.y, target.x, target.y));
     this.targetBeam.fillStyle(color, 0.14);
-    this.targetBeam.fillCircle(target.x, target.y, target.kind === "escape" ? 68 : 50);
+    this.targetBeam.fillCircle(target.x, target.y, target.kind === "escape" ? 68 : target.kind === "carrier" ? 58 : 50);
   }
 
   private finish(outcome: "escaped" | "sealed" | "caught") {
