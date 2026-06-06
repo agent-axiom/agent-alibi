@@ -48,6 +48,7 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_STATE__ === "function");
   const initialTarget = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());
   expect(initialTarget?.target?.kind).toBe("artifact");
+  expect(initialTarget?.targetMarker?.label).toBe("Moon Pearl +3");
   expect(initialTarget?.hasTargetBeam).toBe(true);
   expect(initialTarget?.routeGuide?.kind).toBe("artifact");
   expect(initialTarget?.routeGuide?.chevronCount).toBeGreaterThan(1);
@@ -117,6 +118,8 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   const escapeTarget = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().target);
   expect(escapeTarget?.kind).toBe("escape");
   expect(escapeTarget?.label).toMatch(/atrium lift/i);
+  const escapeMarker = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().targetMarker);
+  expect(escapeMarker?.label).toBe("Atrium Lift");
   const escapeGuide = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().routeGuide);
   expect(escapeGuide?.kind).toBe("escape");
   expect(escapeGuide?.chevronCount).toBeGreaterThan(0);
@@ -131,6 +134,8 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(currentObjective.getByText(/greed route: steal argent crown \+3/i)).toBeVisible();
   const greedTarget = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().target);
   expect(greedTarget?.kind).toBe("artifact");
+  const greedMarker = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().targetMarker);
+  expect(greedMarker?.label).toBe("Argent Crown +3");
   await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget());
   await expect(page.getByText(/press e \/ space to steal/i)).toBeVisible();
   await page.keyboard.press("KeyE");
