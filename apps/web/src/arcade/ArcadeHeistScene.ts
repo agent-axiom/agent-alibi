@@ -352,6 +352,20 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.cashoutRivalCarrier(rival);
   }
 
+  forceRivalNearCashoutForDebug() {
+    const rival = this.aiAgents.find((agent) => agent.carriedRelics.length > 0);
+    const target = this.escapeZone ?? this.rooms.get("atrium");
+    if (!rival || !target) return;
+
+    this.moveAgent(rival, target.x + EXIT_RADIUS + 18 - rival.x, target.y - rival.y);
+    rival.targetRoomId = "atrium";
+    this.updateCarrierBadges();
+    this.updateTargetMarker();
+    this.updateThreatHalo();
+    this.updateCarrierCashoutRoute();
+    this.emitHudIfNeeded(true);
+  }
+
   forceLockdownForDebug() {
     this.elapsedMs = Math.max(this.elapsedMs, ARCADE_MISSION_DURATION_MS - 25_000);
     this.flashSpotlight("Vault lockdown");
@@ -1480,13 +1494,15 @@ export class ArcadeHeistScene extends Phaser.Scene {
     if (!this.player) return null;
     const carrier = this.nearestRivalCarrierRun();
     if (!carrier) return null;
+    const cashoutSeconds = this.carrierCashoutSeconds(carrier.agent);
     return {
       agentName: carrier.agent.name,
       relicName: carrier.relic.name,
       value: carrier.relic.value,
       distanceMeters: carrier.distanceMeters,
       directionLabel: carrier.directionLabel,
-      cashoutSeconds: this.carrierCashoutSeconds(carrier.agent)
+      cashoutSeconds,
+      urgency: cashoutSeconds <= 4 ? "critical" : "chase"
     };
   }
 
@@ -1506,7 +1522,10 @@ export class ArcadeHeistScene extends Phaser.Scene {
       return {
         tone: "danger",
         label: rivalIntercept.directionLabel,
-        detail: `${rivalIntercept.agentName} with ${rivalIntercept.relicName} +${rivalIntercept.value} · cashout in ${rivalIntercept.cashoutSeconds}s`,
+        detail:
+          rivalIntercept.urgency === "critical"
+            ? `${rivalIntercept.agentName} with ${rivalIntercept.relicName} +${rivalIntercept.value} · cashout imminent`
+            : `${rivalIntercept.agentName} with ${rivalIntercept.relicName} +${rivalIntercept.value} · cashout in ${rivalIntercept.cashoutSeconds}s`,
         action: "Close gap and press E"
       };
     }
