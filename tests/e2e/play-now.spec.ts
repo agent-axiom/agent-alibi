@@ -162,6 +162,9 @@ test("rival steals trigger a clear red loot alert", async ({ page }) => {
   await expect(rivalIntercept.getByText(/rook carrying/i)).toBeVisible();
   await expect(rivalIntercept.getByText(/moon pearl \+3/i)).toBeVisible();
   await expect(rivalIntercept.getByText(/\d+m away/i)).toBeVisible();
+  const miniRadar = page.getByLabel(/mini radar/i);
+  await expect(miniRadar.getByText(/carrier: rook carrying moon pearl/i)).toBeVisible();
+  await expect(page.getByLabel(/radar carrier: rook carrying moon pearl/i)).toBeVisible();
   const afterSteal = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().aiLootValue);
   expect(afterSteal).toBeGreaterThan(0);
   await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.forceRivalPressure(6));

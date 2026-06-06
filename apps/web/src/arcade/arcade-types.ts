@@ -9,7 +9,7 @@ export type ArcadeHudPhase = "stealth" | "alarm" | "lockdown" | "escaped" | "sea
 
 export type ArcadeRadarBlip = {
   id: string;
-  kind: "player" | "target" | "exit" | "rival";
+  kind: "player" | "target" | "exit" | "rival" | "carrier";
   label: string;
   x: number;
   y: number;
