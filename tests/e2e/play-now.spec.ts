@@ -721,6 +721,8 @@ test("no-loot lockdown escape final case avoids cashout wording", async ({ page 
   await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget?.());
   await page.keyboard.press("KeyE");
 
+  await expect(page.getByRole("heading", { name: /empty-handed exit/i })).toBeVisible();
+  await expect(page.getByLabel(/share case stamp/i).getByText(/empty-handed exit/i)).toBeVisible();
   const finalScores = page.getByLabel(/final scores/i);
   await expect(finalScores).toBeVisible();
   const caseHighlights = page.getByLabel(/case highlights/i);
@@ -735,6 +737,7 @@ test("no-loot lockdown escape final case avoids cashout wording", async ({ page 
   await expect(page.getByLabel(/rematch hook/i).getByText(/steal one relic/i)).toBeVisible();
   await expect(page.getByLabel(/rematch hook/i)).not.toContainText(/cashout/i);
   await expect(page.getByLabel(/share case stamp/i)).not.toContainText(/cashed out/i);
+  await expect(page.locator(".case-file")).not.toContainText(/silent moon run/i);
 });
 
 test("alibi pulse jams a close rival scan", async ({ page }) => {

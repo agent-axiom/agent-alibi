@@ -115,9 +115,11 @@ describe("buildArcadeMatchSummary", () => {
       elapsedMs: 125_000
     });
 
+    expect(summary.title).toBe("Empty-Handed Exit");
     expect(summary.highlightLines).toContain("Escaped before the seal");
     expect(summary.highlightLines).toContain("No relics banked");
     expect(summary.highlightLines).not.toContain("Cashed out +2 at lift");
+    expect(summary.caseFile).toContain("Title: Empty-Handed Exit");
     expect(summary.caseFile).toContain("Escape Bonus: +2");
     expect(summary.caseFile).toContain("Agent You escaped empty-handed before lockdown.");
     expect(summary.caseFile).not.toContain("Cashout Banked");
