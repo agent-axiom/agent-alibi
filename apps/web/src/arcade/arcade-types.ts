@@ -37,6 +37,7 @@ export type ArcadeRivalIntercept = {
   relicName: string;
   value: number;
   distanceMeters: number;
+  directionLabel: string;
 };
 
 export type ArcadeLootChainWindow = {
@@ -49,6 +50,13 @@ export type ArcadeMissionBeat = {
   tone: "focus" | "danger" | "success";
   kicker: string;
   title: string;
+  detail: string;
+  action: string;
+};
+
+export type ArcadeThreatCue = {
+  tone: "danger" | "warning";
+  label: string;
   detail: string;
   action: string;
 };
@@ -84,6 +92,7 @@ export type ArcadeHudState = {
   cleanBonusWindow: ArcadeCleanBonusWindow | null;
   lootChainWindow: ArcadeLootChainWindow | null;
   missionBeat: ArcadeMissionBeat;
+  threatCue: ArcadeThreatCue | null;
   spotlight: string | null;
   feed: string[];
 };

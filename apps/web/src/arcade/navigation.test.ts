@@ -17,4 +17,8 @@ describe("buildObjectiveDirectionLabel", () => {
   it("adds direction to rival distance labels", () => {
     expect(buildObjectiveDirectionLabel({ kind: "rival", dx: -120, dy: -20, distanceMeters: 16 })).toBe("Nearest rival W 16m");
   });
+
+  it("labels carrier direction as a recoverable threat", () => {
+    expect(buildObjectiveDirectionLabel({ kind: "carrier", dx: 120, dy: -120, distanceMeters: 21 })).toBe("Carrier NE 21m");
+  });
 });

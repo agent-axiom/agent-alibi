@@ -2,7 +2,15 @@ import Phaser from "phaser";
 import type { ArtifactState, GameState, PlayerState, Room, TeamId } from "@agent-alibi/shared";
 import { ALIBI_PULSE_COOLDOWN_MS, buildAlibiPulseStatus, canUseAlibiPulse } from "./alibi-pulse";
 import { rateArcadeRun } from "./arcade-rules";
-import { ARCADE_MISSION_DURATION_MS, type ArcadeHudPhase, type ArcadeHudState, type ArcadeMissionConfig, type ArcadeRadarBlip } from "./arcade-types";
+import {
+  ARCADE_MISSION_DURATION_MS,
+  type ArcadeHudPhase,
+  type ArcadeHudState,
+  type ArcadeMissionConfig,
+  type ArcadeRadarBlip,
+  type ArcadeRivalIntercept,
+  type ArcadeThreatCue
+} from "./arcade-types";
 import { buildActiveActionHint, buildArcadeGuidance, buildRivalPressure, type RivalPressure } from "./guidance";
 import { buildMissionBeat } from "./mission-beats";
 import { nextMovementImpulse, selectMovementVector, type MovementImpulse, type MovementVector } from "./movement";
@@ -946,6 +954,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
         alibiPulseReady,
         nearestRivalName: nearestRival?.name ?? null
       }),
+      threatCue: this.threatCue(rivalIntercept, alibiPulseReady, nearestRival),
       spotlight: this.spotlight,
       feed: this.feed.slice(-5)
     };
@@ -1135,7 +1144,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     };
   }
 
-  private rivalIntercept() {
+  private rivalIntercept(): ArcadeRivalIntercept | null {
     if (!this.player) return null;
     const carrier = this.aiAgents
       .filter((agent) => agent.carriedRelics.length > 0)
@@ -1147,12 +1156,47 @@ export class ArcadeHeistScene extends Phaser.Scene {
     if (!carrier) return null;
     const relic = carrier.agent.carriedRelics.at(-1);
     if (!relic) return null;
+    const dx = carrier.agent.x - this.player.x;
+    const dy = carrier.agent.y - this.player.y;
+    const distanceMeters = Math.max(0, Math.round(carrier.distance / 8));
     return {
       agentName: carrier.agent.name,
       relicName: relic.name,
       value: relic.value,
-      distanceMeters: Math.max(0, Math.round(carrier.distance / 8))
+      distanceMeters,
+      directionLabel: buildObjectiveDirectionLabel({
+        kind: "carrier",
+        dx,
+        dy,
+        distanceMeters
+      })
     };
+  }
+
+  private threatCue(
+    rivalIntercept: ArcadeRivalIntercept | null,
+    alibiPulseReady: boolean,
+    nearestRival: RivalScan | null
+  ): ArcadeThreatCue | null {
+    if (rivalIntercept) {
+      return {
+        tone: "danger",
+        label: rivalIntercept.directionLabel,
+        detail: `${rivalIntercept.agentName} with ${rivalIntercept.relicName} +${rivalIntercept.value}`,
+        action: "Close gap and press E"
+      };
+    }
+
+    if (alibiPulseReady && nearestRival) {
+      return {
+        tone: "warning",
+        label: "Scan lock",
+        detail: "Scanner is charging your alarm.",
+        action: "Press E / Space to jam"
+      };
+    }
+
+    return null;
   }
 
   private rivalStatus(): string {
