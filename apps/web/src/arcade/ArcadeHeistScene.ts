@@ -2049,6 +2049,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
   }
 
   private targetMarkerLabel(target: ArcadeObjectiveTarget): string {
+    if (target.kind === "escape" && this.lootValue > 0) return `Cashout +${this.lootValue + 2}`;
     if (target.kind !== "carrier") return target.label;
     const carrier = this.aiAgents.find((agent) => agent.id === target.id);
     if (!carrier) return target.label;
