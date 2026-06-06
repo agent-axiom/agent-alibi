@@ -215,6 +215,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private routeSignalDetail?: Phaser.GameObjects.Text;
   private threatHalo?: Phaser.GameObjects.Graphics;
   private carrierRoute?: Phaser.GameObjects.Graphics;
+  private rivalIntentRoutes?: Phaser.GameObjects.Graphics;
   private motionTrail?: Phaser.GameObjects.Graphics;
   private motionTrailPoints: MotionTrailPoint[] = [];
   private motionTrailBurstCount = 0;
@@ -344,6 +345,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       routeSignal: this.routeSignalDebug(),
       threatHalo: this.threatHaloDebug(),
       carrierCashoutRoute: this.carrierCashoutRouteDebug(),
+      rivalIntentRoutes: this.rivalIntentRoutesDebug(),
       carrierBadges: this.carrierBadgesDebug(),
       escapeZoneBadge: this.escapeZoneBadgeDebug(),
       motionTrail: this.motionTrailDebug(),
@@ -456,6 +458,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.updateCameraLookahead(delta);
     this.updateThreatHalo();
     this.updateCarrierCashoutRoute();
+    this.updateRivalIntentRoutes();
     this.updateEscapePayoutBadge();
     this.updateAlarm(delta);
     this.emitHudIfNeeded(false);
@@ -522,6 +525,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.escapePayoutBadge = undefined;
     this.escapePayoutBadgeLabel = undefined;
     this.carrierRoute = undefined;
+    this.rivalIntentRoutes = undefined;
     this.motionTrail = undefined;
     this.motionTrailPoints = [];
     this.motionTrailBurstCount = 0;
@@ -550,6 +554,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.updateCameraLookahead(16);
     this.updateThreatHalo();
     this.updateCarrierCashoutRoute();
+    this.updateRivalIntentRoutes();
     this.updateCarrierBadges();
     this.updateEscapePayoutBadge();
     this.scale.off("resize", this.resizeCamera, this);
@@ -1174,6 +1179,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.aiReleased = true;
     this.aiWakeHoldMs = holdMs;
     this.setRivalStandbyVisuals(false);
+    this.updateRivalIntentRoutes();
     if (announce) {
       this.feedLine("Rival agents entered the vault.");
       this.flashRivalBark({
@@ -2087,6 +2093,90 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.carrierRoute.setData("targetLabel", "Atrium Lift");
     this.carrierRoute.setData("chevronCount", chevronCount);
     this.carrierRoute.setData("distanceMeters", Math.max(0, Math.round(distance / 8)));
+  }
+
+  private updateRivalIntentRoutes() {
+    if (!this.aiReleased) {
+      this.clearRivalIntentRoutes();
+      return;
+    }
+
+    const routes = this.aiAgents
+      .filter((agent) => agent.carriedRelics.length === 0)
+      .map((agent) => {
+        const target = this.aiTargetPoint(agent);
+        const targetRoom = this.rooms.get(agent.targetRoomId);
+        if (!target || !targetRoom) return null;
+        const distance = Phaser.Math.Distance.Between(agent.x, agent.y, target.x, target.y);
+        if (distance < 28) return null;
+        return {
+          agent,
+          target,
+          targetLabel: `${agent.name} -> ${targetRoom.room.name}`,
+          distance
+        };
+      })
+      .filter((route): route is { agent: RuntimeAgent; target: { x: number; y: number }; targetLabel: string; distance: number } => Boolean(route));
+
+    if (routes.length === 0) {
+      this.clearRivalIntentRoutes();
+      return;
+    }
+
+    if (!this.rivalIntentRoutes) {
+      this.rivalIntentRoutes = this.add.graphics().setDepth(6);
+    }
+
+    this.rivalIntentRoutes.clear();
+    this.rivalIntentRoutes.lineStyle(10, TEAM_COLORS.red, 0.05);
+    for (const route of routes) {
+      this.rivalIntentRoutes.strokeLineShape(new Phaser.Geom.Line(route.agent.x, route.agent.y, route.target.x, route.target.y));
+    }
+
+    this.rivalIntentRoutes.lineStyle(2, TEAM_COLORS.red, 0.28);
+    for (const route of routes) {
+      this.rivalIntentRoutes.strokeLineShape(new Phaser.Geom.Line(route.agent.x, route.agent.y, route.target.x, route.target.y));
+      this.rivalIntentRoutes.fillStyle(TEAM_COLORS.red, 0.12);
+      this.rivalIntentRoutes.fillCircle(route.target.x, route.target.y, 44);
+      this.drawRivalIntentPips(route.agent, route.target, route.distance);
+    }
+
+    this.rivalIntentRoutes.setData("visible", true);
+    this.rivalIntentRoutes.setData("routeCount", routes.length);
+    this.rivalIntentRoutes.setData(
+      "targetLabels",
+      routes.map((route) => route.targetLabel)
+    );
+  }
+
+  private drawRivalIntentPips(from: { x: number; y: number }, target: { x: number; y: number }, distance: number) {
+    if (!this.rivalIntentRoutes || distance < 56) return;
+    const count = Phaser.Math.Clamp(Math.floor(distance / 140), 1, 4);
+    const phase = (this.elapsedMs / 880) % 1;
+    this.rivalIntentRoutes.fillStyle(TEAM_COLORS.red, 0.6);
+    for (let index = 0; index < count; index += 1) {
+      const progress = 0.16 + (((index + phase) / count) % 1) * 0.68;
+      this.rivalIntentRoutes.fillCircle(Phaser.Math.Linear(from.x, target.x, progress), Phaser.Math.Linear(from.y, target.y, progress), 4.5);
+    }
+  }
+
+  private clearRivalIntentRoutes() {
+    this.rivalIntentRoutes?.clear();
+    this.rivalIntentRoutes?.setData("visible", false);
+    this.rivalIntentRoutes?.setData("routeCount", 0);
+    this.rivalIntentRoutes?.setData("targetLabels", []);
+  }
+
+  private rivalIntentRoutesDebug() {
+    if (!this.rivalIntentRoutes?.getData("visible")) {
+      return { visible: false, routeCount: 0, targetLabels: [] };
+    }
+
+    return {
+      visible: true,
+      routeCount: Number(this.rivalIntentRoutes.getData("routeCount") ?? 0),
+      targetLabels: (this.rivalIntentRoutes.getData("targetLabels") as string[] | undefined) ?? []
+    };
   }
 
   private drawCarrierCashoutChevrons(from: { x: number; y: number }, target: { x: number; y: number }, chevronCount: number) {
