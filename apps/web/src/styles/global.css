@@ -1364,6 +1364,14 @@ p {
   box-shadow: 0 0 14px rgba(255, 79, 123, 0.72);
 }
 
+.arcade-radar-blip.carrier {
+  width: 14px;
+  height: 14px;
+  border-color: #ffd56a;
+  background: #ff4f7b;
+  box-shadow: 0 0 18px rgba(255, 213, 106, 0.82), 0 0 10px rgba(255, 79, 123, 0.72);
+}
+
 .arcade-agent {
   min-height: 54px;
   display: grid;

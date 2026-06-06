@@ -32,8 +32,10 @@ export function MatchScreen({ match }: MatchScreenProps) {
     const blueLoot = hud?.lootValue ?? 0;
     const redLoot = hud?.aiLootValue ?? 0;
     const raceTone = blueLoot > redLoot ? "leading" : blueLoot < redLoot ? "trailing" : "tied";
-    const radarFocus = hud?.radarBlips.find((blip) => blip.kind === "target" || blip.kind === "exit");
-    const radarFocusLabel = radarFocus ? `${radarFocus.kind === "exit" ? "Exit" : "Target"}: ${radarFocus.label}` : "Sweep clear";
+    const radarFocus = hud?.radarBlips.find((blip) => blip.kind === "carrier") ?? hud?.radarBlips.find((blip) => blip.kind === "target" || blip.kind === "exit");
+    const radarFocusLabel = radarFocus
+      ? `${radarFocus.kind === "exit" ? "Exit" : radarFocus.kind === "carrier" ? "Carrier" : "Target"}: ${radarFocus.label}`
+      : "Sweep clear";
     const routeChoiceRelic = hud?.greedStatus
       ?.replace(/^Optional relic:\s*/i, "")
       .replace(/^Greed route:\s*/i, "")

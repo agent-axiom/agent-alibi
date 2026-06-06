@@ -1042,10 +1042,11 @@ export class ArcadeHeistScene extends Phaser.Scene {
       });
     }
     for (const rival of this.aiAgents) {
+      const carriedRelic = rival.carriedRelics.at(-1);
       blips.push({
         id: rival.id,
-        kind: "rival",
-        label: rival.name,
+        kind: carriedRelic ? "carrier" : "rival",
+        label: carriedRelic ? `${rival.name} carrying ${carriedRelic.name}` : rival.name,
         x: this.radarX(rival.x),
         y: this.radarY(rival.y)
       });
