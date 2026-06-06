@@ -102,7 +102,7 @@ type RivalCarrierRun = {
   directionLabel: string;
 };
 
-type ImpactKind = "steal" | "intercept" | "alibi" | "escape" | "lockdown" | "cashout" | "laser";
+type ImpactKind = "steal" | "intercept" | "alibi" | "escape" | "lockdown" | "cashout" | "laser" | "dodge";
 type CameraKickKind = ImpactKind | "dash";
 type ArenaCalloutKind = ImpactKind | "rival-steal";
 
@@ -134,6 +134,7 @@ type SecuritySweepDebug = {
   inWarning: boolean;
   telegraphVisible: boolean;
   hitCount: number;
+  dodgeCount: number;
   label: "Laser sweep";
 };
 
@@ -233,13 +234,18 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private securitySweep?: Phaser.GameObjects.Graphics;
   private securitySweepHitCooldownMs = 0;
   private securitySweepHitCount = 0;
+  private securitySweepDodgeCount = 0;
   private securitySweepOverrideUntilMs = 0;
+  private securitySweepOverrideX: number | null = null;
+  private securitySweepWasInWarning = false;
+  private securitySweepWarningHadHit = false;
   private securitySweepState: SecuritySweepDebug = {
     active: false,
     inBeam: false,
     inWarning: false,
     telegraphVisible: false,
     hitCount: 0,
+    dodgeCount: 0,
     label: "Laser sweep"
   };
   private motionTrail?: Phaser.GameObjects.Graphics;
@@ -469,10 +475,24 @@ export class ArcadeHeistScene extends Phaser.Scene {
   }
 
   forceSecuritySweepForDebug() {
+    if (!this.player) return;
     this.releaseRivals({ announce: false, holdMs: 0 });
     this.aiWakeHoldMs = 0;
     this.aiActionHoldMs = 5_000;
     this.securitySweepOverrideUntilMs = this.elapsedMs + 2_400;
+    this.securitySweepOverrideX = this.player.x;
+    this.securitySweepHitCooldownMs = Math.max(this.securitySweepHitCooldownMs, 420);
+    this.updateSecuritySweep(0);
+    this.emitHudIfNeeded(true);
+  }
+
+  forceSecuritySweepWarningForDebug() {
+    if (!this.player) return;
+    this.releaseRivals({ announce: false, holdMs: 0 });
+    this.aiWakeHoldMs = 0;
+    this.aiActionHoldMs = 5_000;
+    this.securitySweepOverrideUntilMs = this.elapsedMs + 2_400;
+    this.securitySweepOverrideX = Phaser.Math.Clamp(this.player.x + SECURITY_SWEEP_BEAM_WIDTH / 2 + 25, 188, WORLD_WIDTH - 188);
     this.securitySweepHitCooldownMs = Math.max(this.securitySweepHitCooldownMs, 420);
     this.updateSecuritySweep(0);
     this.emitHudIfNeeded(true);
@@ -568,13 +588,18 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.securitySweep = undefined;
     this.securitySweepHitCooldownMs = 0;
     this.securitySweepHitCount = 0;
+    this.securitySweepDodgeCount = 0;
     this.securitySweepOverrideUntilMs = 0;
+    this.securitySweepOverrideX = null;
+    this.securitySweepWasInWarning = false;
+    this.securitySweepWarningHadHit = false;
     this.securitySweepState = {
       active: false,
       inBeam: false,
       inWarning: false,
       telegraphVisible: false,
       hitCount: 0,
+      dodgeCount: 0,
       label: "Laser sweep"
     };
     this.motionTrail = undefined;
@@ -1271,7 +1296,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
       escape: { duration: 190, intensity: 0.0055, color: [126, 255, 223] },
       lockdown: { duration: 220, intensity: 0.007, color: [255, 79, 123] },
       cashout: { duration: 190, intensity: 0.0065, color: [255, 79, 123] },
-      laser: { duration: 140, intensity: 0.0048, color: [255, 213, 106] }
+      laser: { duration: 140, intensity: 0.0048, color: [255, 213, 106] },
+      dodge: { duration: 120, intensity: 0.0038, color: [126, 255, 223] }
     } satisfies Record<CameraKickKind, { duration: number; intensity: number; color: [number, number, number] | null }>;
     const kick = settings[kind];
     camera.shake(kick.duration, kick.intensity, true);
@@ -2273,12 +2299,14 @@ export class ArcadeHeistScene extends Phaser.Scene {
       inWarning,
       telegraphVisible: true,
       hitCount: this.securitySweepHitCount,
+      dodgeCount: this.securitySweepDodgeCount,
       label: "Laser sweep"
     };
 
     if (inBeam && this.securitySweepHitCooldownMs <= 0) {
       this.securitySweepHitCooldownMs = SECURITY_SWEEP_HIT_COOLDOWN_MS;
       this.securitySweepHitCount += 1;
+      this.securitySweepWarningHadHit = true;
       this.securitySweepState.hitCount = this.securitySweepHitCount;
       this.alarm = Math.min(5, this.alarm + SECURITY_SWEEP_HIT_ALARM_DELTA);
       this.flashSpotlight("Laser sweep +1 alarm");
@@ -2286,6 +2314,19 @@ export class ArcadeHeistScene extends Phaser.Scene {
       this.feedLine("Security laser clipped your alibi. Dash clear of the sweep.");
       this.impactPulse("laser");
     }
+
+    if (inWarning && !this.securitySweepWasInWarning) {
+      this.securitySweepWarningHadHit = inBeam;
+    }
+
+    if (this.securitySweepWasInWarning && !inWarning) {
+      if (!this.securitySweepWarningHadHit) {
+        this.rewardCleanSweepDodge();
+      }
+      this.securitySweepWarningHadHit = false;
+    }
+
+    this.securitySweepWasInWarning = inWarning;
   }
 
   private securitySweepActive() {
@@ -2293,8 +2334,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
   }
 
   private securitySweepX() {
-    if (this.securitySweepOverrideUntilMs > this.elapsedMs && this.player) {
-      return this.player.x;
+    if (this.securitySweepOverrideUntilMs > this.elapsedMs) {
+      return this.securitySweepOverrideX ?? this.player?.x ?? WORLD_WIDTH / 2;
     }
 
     const spanStart = 188;
@@ -2307,18 +2348,37 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private clearSecuritySweep() {
     this.securitySweep?.clear();
     this.securitySweep?.setData("visible", false);
+    this.securitySweepOverrideX = null;
+    this.securitySweepWasInWarning = false;
+    this.securitySweepWarningHadHit = false;
     this.securitySweepState = {
       active: false,
       inBeam: false,
       inWarning: false,
       telegraphVisible: false,
       hitCount: this.securitySweepHitCount,
+      dodgeCount: this.securitySweepDodgeCount,
       label: "Laser sweep"
     };
   }
 
   private securitySweepDebug(): SecuritySweepDebug {
     return this.securitySweepState;
+  }
+
+  private rewardCleanSweepDodge() {
+    if (!this.player) return;
+    this.securitySweepDodgeCount += 1;
+    this.securitySweepState.dodgeCount = this.securitySweepDodgeCount;
+    this.flashSpotlight("Clean dodge");
+    this.flashScorePopup({
+      tone: "bonus",
+      label: "Clean dodge",
+      detail: "Laser sweep avoided"
+    });
+    this.flashArenaCallout("dodge", "Clean dodge", this.player.x, this.player.y, 0x7effdf);
+    this.feedLine("Clean dodge. Security sweep avoided.");
+    this.impactPulse("dodge");
   }
 
   private drawCarrierCashoutChevrons(from: { x: number; y: number }, target: { x: number; y: number }, chevronCount: number) {

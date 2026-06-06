@@ -20,6 +20,7 @@ declare global {
       forceRivalNearCashout: () => void;
       forceLockdown: () => void;
       forceSecuritySweep: () => void;
+      forceSecuritySweepWarning: () => void;
     };
   }
 }
@@ -70,7 +71,8 @@ export function ArcadeHeistStage({ state, runId, onHudUpdate, onFinish, hud }: A
         forceRivalCashout: () => scene.forceRivalCashoutForDebug(),
         forceRivalNearCashout: () => scene.forceRivalNearCashoutForDebug(),
         forceLockdown: () => scene.forceLockdownForDebug(),
-        forceSecuritySweep: () => scene.forceSecuritySweepForDebug()
+        forceSecuritySweep: () => scene.forceSecuritySweepForDebug(),
+        forceSecuritySweepWarning: () => scene.forceSecuritySweepWarningForDebug()
       };
     }
     hostRef.current.focus({ preventScroll: true });
