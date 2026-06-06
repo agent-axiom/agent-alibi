@@ -6,6 +6,10 @@ describe("selectMusicTrack", () => {
     expect(selectMusicTrack({ screen: "home" })).toBe("menu");
   });
 
+  it("returns to the menu loop on the final case file", () => {
+    expect(selectMusicTrack({ screen: "final" })).toBe("menu");
+  });
+
   it("uses stealth music early in a quiet arcade mission", () => {
     expect(selectMusicTrack({ screen: "match", isArcade: true, alarm: 1, timeLeftMs: 110_000 })).toBe("stealth");
   });

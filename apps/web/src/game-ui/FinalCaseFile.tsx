@@ -1,14 +1,16 @@
-import { Copy, Home, RotateCcw } from "lucide-react";
+import { Copy, Home, RotateCcw, Volume2, VolumeX } from "lucide-react";
 import { useState } from "react";
 import type { MatchSummary, TeamScore } from "@agent-alibi/shared";
 
 type FinalCaseFileProps = {
   summary: MatchSummary;
+  soundEnabled?: boolean;
+  onToggleSound?: () => void;
   onRematch: () => void;
   onHome: () => void;
 };
 
-export function FinalCaseFile({ summary, onRematch, onHome }: FinalCaseFileProps) {
+export function FinalCaseFile({ summary, soundEnabled = false, onToggleSound, onRematch, onHome }: FinalCaseFileProps) {
   const [copied, setCopied] = useState(false);
   const blueScore = summary.teamScores.find((score) => score.teamId === "blue");
   const redScore = summary.teamScores.find((score) => score.teamId === "red");
@@ -131,6 +133,12 @@ export function FinalCaseFile({ summary, onRematch, onHome }: FinalCaseFileProps
         </section>
         <pre>{summary.caseFile}</pre>
         <div className="final-actions">
+          {onToggleSound ? (
+            <button onClick={onToggleSound} aria-label={soundEnabled ? "Sound On" : "Sound Off"} title={soundEnabled ? "Sound On" : "Sound Off"}>
+              {soundEnabled ? <Volume2 aria-hidden="true" size={18} /> : <VolumeX aria-hidden="true" size={18} />}
+              {soundEnabled ? "Sound On" : "Sound Off"}
+            </button>
+          ) : null}
           <button onClick={copyResult}>
             <Copy aria-hidden="true" size={18} />
             {copied ? "Copied" : "Copy Result"}

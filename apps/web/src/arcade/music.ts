@@ -11,7 +11,7 @@ export type MusicSelectionInput = {
 const LOCKDOWN_TIME_MS = 30_000;
 
 export function selectMusicTrack(input: MusicSelectionInput): MusicTrackId | null {
-  if (input.screen === "home" || input.screen === "room") {
+  if (input.screen === "home" || input.screen === "room" || input.screen === "final") {
     return "menu";
   }
 

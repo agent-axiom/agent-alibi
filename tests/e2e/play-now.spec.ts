@@ -212,6 +212,10 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(page.getByText(/cashout banked: \+8/i)).toBeVisible();
   await expect(page.getByLabel(/rematch hook/i).getByText(/run it back and make the case file louder/i)).toBeVisible();
   await expect(page.getByText(/relics stolen: moon pearl, argent crown/i)).toBeVisible();
+  const finalSoundOn = page.getByRole("button", { name: /sound on/i });
+  await expect(finalSoundOn).toBeVisible();
+  await finalSoundOn.click();
+  await expect(page.getByRole("button", { name: /sound off/i })).toBeVisible();
   await page.getByRole("button", { name: /copy result/i }).click();
   await expect(page.getByText(/copied/i)).toBeVisible();
   await expect(page.getByRole("button", { name: /rematch/i })).toBeVisible();
