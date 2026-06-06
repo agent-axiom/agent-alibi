@@ -19,6 +19,11 @@ const STINGER_NOTES: Record<MissionStingerId, Array<[number, number]>> = {
     [740, 80],
     [1180, 145]
   ],
+  "rival-wake": [
+    [294, 0],
+    [440, 80],
+    [659, 160]
+  ],
   "rival-cashout": [
     [196, 0],
     [147, 95],
@@ -44,9 +49,10 @@ export function useMissionStingers({ enabled, hud, summary }: MissionStingerInpu
       aiLootValue: hud?.aiLootValue ?? 0,
       phase: hud?.phase ?? "stealth",
       spotlight: hud?.spotlight ?? null,
+      rivalStatus: hud?.rivalStatus ?? null,
       summaryTitle: summary?.title ?? null
     }),
-    [hud?.lootValue, hud?.aiLootValue, hud?.phase, hud?.spotlight, summary?.title]
+    [hud?.lootValue, hud?.aiLootValue, hud?.phase, hud?.spotlight, hud?.rivalStatus, summary?.title]
   );
 
   useEffect(() => {
@@ -70,7 +76,7 @@ function playStinger(stinger: MissionStingerId, audioContextRef: MutableRefObjec
     const oscillator = context.createOscillator();
     const gain = context.createGain();
     const startsAt = startedAt + delayMs / 1000;
-    oscillator.type = stinger === "lockdown" || stinger === "rival-cashout" ? "sawtooth" : "triangle";
+    oscillator.type = stinger === "lockdown" || stinger === "rival-cashout" || stinger === "rival-wake" ? "sawtooth" : "triangle";
     oscillator.frequency.setValueAtTime(frequency, startsAt);
     gain.gain.setValueAtTime(0, startsAt);
     gain.gain.linearRampToValueAtTime(stinger === "lockdown" ? 0.07 : 0.055, startsAt + 0.018);
