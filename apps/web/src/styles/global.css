@@ -1456,6 +1456,55 @@ p {
   font-weight: 900;
 }
 
+.arcade-countdown-pulse {
+  position: absolute;
+  top: clamp(214px, 31vh, 312px);
+  left: 50%;
+  z-index: 5;
+  width: min(360px, calc(100vw - 32px));
+  pointer-events: none;
+  transform: translateX(-50%);
+  display: grid;
+  gap: 4px;
+  padding: 11px 15px;
+  border: 1px solid rgba(255, 213, 106, 0.78);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(38, 5, 18, 0.94), rgba(56, 35, 12, 0.9)),
+    radial-gradient(circle at 50% 0%, rgba(255, 213, 106, 0.28), transparent 62%);
+  box-shadow: 0 22px 52px rgba(0, 0, 0, 0.38), 0 0 46px rgba(255, 213, 106, 0.28);
+  color: #fff7d6;
+  text-align: center;
+  text-transform: uppercase;
+  animation: arcade-countdown-pulse 760ms ease-in-out infinite alternate;
+}
+
+.arcade-countdown-pulse span,
+.arcade-countdown-pulse strong,
+.arcade-countdown-pulse small {
+  display: block;
+  overflow-wrap: anywhere;
+  line-height: 1;
+}
+
+.arcade-countdown-pulse span {
+  color: #ffd56a;
+  font-size: 0.78rem;
+  font-weight: 950;
+}
+
+.arcade-countdown-pulse strong {
+  color: #ffffff;
+  font-size: clamp(1rem, 2vw, 1.35rem);
+  font-weight: 950;
+}
+
+.arcade-countdown-pulse small {
+  color: #d8fcff;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
 .arcade-shell.scan-lock-active .arcade-vignette {
   background:
     linear-gradient(90deg, rgba(55, 7, 20, 0.74), transparent 24%, transparent 76%, rgba(55, 7, 20, 0.68)),
@@ -1464,6 +1513,13 @@ p {
 
 .arcade-shell.scan-lock-active .arcade-objective-banner,
 .arcade-shell.scan-lock-active .arcade-spotlight {
+  opacity: 0;
+  animation: none;
+  pointer-events: none;
+}
+
+.arcade-shell.countdown-pulse-active .arcade-objective-banner,
+.arcade-shell.countdown-pulse-active .arcade-spotlight {
   opacity: 0;
   animation: none;
   pointer-events: none;
@@ -1510,6 +1566,18 @@ p {
   100% {
     opacity: 1;
     transform: translateX(-50%) scale(1.015);
+  }
+}
+
+@keyframes arcade-countdown-pulse {
+  0% {
+    opacity: 0.76;
+    transform: translateX(-50%) scale(0.98);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1.02);
   }
 }
 

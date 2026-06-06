@@ -1393,7 +1393,9 @@ export class ArcadeHeistScene extends Phaser.Scene {
         routeMode: this.routeMode,
         rivalCarrier: rivalIntercept,
         alibiPulseReady,
-        nearestRivalName: nearestRival?.name ?? null
+        nearestRivalName: nearestRival?.name ?? null,
+        phase: this.phase(),
+        timeLeftMs: this.timeLeftMs()
       }),
       threatCue: this.threatCue(rivalIntercept, alibiPulseReady, nearestRival),
       objectiveBanner: this.objectiveBanner,
@@ -1682,6 +1684,15 @@ export class ArcadeHeistScene extends Phaser.Scene {
       };
     }
 
+    if (this.phase() === "lockdown") {
+      return {
+        tone: "danger",
+        label: "Vault sealing",
+        detail: `${Math.max(1, Math.ceil(this.timeLeftMs() / 1000))}s before the Moon Vault closes`,
+        action: "Cashout before the doors close"
+      };
+    }
+
     if (this.aiReleased && this.aiWakeHoldMs > 0) {
       return {
         tone: "warning",
@@ -1704,6 +1715,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
   }
 
   private rivalStatus(): string {
+    if (this.phase() === "lockdown") return `Vault sealing in ${Math.max(1, Math.ceil(this.timeLeftMs() / 1000))}s`;
     if (this.rivalsAreActive()) return "Rivals active";
     if (this.aiReleased) return `Rivals waking in ${Math.max(1, Math.ceil(this.aiWakeHoldMs / 1000))}s`;
     const seconds = Math.max(1, Math.ceil(Math.max(0, AI_GRACE_MS - this.elapsedMs - 500) / 1000));
