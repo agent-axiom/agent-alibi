@@ -1997,7 +1997,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.updateTargetBeam(target);
 
     const targetKey = `${target.kind}:${target.id}`;
-    const markerLabel = target.label;
+    const markerLabel = this.targetMarkerLabel(target);
     if (!this.targetMarker || this.targetMarker.getData("targetKey") !== targetKey || this.targetMarker.getData("label") !== markerLabel) {
       this.targetMarker?.destroy(true);
       const ring = this.add.circle(0, 0, 44, 0xffd56a, 0.08).setStrokeStyle(4, 0xffd56a, 0.9);
@@ -2046,6 +2046,14 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.drawRouteChevrons(target, color, distance);
     this.targetBeam.fillStyle(color, 0.14);
     this.targetBeam.fillCircle(target.x, target.y, target.kind === "escape" ? 68 : target.kind === "carrier" ? 58 : 50);
+  }
+
+  private targetMarkerLabel(target: ArcadeObjectiveTarget): string {
+    if (target.kind !== "carrier") return target.label;
+    const carrier = this.aiAgents.find((agent) => agent.id === target.id);
+    if (!carrier) return target.label;
+    const carriedRelic = carrier.carriedRelics.at(-1);
+    return carriedRelic ? `${carrier.name} +${carriedRelic.value}` : target.label;
   }
 
   private routeGuideDebug(target: ArcadeObjectiveTarget | undefined) {
