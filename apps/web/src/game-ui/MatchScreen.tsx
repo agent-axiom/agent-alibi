@@ -140,6 +140,14 @@ export function MatchScreen({ match }: MatchScreenProps) {
             <kbd>{hud?.activeAction.key ?? "Move"}</kbd>
             <span>{hud?.activeAction.label ?? "Follow marker"}</span>
           </div>
+          {hud?.missionBeat ? (
+            <div className={`arcade-mission-beat ${hud.missionBeat.tone}`} aria-label="Mission beat">
+              <span>{hud.missionBeat.kicker}</span>
+              <strong>{hud.missionBeat.title}</strong>
+              <p>{hud.missionBeat.detail}</p>
+              <small>{hud.missionBeat.action}</small>
+            </div>
+          ) : null}
           <div className="arcade-steps" aria-label="Mission loop">
             <span className={hud?.loopStep === "steal" ? "active" : ""}>
               <b>1</b> Steal

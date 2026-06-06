@@ -4,6 +4,7 @@ import { chooseFallbackDecision } from "@agent-alibi/ai";
 import { buildMatchSummary, createInitialGameState, generateLegalActions, resolveRound } from "@agent-alibi/game";
 import { buildArcadeMatchSummary, type ArcadeMissionResult } from "../arcade/arcade-rules";
 import { ARCADE_MISSION_DURATION_MS, type ArcadeController, type ArcadeHudState } from "../arcade/arcade-types";
+import { buildMissionBeat } from "../arcade/mission-beats";
 import { buildActionCards, type ActionCard } from "../game-ui/action-cards";
 
 type BriefingMessage = {
@@ -277,6 +278,17 @@ function makeInitialArcadeHud(state: GameState): ArcadeHudState {
       secondsLeft: 60
     },
     lootChainWindow: null,
+    missionBeat: buildMissionBeat({
+      targetArtifactName: "Moon Pearl",
+      lootValue: 0,
+      canEscape: false,
+      cashoutValue: null,
+      routeChoiceRelic: null,
+      routeMode: "escape",
+      rivalCarrier: null,
+      alibiPulseReady: false,
+      nearestRivalName: null
+    }),
     spotlight: null,
     feed: ["Moon Vault breach started.", "Rival agents enter in 5 seconds.", "Move fast. Steal clean. Escape before lockdown."]
   };
