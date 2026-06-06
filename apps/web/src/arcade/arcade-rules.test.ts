@@ -103,4 +103,23 @@ describe("buildArcadeMatchSummary", () => {
     expect(summary.caseFile).toContain("Alibi Pulses: 2");
     expect(summary.caseFile).toContain("Scan Burns: 1");
   });
+
+  it("records carrier intercepts as a shareable match highlight", () => {
+    const summary = buildArcadeMatchSummary({
+      outcome: "escaped",
+      playerName: "Agent You",
+      lootValue: 3,
+      artifactsStolen: 1,
+      aiLootValue: 0,
+      alarm: 2,
+      elapsedMs: 55_000,
+      carrierIntercepts: 1,
+      interceptedRelicNames: ["Moon Pearl"]
+    });
+
+    expect(summary.carrierIntercepts).toBe(1);
+    expect(summary.interceptedRelicNames).toEqual(["Moon Pearl"]);
+    expect(summary.caseFile).toContain("Carrier Intercepts: 1");
+    expect(summary.caseFile).toContain("Recovered From Rivals: Moon Pearl");
+  });
 });

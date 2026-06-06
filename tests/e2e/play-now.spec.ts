@@ -175,8 +175,15 @@ test("rival steals trigger a clear red loot alert", async ({ page }) => {
 
   await page.evaluate(() => window.__AGENT_ALIBI_FINISH_ARCADE__?.());
   const finalScores = page.getByLabel(/final scores/i);
-  await expect(finalScores.getByText(/relics stolen/i)).toBeVisible();
-  await expect(finalScores.getByText(/moon pearl/i)).toBeVisible();
+  const carrierCard = finalScores.locator(".final-intercepts");
+  await expect(carrierCard.getByText(/carrier intercepts/i)).toBeVisible();
+  await expect(carrierCard.getByText(/x1/i)).toBeVisible();
+  await expect(carrierCard.getByText(/moon pearl/i)).toBeVisible();
+  const relicsCard = finalScores.locator(".final-relics");
+  await expect(relicsCard.getByText(/relics stolen/i)).toBeVisible();
+  await expect(relicsCard.getByText(/moon pearl/i)).toBeVisible();
+  await expect(page.getByText(/carrier intercepts: 1/i)).toBeVisible();
+  await expect(page.getByText(/recovered from rivals: moon pearl/i)).toBeVisible();
   await expect(page.getByText(/relics stolen: moon pearl/i)).toBeVisible();
 });
 

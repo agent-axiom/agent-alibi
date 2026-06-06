@@ -662,6 +662,16 @@ p {
   box-shadow: 0 8px 0 rgba(76, 244, 240, 0.32);
 }
 
+.final-intercepts {
+  border-color: #ffd56a;
+  background: #fff2cc;
+  box-shadow: 0 8px 0 rgba(255, 79, 123, 0.22);
+}
+
+.final-intercepts small {
+  overflow-wrap: anywhere;
+}
+
 .final-burn {
   border-color: #ff4f7b;
   background: #fff0f4;

@@ -64,6 +64,13 @@ export function FinalCaseFile({ summary, onRematch, onHome }: FinalCaseFileProps
               <small>Scanner jams</small>
             </div>
           ) : null}
+          {summary.carrierIntercepts && summary.carrierIntercepts > 0 ? (
+            <div className="final-score final-intercepts">
+              <span>Carrier Intercepts</span>
+              <strong>x{summary.carrierIntercepts}</strong>
+              <small>{summary.interceptedRelicNames?.length ? summary.interceptedRelicNames.join(" + ") : "Recovered loot"}</small>
+            </div>
+          ) : null}
           {summary.scanBurns && summary.scanBurns > 0 ? (
             <div className="final-score final-burn">
               <span>Scan Burns</span>

@@ -109,5 +109,7 @@ export type MatchSummary = {
   rivalRelicNames?: string[];
   alibiPulsesUsed?: number;
   scanBurns?: number;
+  carrierIntercepts?: number;
+  interceptedRelicNames?: string[];
   caseFile: string;
 };

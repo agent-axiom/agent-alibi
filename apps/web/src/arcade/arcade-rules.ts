@@ -14,6 +14,8 @@ export type ArcadeMissionResult = {
   elapsedMs: number;
   alibiPulsesUsed?: number;
   scanBurns?: number;
+  carrierIntercepts?: number;
+  interceptedRelicNames?: string[];
 };
 
 export type ArcadeRunRating = {
@@ -31,6 +33,8 @@ export function buildArcadeMatchSummary(result: ArcadeMissionResult): MatchSumma
   const rivalRelicNames = result.rivalRelicNames ?? [];
   const alibiPulsesUsed = result.alibiPulsesUsed ?? 0;
   const scanBurns = result.scanBurns ?? 0;
+  const carrierIntercepts = result.carrierIntercepts ?? 0;
+  const interceptedRelicNames = result.interceptedRelicNames ?? [];
   const blueScore: TeamScore = {
     teamId: "blue",
     loot: result.lootValue,
@@ -63,6 +67,8 @@ export function buildArcadeMatchSummary(result: ArcadeMissionResult): MatchSumma
     rivalRelicNames,
     alibiPulsesUsed,
     scanBurns,
+    carrierIntercepts,
+    interceptedRelicNames,
     caseFile: buildCaseFile(result, title, blueScore, redScore, runRating, styleBonus)
   };
 }
@@ -130,6 +136,8 @@ function buildCaseFile(
     `Rival Relics: ${result.rivalRelicNames?.length ? result.rivalRelicNames.join(", ") : "none"}`,
     `Alibi Pulses: ${result.alibiPulsesUsed ?? 0}`,
     `Scan Burns: ${result.scanBurns ?? 0}`,
+    `Carrier Intercepts: ${result.carrierIntercepts ?? 0}`,
+    `Recovered From Rivals: ${result.interceptedRelicNames?.length ? result.interceptedRelicNames.join(", ") : "none"}`,
     `Alarm: ${result.alarm}/5`,
     `Time inside: ${elapsedSeconds}s`,
     "",
