@@ -19,6 +19,11 @@ const STINGER_NOTES: Record<MissionStingerId, Array<[number, number]>> = {
     [740, 80],
     [1180, 145]
   ],
+  "rival-cashout": [
+    [196, 0],
+    [147, 95],
+    [196, 180]
+  ],
   lockdown: [
     [180, 0],
     [150, 130]
@@ -36,11 +41,12 @@ export function useMissionStingers({ enabled, hud, summary }: MissionStingerInpu
   const snapshot = useMemo<MissionStingerSnapshot>(
     () => ({
       lootValue: hud?.lootValue ?? 0,
+      aiLootValue: hud?.aiLootValue ?? 0,
       phase: hud?.phase ?? "stealth",
       spotlight: hud?.spotlight ?? null,
       summaryTitle: summary?.title ?? null
     }),
-    [hud?.lootValue, hud?.phase, hud?.spotlight, summary?.title]
+    [hud?.lootValue, hud?.aiLootValue, hud?.phase, hud?.spotlight, summary?.title]
   );
 
   useEffect(() => {
@@ -64,7 +70,7 @@ function playStinger(stinger: MissionStingerId, audioContextRef: MutableRefObjec
     const oscillator = context.createOscillator();
     const gain = context.createGain();
     const startsAt = startedAt + delayMs / 1000;
-    oscillator.type = stinger === "lockdown" ? "sawtooth" : "triangle";
+    oscillator.type = stinger === "lockdown" || stinger === "rival-cashout" ? "sawtooth" : "triangle";
     oscillator.frequency.setValueAtTime(frequency, startsAt);
     gain.gain.setValueAtTime(0, startsAt);
     gain.gain.linearRampToValueAtTime(stinger === "lockdown" ? 0.07 : 0.055, startsAt + 0.018);

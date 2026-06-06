@@ -5,8 +5,8 @@ describe("selectMissionStinger", () => {
   it("plays a steal stinger when blue loot increases", () => {
     expect(
       selectMissionStinger(
-        { lootValue: 0, phase: "stealth", spotlight: null, summaryTitle: null },
-        { lootValue: 3, phase: "stealth", spotlight: "Moon Pearl secured", summaryTitle: null }
+        { lootValue: 0, aiLootValue: 0, phase: "stealth", spotlight: null, summaryTitle: null },
+        { lootValue: 3, aiLootValue: 0, phase: "stealth", spotlight: "Moon Pearl secured", summaryTitle: null }
       )
     ).toBe("steal");
   });
@@ -14,8 +14,8 @@ describe("selectMissionStinger", () => {
   it("prioritizes intercept stingers over ordinary loot gain", () => {
     expect(
       selectMissionStinger(
-        { lootValue: 0, phase: "stealth", spotlight: null, summaryTitle: null },
-        { lootValue: 3, phase: "stealth", spotlight: "Intercepted Rook", summaryTitle: null }
+        { lootValue: 0, aiLootValue: 0, phase: "stealth", spotlight: null, summaryTitle: null },
+        { lootValue: 3, aiLootValue: 0, phase: "stealth", spotlight: "Intercepted Rook", summaryTitle: null }
       )
     ).toBe("intercept");
   });
@@ -23,8 +23,8 @@ describe("selectMissionStinger", () => {
   it("plays a lockdown stinger when the vault enters lockdown", () => {
     expect(
       selectMissionStinger(
-        { lootValue: 3, phase: "alarm", spotlight: null, summaryTitle: null },
-        { lootValue: 3, phase: "lockdown", spotlight: null, summaryTitle: null }
+        { lootValue: 3, aiLootValue: 0, phase: "alarm", spotlight: null, summaryTitle: null },
+        { lootValue: 3, aiLootValue: 0, phase: "lockdown", spotlight: null, summaryTitle: null }
       )
     ).toBe("lockdown");
   });
@@ -32,9 +32,18 @@ describe("selectMissionStinger", () => {
   it("plays a case-file stinger when a final title appears", () => {
     expect(
       selectMissionStinger(
-        { lootValue: 6, phase: "escaped", spotlight: null, summaryTitle: null },
-        { lootValue: 6, phase: "escaped", spotlight: null, summaryTitle: "Silent Moon Run" }
+        { lootValue: 6, aiLootValue: 0, phase: "escaped", spotlight: null, summaryTitle: null },
+        { lootValue: 6, aiLootValue: 0, phase: "escaped", spotlight: null, summaryTitle: "Silent Moon Run" }
       )
     ).toBe("case-file");
+  });
+
+  it("plays a rival cashout stinger when red loot increases", () => {
+    expect(
+      selectMissionStinger(
+        { lootValue: 0, aiLootValue: 0, phase: "stealth", spotlight: null, summaryTitle: null },
+        { lootValue: 0, aiLootValue: 3, phase: "stealth", spotlight: "Red cashout +3", summaryTitle: null }
+      )
+    ).toBe("rival-cashout");
   });
 });
