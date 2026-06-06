@@ -96,9 +96,9 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(lootChainWindow.getByText(/next relic keeps streak/i)).toBeVisible();
   await expect(lootChainWindow.getByText(/\d+s left/i)).toBeVisible();
   await expect(page.getByText(/optional relic/i)).toBeVisible();
-  await expect(heistRace.getByText(/blue 3/i)).toBeVisible();
+  await expect(heistRace.getByText(/blue carrying \+3/i)).toBeVisible();
   await expect(heistRace.getByText(/red 0/i)).toBeVisible();
-  await expect(heistRace.getByText(/you lead by 3/i)).toBeVisible();
+  await expect(heistRace.getByText(/bank \+5 at lift/i)).toBeVisible();
   const carriedLoot = page.getByLabel(/carried loot/i);
   await expect(carriedLoot.getByText(/carrying \+3/i)).toBeVisible();
   await expect(carriedLoot.getByText(/bank \+5 at lift/i)).toBeVisible();
@@ -150,6 +150,8 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   expect(afterGreedSteal?.target?.kind).toBe("escape");
   expect(afterGreedSteal?.targetMarker?.label).toBe("Cashout +8");
   expect(afterGreedSteal?.escapeZoneBadge).toEqual({ visible: true, label: "Cashout +8" });
+  await expect(heistRace.getByText(/blue carrying \+6/i)).toBeVisible();
+  await expect(heistRace.getByText(/bank \+8 at lift/i)).toBeVisible();
   await expect(carriedLoot.getByText(/carrying \+6/i)).toBeVisible();
   await expect(carriedLoot.getByText(/bank \+8 at lift/i)).toBeVisible();
 
