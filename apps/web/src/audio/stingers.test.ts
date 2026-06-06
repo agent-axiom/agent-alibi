@@ -41,9 +41,18 @@ describe("selectMissionStinger", () => {
   it("plays a rival cashout stinger when red loot increases", () => {
     expect(
       selectMissionStinger(
-        { lootValue: 0, aiLootValue: 0, phase: "stealth", spotlight: null, summaryTitle: null },
-        { lootValue: 0, aiLootValue: 3, phase: "stealth", spotlight: "Red cashout +3", summaryTitle: null }
+        { lootValue: 0, aiLootValue: 0, phase: "stealth", spotlight: null, summaryTitle: null, rivalStatus: "Rivals active" },
+        { lootValue: 0, aiLootValue: 3, phase: "stealth", spotlight: "Red cashout +3", summaryTitle: null, rivalStatus: "Rivals active" }
       )
     ).toBe("rival-cashout");
+  });
+
+  it("plays a rival wake stinger when the first score wakes the rivals", () => {
+    expect(
+      selectMissionStinger(
+        { lootValue: 0, aiLootValue: 0, phase: "stealth", spotlight: null, summaryTitle: null, rivalStatus: "Rivals wake after first score or 9s" },
+        { lootValue: 3, aiLootValue: 0, phase: "stealth", spotlight: "Moon Pearl secured", summaryTitle: null, rivalStatus: "Rivals waking in 4s" }
+      )
+    ).toBe("rival-wake");
   });
 });
