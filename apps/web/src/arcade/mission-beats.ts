@@ -3,6 +3,7 @@ import type { ArcadeMissionBeat, ArcadeRivalIntercept } from "./arcade-types";
 export type MissionBeatInput = {
   targetArtifactName: string | null;
   lootValue: number;
+  rivalLootValue: number;
   canEscape: boolean;
   cashoutValue: number | null;
   routeChoiceRelic: string | null;
@@ -26,16 +27,6 @@ export function buildMissionBeat(input: MissionBeatInput): ArcadeMissionBeat {
     };
   }
 
-  if (input.alibiPulseReady) {
-    return {
-      tone: "danger",
-      kicker: "Scan threat",
-      title: `${input.nearestRivalName ?? "Rival"} is burning your alibi`,
-      detail: "A scan spike raises alarm. Pulse now, then break line.",
-      action: "Press E / Space to jam scan"
-    };
-  }
-
   if (input.canEscape && input.lootValue > 0) {
     const cashoutValue = input.cashoutValue ?? input.lootValue;
     return {
@@ -46,6 +37,28 @@ export function buildMissionBeat(input: MissionBeatInput): ArcadeMissionBeat {
         ? `${input.routeChoiceRelic} can extend the chain, but the lift is paying now.`
         : "Escape before lockdown seals the vault.",
       action: input.routeMode === "greed" ? "Steal the greed relic, then exit" : "Reach Atrium Lift or press G for greed route"
+    };
+  }
+
+  if (input.rivalLootValue > input.lootValue) {
+    const lead = input.rivalLootValue - input.lootValue;
+    const targetName = input.targetArtifactName ?? "The marked relic";
+    return {
+      tone: "danger",
+      kicker: "Score pressure",
+      title: `Red leads by ${lead}`,
+      detail: `${targetName} can swing the race. Steal it, then cash out.`,
+      action: "Follow the gold marker before the next red carrier run"
+    };
+  }
+
+  if (input.alibiPulseReady) {
+    return {
+      tone: "danger",
+      kicker: "Scan threat",
+      title: `${input.nearestRivalName ?? "Rival"} is burning your alibi`,
+      detail: "A scan spike raises alarm. Pulse now, then break line.",
+      action: "Press E / Space to jam scan"
     };
   }
 

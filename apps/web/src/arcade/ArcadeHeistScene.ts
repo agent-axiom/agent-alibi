@@ -1298,6 +1298,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       missionBeat: buildMissionBeat({
         targetArtifactName: targetArtifact?.name ?? null,
         lootValue: this.lootValue,
+        rivalLootValue: this.aiLootValue,
         canEscape,
         cashoutValue: escapePayout?.cashout ?? null,
         routeChoiceRelic: routeChoiceRelic ?? null,
