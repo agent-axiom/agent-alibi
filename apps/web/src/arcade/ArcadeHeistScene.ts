@@ -99,6 +99,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private playerName = "Agent You";
   private escapeZone?: Phaser.GameObjects.Container;
   private targetMarker?: Phaser.GameObjects.Container;
+  private targetBeam?: Phaser.GameObjects.Graphics;
 
   constructor() {
     super("arcade-heist");
@@ -172,6 +173,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
           }
         : null,
       target,
+      hasTargetBeam: Boolean(this.targetBeam),
       impulse: this.keyboardImpulse ?? null
     };
   }
@@ -227,6 +229,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.finished = false;
     this.aiReleased = false;
     this.targetMarker = undefined;
+    this.targetBeam = undefined;
     this.playerName = config.state.players.find((player) => player.kind === "human")?.name ?? "Agent You";
 
     this.tweens.killAll();
@@ -234,6 +237,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.drawWorld(config.state);
     this.createActors(config.state);
     this.resizeCamera();
+    this.updateTargetMarker();
     this.scale.off("resize", this.resizeCamera, this);
     this.scale.on("resize", this.resizeCamera, this);
     this.emitHudIfNeeded(true);
@@ -761,8 +765,12 @@ export class ArcadeHeistScene extends Phaser.Scene {
     if (!target) {
       this.targetMarker?.destroy(true);
       this.targetMarker = undefined;
+      this.targetBeam?.destroy();
+      this.targetBeam = undefined;
       return;
     }
+
+    this.updateTargetBeam(target);
 
     const targetKey = `${target.kind}:${target.id}`;
     if (!this.targetMarker || this.targetMarker.getData("targetKey") !== targetKey) {
@@ -794,6 +802,20 @@ export class ArcadeHeistScene extends Phaser.Scene {
     }
 
     this.targetMarker.setPosition(target.x, target.y);
+  }
+
+  private updateTargetBeam(target: ArcadeObjectiveTarget) {
+    if (!this.player) return;
+    if (!this.targetBeam) {
+      this.targetBeam = this.add.graphics().setDepth(5);
+    }
+
+    const color = target.kind === "escape" ? 0x7effdf : 0xffd56a;
+    this.targetBeam.clear();
+    this.targetBeam.lineStyle(3, color, 0.32);
+    this.targetBeam.strokeLineShape(new Phaser.Geom.Line(this.player.x, this.player.y, target.x, target.y));
+    this.targetBeam.fillStyle(color, 0.14);
+    this.targetBeam.fillCircle(target.x, target.y, target.kind === "escape" ? 68 : 50);
   }
 
   private finish(outcome: "escaped" | "sealed" | "caught") {

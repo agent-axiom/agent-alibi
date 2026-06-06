@@ -14,6 +14,9 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(page.getByText(/rival agents enter in 5 seconds/i)).toBeVisible();
 
   await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_STATE__ === "function");
+  const initialTarget = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());
+  expect(initialTarget?.target?.kind).toBe("artifact");
+  expect(initialTarget?.hasTargetBeam).toBe(true);
   await page.waitForTimeout(1_600);
   const graceState = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());
   expect(graceState?.aiLootValue).toBe(0);
