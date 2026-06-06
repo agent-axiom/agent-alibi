@@ -850,6 +850,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
         cooldownMs: this.alibiPulseCooldownMs
       }),
       paceStatus: this.paceStatus(),
+      cleanBonusWindow: this.cleanBonusWindow(),
       spotlight: this.spotlight,
       feed: this.feed.slice(-5)
     };
@@ -983,6 +984,32 @@ export class ArcadeHeistScene extends Phaser.Scene {
       elapsedMs: this.elapsedMs
     });
     return styleBonus > 0 ? `${runRating} pace` : "Bonus window closed";
+  }
+
+  private cleanBonusWindow() {
+    const elapsedSeconds = this.elapsedMs / 1000;
+    if (elapsedSeconds <= 60 && Math.ceil(this.alarm) <= 2) {
+      return {
+        label: "Clean bonus",
+        detail: "S-Rank +3",
+        secondsLeft: Math.max(0, Math.ceil(60 - elapsedSeconds))
+      };
+    }
+    if (elapsedSeconds <= 75 && Math.ceil(this.alarm) <= 3) {
+      return {
+        label: "Clean bonus",
+        detail: "A-Rank +2",
+        secondsLeft: Math.max(0, Math.ceil(75 - elapsedSeconds))
+      };
+    }
+    if (elapsedSeconds <= 90 && Math.ceil(this.alarm) <= 3) {
+      return {
+        label: "Clean bonus",
+        detail: "B-Rank +1",
+        secondsLeft: Math.max(0, Math.ceil(90 - elapsedSeconds))
+      };
+    }
+    return null;
   }
 
   private rivalStatus(): string {

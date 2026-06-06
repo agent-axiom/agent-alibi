@@ -26,6 +26,12 @@ export type ArcadeEscapePayout = {
   cashout: number;
 };
 
+export type ArcadeCleanBonusWindow = {
+  label: string;
+  detail: string;
+  secondsLeft: number;
+};
+
 export type ArcadeHudState = {
   phase: ArcadeHudPhase;
   timeLeftMs: number;
@@ -53,6 +59,7 @@ export type ArcadeHudState = {
   rivalScanStatus: RivalScanStatus;
   alibiPulseStatus: string;
   paceStatus: string;
+  cleanBonusWindow: ArcadeCleanBonusWindow | null;
   spotlight: string | null;
   feed: string[];
 };

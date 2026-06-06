@@ -20,6 +20,9 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(page.getByText(/rivals enter in \d+s/i)).toBeVisible();
   await expect(page.getByText(/nearest rival \d+m/i)).toBeVisible();
   await expect(page.getByText(/s-rank pace/i)).toBeVisible();
+  const bonusWindow = page.getByLabel(/clean bonus window/i);
+  await expect(bonusWindow.getByText(/clean bonus/i)).toBeVisible();
+  await expect(bonusWindow.getByText(/\d+s left/i)).toBeVisible();
   await expect(page.getByText(/dash ready/i)).toBeVisible();
   await expect(page.getByLabel(/active action/i).getByText(/move/i)).toBeVisible();
   await expect(page.getByLabel(/active action/i).getByText(/follow marker/i)).toBeVisible();

@@ -183,6 +183,13 @@ export function MatchScreen({ match }: MatchScreenProps) {
             <div className="arcade-pace" aria-label="Run pace">
               {hud?.paceStatus ?? "Pace unknown"}
             </div>
+            {hud?.cleanBonusWindow ? (
+              <div className="arcade-clean-bonus" aria-label="Clean bonus window">
+                <span>{hud.cleanBonusWindow.label}</span>
+                <strong>{hud.cleanBonusWindow.detail}</strong>
+                <small>{hud.cleanBonusWindow.secondsLeft}s left</small>
+              </div>
+            ) : null}
             <div className={`arcade-dash ${hud?.dashReady === false ? "cooling" : ""}`} aria-label="Dash status">
               {hud?.dashReady === false ? "Dash cooling" : "Dash ready"}
             </div>

@@ -270,6 +270,11 @@ function makeInitialArcadeHud(state: GameState): ArcadeHudState {
     },
     alibiPulseStatus: "Alibi ready",
     paceStatus: "S-Rank pace",
+    cleanBonusWindow: {
+      label: "Clean bonus",
+      detail: "S-Rank +3",
+      secondsLeft: 60
+    },
     spotlight: null,
     feed: ["Moon Vault breach started.", "Rival agents enter in 5 seconds.", "Move fast. Steal clean. Escape before lockdown."]
   };

@@ -1602,6 +1602,35 @@ p {
   text-transform: uppercase;
 }
 
+.arcade-clean-bonus {
+  width: fit-content;
+  border: 1px solid rgba(255, 213, 106, 0.54);
+  border-radius: 6px;
+  padding: 6px 9px;
+  background: rgba(255, 213, 106, 0.12);
+  color: #fff4c2;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.arcade-clean-bonus span,
+.arcade-clean-bonus strong,
+.arcade-clean-bonus small {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 950;
+}
+
+.arcade-clean-bonus strong {
+  margin-top: 4px;
+  color: #fffaf2;
+}
+
+.arcade-clean-bonus small {
+  margin-top: 4px;
+  color: #ffd56a;
+}
+
 .arcade-escape-payout {
   width: fit-content;
   border: 1px solid rgba(126, 255, 223, 0.56);
