@@ -26,8 +26,28 @@ describe("buildMissionBeat", () => {
       kicker: "Final countdown",
       title: "Lockdown is closing",
       detail: "The Moon Vault seals soon. Stop chasing relics and reach the lift.",
-      action: "Cashout or escape now"
+      action: "Escape now"
     });
+  });
+
+  it("turns lockdown with carried loot into a cashout-first beat", () => {
+    const beat = buildMissionBeat({
+      targetArtifactName: "Argent Crown",
+      targetArtifactValue: 3,
+      lootValue: 3,
+      rivalLootValue: 0,
+      canEscape: true,
+      cashoutValue: 5,
+      routeChoiceRelic: null,
+      routeMode: "escape",
+      rivalCarrier: null,
+      alibiPulseReady: false,
+      nearestRivalName: null,
+      phase: "lockdown",
+      timeLeftMs: 24_000
+    });
+
+    expect(beat.action).toBe("Cashout now");
   });
 
   it("starts the heist with one concrete objective beat", () => {

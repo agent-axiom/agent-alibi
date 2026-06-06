@@ -18,12 +18,13 @@ export type MissionBeatInput = {
 
 export function buildMissionBeat(input: MissionBeatInput): ArcadeMissionBeat {
   if (input.phase === "lockdown" || (input.timeLeftMs !== undefined && input.timeLeftMs <= 30_000)) {
+    const lockdownAction = input.lootValue > 0 ? "Cashout now" : "Escape now";
     return {
       tone: "danger",
       kicker: "Final countdown",
       title: "Lockdown is closing",
       detail: "The Moon Vault seals soon. Stop chasing relics and reach the lift.",
-      action: "Cashout or escape now"
+      action: lockdownAction
     };
   }
 

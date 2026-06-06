@@ -659,7 +659,8 @@ test("lockdown phase triggers an unmistakable vault warning", async ({ page }) =
   await expect(page.locator(".arcade-shell")).toHaveClass(/countdown-pulse-active/);
   const countdownPulse = page.getByLabel(/final countdown pulse/i);
   await expect(countdownPulse.getByText(/final 30s/i)).toBeVisible();
-  await expect(countdownPulse.getByText(/cashout now/i)).toBeVisible();
+  await expect(countdownPulse.getByText(/escape now/i)).toBeVisible();
+  await expect(countdownPulse).not.toContainText(/cashout now/i);
   const countdownState = await page.evaluate(() => {
     const pulse = document.querySelector(`[aria-label="Final countdown pulse"]`);
     const objective = document.querySelector(`[aria-label="Current objective"]`);
@@ -683,18 +684,33 @@ test("lockdown phase triggers an unmistakable vault warning", async ({ page }) =
   const missionBeat = page.getByLabel(/mission beat/i);
   await expect(missionBeat.getByText(/final countdown/i)).toBeVisible();
   await expect(missionBeat.getByText(/lockdown is closing/i)).toBeVisible();
-  await expect(missionBeat.getByText(/cashout or escape now/i)).toBeVisible();
+  await expect(missionBeat.getByText(/escape now/i)).toBeVisible();
   await expect(missionBeat).not.toContainText(/first objective|steal moon pearl/i);
   await expect(page.locator('[aria-label="Current objective"] > strong')).toContainText(/lockdown is closing/i);
   const threatVector = page.getByLabel(/threat vector/i);
   await expect(threatVector.getByText(/vault sealing/i)).toBeVisible();
-  await expect(threatVector.getByText(/cashout before the doors close/i)).toBeVisible();
-  await expect(threatVector).not.toContainText(/rivals waking|choose cashout or greed/i);
+  await expect(threatVector.getByText(/escape before the doors close/i)).toBeVisible();
+  await expect(threatVector).not.toContainText(/rivals waking|choose cashout or greed|cashout before/i);
   const rivalCrewStatus = page.getByLabel(/rival crew status/i);
   await expect(rivalCrewStatus).toContainText(/vault sealing/i);
   await expect(rivalCrewStatus).not.toContainText(/rivals waking/i);
   await expect(page.getByLabel(/rival comms/i)).toBeHidden();
   await expect(page.locator(".arcade-shell")).not.toHaveClass(/breach-alert/);
+});
+
+test("lockdown with carried loot uses cashout copy", async ({ page }) => {
+  await startSoloArcade(page);
+  await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget === "function");
+
+  await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget());
+  await page.keyboard.press("KeyE");
+  await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.forceLockdown?.());
+
+  const countdownPulse = page.getByLabel(/final countdown pulse/i);
+  await expect(countdownPulse.getByText(/cashout now/i)).toBeVisible();
+  await expect(countdownPulse).not.toContainText(/escape now/i);
+  await expect(page.getByLabel(/mission beat/i).getByText(/cashout now/i)).toBeVisible();
+  await expect(page.getByLabel(/threat vector/i).getByText(/cashout before the doors close/i)).toBeVisible();
 });
 
 test("alibi pulse jams a close rival scan", async ({ page }) => {
