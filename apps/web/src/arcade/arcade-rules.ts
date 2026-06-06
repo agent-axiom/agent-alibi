@@ -103,6 +103,8 @@ function runRatingForResult(result: Pick<ArcadeMissionResult, "outcome">, styleB
 }
 
 function titleForResult(result: ArcadeMissionResult, winnerTeamId: MatchSummary["winnerTeamId"]): string {
+  if ((result.carrierIntercepts ?? 0) > 0) return "Carrier Denied";
+  if ((result.pendingRivalRelicNames?.length ?? 0) > 0) return "Lift Denied";
   if (result.outcome === "escaped" && winnerTeamId === "blue" && result.alarm <= 2) return "Silent Moon Run";
   if (result.outcome === "escaped" && winnerTeamId === "blue") return "Hot Exit";
   if (result.outcome === "sealed") return "Vault sealed";
