@@ -1285,6 +1285,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
         objectiveTarget && targetDistanceMeters !== null && this.player
           ? buildObjectiveDirectionLabel({
               kind: objectiveTarget.kind === "escape" ? "exit" : objectiveTarget.kind === "carrier" ? "carrier" : "target",
+              cashoutValue: objectiveTarget.kind === "escape" ? (escapePayout?.cashout ?? null) : null,
               dx: objectiveTarget.x - this.player.x,
               dy: objectiveTarget.y - this.player.y,
               distanceMeters: targetDistanceMeters

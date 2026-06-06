@@ -1,5 +1,6 @@
 export type ObjectiveDirectionInput = {
   kind: "target" | "exit" | "rival" | "carrier";
+  cashoutValue?: number | null;
   dx: number;
   dy: number;
   distanceMeters: number;
@@ -8,7 +9,16 @@ export type ObjectiveDirectionInput = {
 const DIRECTIONS = ["E", "SE", "S", "SW", "W", "NW", "N", "NE"] as const;
 
 export function buildObjectiveDirectionLabel(input: ObjectiveDirectionInput): string {
-  const prefix = input.kind === "exit" ? "Exit" : input.kind === "rival" ? "Nearest rival" : input.kind === "carrier" ? "Carrier" : "Target";
+  const prefix =
+    input.kind === "exit" && input.cashoutValue && input.cashoutValue > 0
+      ? `Cashout +${input.cashoutValue}`
+      : input.kind === "exit"
+        ? "Exit"
+        : input.kind === "rival"
+          ? "Nearest rival"
+          : input.kind === "carrier"
+            ? "Carrier"
+            : "Target";
   if (input.dx === 0 && input.dy === 0) return `${prefix} here ${input.distanceMeters}m`;
 
   const angle = Math.atan2(input.dy, input.dx);
