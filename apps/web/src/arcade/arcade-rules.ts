@@ -21,6 +21,8 @@ export function buildArcadeMatchSummary(result: ArcadeMissionResult): MatchSumma
   const escaped = result.outcome === "escaped";
   const bluePenalty = escaped ? 0 : -3;
   const { runRating, styleBonus } = rateArcadeRun(result);
+  const lootChain = Math.max(1, result.artifactsStolen);
+  const greedRoute = lootChain > 1 ? "successful" : "skipped";
   const blueScore: TeamScore = {
     teamId: "blue",
     loot: result.lootValue,
@@ -47,6 +49,8 @@ export function buildArcadeMatchSummary(result: ArcadeMissionResult): MatchSumma
     title,
     runRating,
     styleBonus,
+    lootChain,
+    greedRoute,
     caseFile: buildCaseFile(result, title, blueScore, redScore, runRating, styleBonus)
   };
 }
@@ -108,6 +112,8 @@ function buildCaseFile(
     `Red Crew: ${redScore.total} (${redScore.loot} rival loot)`,
     `Run Rating: ${runRating}`,
     styleBonus > 0 ? `Clean exit bonus: +${styleBonus}` : "Clean exit bonus: +0",
+    `Loot Chain: x${Math.max(1, result.artifactsStolen)}`,
+    `Greed Route: ${result.artifactsStolen > 1 ? "successful" : "skipped"}`,
     `Alarm: ${result.alarm}/5`,
     `Time inside: ${elapsedSeconds}s`,
     "",

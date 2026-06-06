@@ -36,6 +36,13 @@ export function FinalCaseFile({ summary, onRematch, onHome }: FinalCaseFileProps
               <small>{summary.styleBonus ? `Clean exit bonus +${summary.styleBonus}` : "No clean bonus"}</small>
             </div>
           ) : null}
+          {summary.lootChain && summary.lootChain > 1 ? (
+            <div className="final-score final-chain">
+              <span>Loot Chain</span>
+              <strong>x{summary.lootChain}</strong>
+              <small>{summary.greedRoute === "successful" ? "Greed route successful" : "Main route only"}</small>
+            </div>
+          ) : null}
           <div className="final-score">
             <span>Blue Crew</span>
             <strong>{blueScore?.total ?? 0}</strong>

@@ -53,4 +53,19 @@ describe("buildArcadeMatchSummary", () => {
     expect(summary.caseFile).toContain("Run Rating: S-Rank");
     expect(summary.caseFile).toContain("Clean exit bonus: +3");
   });
+
+  it("records a successful greed route in the shareable case file", () => {
+    const summary = buildArcadeMatchSummary({
+      outcome: "escaped",
+      playerName: "Agent You",
+      lootValue: 6,
+      artifactsStolen: 2,
+      aiLootValue: 0,
+      alarm: 2,
+      elapsedMs: 50_000
+    });
+
+    expect(summary.caseFile).toContain("Loot Chain: x2");
+    expect(summary.caseFile).toContain("Greed Route: successful");
+  });
 });

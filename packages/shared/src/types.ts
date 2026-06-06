@@ -103,5 +103,7 @@ export type MatchSummary = {
   title: string;
   runRating?: string;
   styleBonus?: number;
+  lootChain?: number;
+  greedRoute?: "successful" | "skipped";
   caseFile: string;
 };
