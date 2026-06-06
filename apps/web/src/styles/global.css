@@ -683,6 +683,12 @@ p {
   box-shadow: 0 8px 0 rgba(246, 189, 96, 0.42);
 }
 
+.final-margin {
+  border-color: #39e5c0;
+  background: #f0fffb;
+  box-shadow: 0 8px 0 rgba(57, 229, 192, 0.28);
+}
+
 .final-chain {
   border-color: #39e5c0;
   background: #e9fff9;

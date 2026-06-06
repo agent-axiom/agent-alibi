@@ -1,6 +1,6 @@
 import { Copy, Home, RotateCcw } from "lucide-react";
 import { useState } from "react";
-import type { MatchSummary } from "@agent-alibi/shared";
+import type { MatchSummary, TeamScore } from "@agent-alibi/shared";
 
 type FinalCaseFileProps = {
   summary: MatchSummary;
@@ -15,6 +15,7 @@ export function FinalCaseFile({ summary, onRematch, onHome }: FinalCaseFileProps
   const winner = summary.winnerTeamId === "tie" ? "Tie" : summary.winnerTeamId === "blue" ? "Blue Crew" : "Red Crew";
   const escapeBonus = blueScore?.escape ?? 0;
   const rematchHook = buildRematchHook(summary);
+  const scoreMargin = buildScoreMarginLabel(summary.teamScores);
 
   async function copyResult() {
     await navigator.clipboard?.writeText(buildCaseShareText(summary)).catch(() => undefined);
@@ -36,6 +37,10 @@ export function FinalCaseFile({ summary, onRematch, onHome }: FinalCaseFileProps
           <div className="final-score">
             <span>Winner</span>
             <strong>{winner}</strong>
+          </div>
+          <div className="final-score final-margin">
+            <span>Score Margin</span>
+            <strong>{scoreMargin}</strong>
           </div>
           {summary.runRating ? (
             <div className="final-score final-rating">
@@ -170,4 +175,13 @@ export function buildCaseShareText(summary: MatchSummary): string {
 
   lines.push("", "NEXT RUN", buildRematchHook(summary));
   return lines.join("\n");
+}
+
+export function buildScoreMarginLabel(teamScores: TeamScore[]): string {
+  const blueTotal = teamScores.find((score) => score.teamId === "blue")?.total ?? 0;
+  const redTotal = teamScores.find((score) => score.teamId === "red")?.total ?? 0;
+  const margin = Math.abs(blueTotal - redTotal);
+
+  if (margin === 0) return "Tie game";
+  return blueTotal > redTotal ? `Blue by ${margin}` : `Red by ${margin}`;
 }
