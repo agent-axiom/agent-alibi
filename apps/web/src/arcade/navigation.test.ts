@@ -13,4 +13,8 @@ describe("buildObjectiveDirectionLabel", () => {
   it("keeps the label stable at point-blank range", () => {
     expect(buildObjectiveDirectionLabel({ kind: "target", dx: 0, dy: 0, distanceMeters: 0 })).toBe("Target here 0m");
   });
+
+  it("adds direction to rival distance labels", () => {
+    expect(buildObjectiveDirectionLabel({ kind: "rival", dx: -120, dy: -20, distanceMeters: 16 })).toBe("Nearest rival W 16m");
+  });
 });
