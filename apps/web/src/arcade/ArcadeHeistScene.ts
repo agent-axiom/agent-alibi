@@ -337,6 +337,16 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.emitHudIfNeeded(true);
   }
 
+  forceRivalCashoutForDebug() {
+    const rival = this.aiAgents.find((agent) => agent.carriedRelics.length > 0);
+    if (!rival) return;
+    const target = this.escapeZone ?? this.rooms.get("atrium");
+    if (target) {
+      this.moveAgent(rival, target.x - rival.x, target.y - rival.y);
+    }
+    this.cashoutRivalCarrier(rival);
+  }
+
   forceLockdownForDebug() {
     this.elapsedMs = Math.max(this.elapsedMs, ARCADE_MISSION_DURATION_MS - 25_000);
     this.flashSpotlight("Vault lockdown");
@@ -773,18 +783,31 @@ export class ArcadeHeistScene extends Phaser.Scene {
     }
 
     for (const agent of this.aiAgents) {
-      const target = this.rooms.get(agent.targetRoomId) ?? this.rooms.get("inner-vault");
+      const target = this.aiTargetPoint(agent);
       if (!target) continue;
       const vector = new Phaser.Math.Vector2(target.x - agent.x, target.y - agent.y);
       if (vector.length() < 36) {
+        if (this.cashoutRivalCarrier(agent)) {
+          agent.targetRoomId = this.pickAiTarget(agent);
+          continue;
+        }
         this.aiStealNearby(agent);
-        agent.targetRoomId = this.pickAiTarget(agent);
+        if (agent.carriedRelics.length === 0) {
+          agent.targetRoomId = this.pickAiTarget(agent);
+        }
         continue;
       }
       vector.normalize();
       this.moveAgent(agent, vector.x * AI_SPEED * (delta / 1000), vector.y * AI_SPEED * (delta / 1000));
       agent.ship.rotation = Phaser.Math.Angle.Between(0, 0, vector.x, vector.y) + Math.PI / 2;
     }
+  }
+
+  private aiTargetPoint(agent: RuntimeAgent): { x: number; y: number } | undefined {
+    if (agent.carriedRelics.length > 0) {
+      return this.escapeZone ?? this.rooms.get("atrium");
+    }
+    return this.rooms.get(agent.targetRoomId) ?? this.rooms.get("inner-vault");
   }
 
   private moveAgent(agent: RuntimeAgent, dx: number, dy: number) {
@@ -796,9 +819,9 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private stealArtifact(artifact: RuntimeArtifact, actor: RuntimeAgent, actorLabel: string) {
     if (artifact.takenBy) return;
     artifact.takenBy = actor.id;
-    actor.lootValue += artifact.value;
 
     if (actor.id === this.player?.id) {
+      actor.lootValue += artifact.value;
       this.lootValue += artifact.value;
       this.artifactsStolen += 1;
       this.stolenRelicNames.push(artifact.name);
@@ -820,7 +843,6 @@ export class ArcadeHeistScene extends Phaser.Scene {
       return;
     }
 
-    this.aiLootValue += artifact.value;
     this.rivalRelicNames.push(artifact.name);
     actor.carriedRelics.push({ name: artifact.name, value: artifact.value });
     actor.targetRoomId = "atrium";
@@ -835,6 +857,28 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.collectArtifactVisual(artifact, TEAM_COLORS[actor.teamId]);
     this.updateTargetMarker();
     this.updateThreatHalo();
+  }
+
+  private cashoutRivalCarrier(rival: RuntimeAgent): boolean {
+    if (rival.carriedRelics.length === 0) return false;
+    const target = this.escapeZone ?? this.rooms.get("atrium");
+    if (target && Phaser.Math.Distance.Between(rival.x, rival.y, target.x, target.y) > EXIT_RADIUS) return false;
+
+    const cashed = rival.carriedRelics.splice(0);
+    const cashedValue = cashed.reduce((total, relic) => total + relic.value, 0);
+    rival.lootValue += cashedValue;
+    this.aiLootValue += cashedValue;
+    this.lastRivalSteal = `Red cashed out +${cashedValue}: ${rival.name} escaped with ${this.relicListLabel(cashed)}`;
+    this.flashSpotlight(`Red cashout +${cashedValue}`);
+    this.flashRivalBark({
+      tone: "taunt",
+      agentName: rival.name,
+      line: `Cashed out ${this.relicListLabel(cashed)}. Too slow.`
+    });
+    this.feedLine(`${rival.name} cashed out ${this.relicListLabel(cashed)} at the Atrium Lift.`);
+    this.updateTargetMarker();
+    this.updateThreatHalo();
+    return true;
   }
 
   private flashSpotlight(text: string) {
@@ -930,7 +974,6 @@ export class ArcadeHeistScene extends Phaser.Scene {
     const recoveredValue = recovered.reduce((total, relic) => total + relic.value, 0);
     const recoveredNames = recovered.map((relic) => relic.name);
     rival.lootValue = Math.max(0, rival.lootValue - recoveredValue);
-    this.aiLootValue = Math.max(0, this.aiLootValue - recoveredValue);
     this.lootValue += recoveredValue;
     this.artifactsStolen += recovered.length;
     this.stolenRelicNames.push(...recoveredNames);

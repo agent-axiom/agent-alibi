@@ -377,7 +377,7 @@ test("rival steals trigger a clear red loot alert", async ({ page }) => {
   await expect(miniRadar.getByText(/carrier: rook carrying moon pearl/i)).toBeVisible();
   await expect(page.getByLabel(/radar carrier: rook carrying moon pearl/i)).toBeVisible();
   const afterSteal = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().aiLootValue);
-  expect(afterSteal).toBeGreaterThan(0);
+  expect(afterSteal).toBe(0);
   await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.forceRivalPressure(6));
   await expect(page.getByText(/press e \/ space to intercept/i)).toBeVisible();
   await expect(page.getByLabel(/active action/i).getByText(/intercept carrier/i)).toBeVisible();
@@ -402,6 +402,24 @@ test("rival steals trigger a clear red loot alert", async ({ page }) => {
   await expect(page.getByText(/carrier intercepts: 1/i)).toBeVisible();
   await expect(page.getByText(/recovered from rivals: moon pearl/i)).toBeVisible();
   await expect(page.getByText(/relics stolen: moon pearl/i)).toBeVisible();
+});
+
+test("rival carriers only score after cashout", async ({ page }) => {
+  await startSoloArcade(page);
+  await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_STATE__ === "function");
+  await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.forceRivalSteal?.());
+
+  const afterSteal = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());
+  expect(afterSteal?.aiLootValue).toBe(0);
+  expect(afterSteal?.rivalIntercept?.relicName).toBe("Moon Pearl");
+
+  await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.forceRivalCashout?.());
+
+  const afterCashout = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());
+  expect(afterCashout?.aiLootValue).toBe(3);
+  expect(afterCashout?.rivalIntercept).toBeNull();
+  await expect(page.getByLabel(/rival loot alert/i).getByText(/red cashed out \+3/i)).toBeVisible();
+  await expect(page.getByLabel(/heist race/i).getByText(/red 3/i)).toBeVisible();
 });
 
 test("lockdown phase triggers an unmistakable vault warning", async ({ page }) => {

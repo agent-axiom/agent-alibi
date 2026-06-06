@@ -16,6 +16,7 @@ declare global {
       teleportToTarget: () => void;
       forceRivalPressure: (distanceMeters?: number) => void;
       forceRivalSteal: () => void;
+      forceRivalCashout: () => void;
       forceLockdown: () => void;
     };
   }
@@ -64,6 +65,7 @@ export function ArcadeHeistStage({ state, runId, onHudUpdate, onFinish, hud }: A
         teleportToTarget: () => scene.teleportToTargetForDebug(),
         forceRivalPressure: (distanceMeters?: number) => scene.forceRivalPressureForDebug(distanceMeters),
         forceRivalSteal: () => scene.forceRivalStealForDebug(),
+        forceRivalCashout: () => scene.forceRivalCashoutForDebug(),
         forceLockdown: () => scene.forceLockdownForDebug()
       };
     }
