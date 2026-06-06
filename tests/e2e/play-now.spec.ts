@@ -73,6 +73,10 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(currentObjective.getByText(/escape with/i)).toBeVisible();
   await expect(page.getByLabel(/rival crew status/i).getByText(/rivals waking in \d+s/i)).toBeVisible();
   await expect(page.getByLabel(/mission radio/i).getByText(/rival agents entered the vault/i)).toBeVisible();
+  const wakeThreat = page.getByLabel(/threat vector/i);
+  await expect(wakeThreat.getByText(/rivals waking/i)).toBeVisible();
+  await expect(wakeThreat.getByText(/\d+s head start before scans/i)).toBeVisible();
+  await expect(wakeThreat.getByText(/choose cashout or greed now/i)).toBeVisible();
   await expect(page.getByText(/moon pearl secured/i)).toBeVisible();
   await expect(objectiveBanner.getByText(/escape with 3 loot/i)).toBeVisible();
   await expect(objectiveBanner.getByText(/cashout 5 or risk greed route/i)).toBeVisible();
