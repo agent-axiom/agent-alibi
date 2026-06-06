@@ -1655,6 +1655,43 @@ p {
   color: #fffaf2;
 }
 
+.arcade-route-choice {
+  width: fit-content;
+  border: 1px solid rgba(255, 213, 106, 0.56);
+  border-radius: 6px;
+  padding: 6px 9px;
+  background: linear-gradient(135deg, rgba(255, 213, 106, 0.16), rgba(76, 244, 240, 0.12));
+  box-shadow: 0 0 24px rgba(255, 213, 106, 0.16);
+  color: #fff7d6;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.arcade-route-choice span,
+.arcade-route-choice strong,
+.arcade-route-choice small {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 950;
+}
+
+.arcade-route-choice strong {
+  margin-top: 4px;
+  color: #fffaf2;
+}
+
+.arcade-route-choice small {
+  margin-top: 4px;
+  color: #d8fcff;
+}
+
+.arcade-route-choice.greed {
+  border-color: rgba(189, 169, 255, 0.58);
+  background: linear-gradient(135deg, rgba(189, 169, 255, 0.18), rgba(57, 229, 192, 0.12));
+  box-shadow: 0 0 24px rgba(189, 169, 255, 0.18);
+  color: #eee8ff;
+}
+
 .arcade-route {
   width: fit-content;
   border: 1px solid rgba(76, 244, 240, 0.34);
@@ -2049,6 +2086,12 @@ p {
 
   .arcade-route {
     font-size: 0.72rem;
+  }
+
+  .arcade-route-choice span,
+  .arcade-route-choice strong,
+  .arcade-route-choice small {
+    font-size: 0.7rem;
   }
 
   .arcade-rivals {

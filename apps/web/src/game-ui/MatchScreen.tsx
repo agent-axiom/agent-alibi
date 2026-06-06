@@ -34,6 +34,11 @@ export function MatchScreen({ match }: MatchScreenProps) {
     const raceTone = blueLoot > redLoot ? "leading" : blueLoot < redLoot ? "trailing" : "tied";
     const radarFocus = hud?.radarBlips.find((blip) => blip.kind === "target" || blip.kind === "exit");
     const radarFocusLabel = radarFocus ? `${radarFocus.kind === "exit" ? "Exit" : "Target"}: ${radarFocus.label}` : "Sweep clear";
+    const routeChoiceRelic = hud?.greedStatus
+      ?.replace(/^Optional relic:\s*/i, "")
+      .replace(/^Greed route:\s*/i, "")
+      .replace(/\s*·\s*press G$/i, "");
+    const routeChoiceMode = hud?.greedStatus?.toLowerCase().startsWith("greed route") ? "greed" : "escape";
     return (
       <main className={`arcade-shell ${hud?.phase ?? "stealth"}`}>
         <Suspense
@@ -163,6 +168,13 @@ export function MatchScreen({ match }: MatchScreenProps) {
               <div className="arcade-escape-payout" aria-label="Escape payout">
                 <span>Escape bonus +{hud.escapePayout.escapeBonus}</span>
                 <strong>Cashout {hud.escapePayout.cashout}</strong>
+              </div>
+            ) : null}
+            {hud?.escapePayout && routeChoiceRelic ? (
+              <div className={`arcade-route-choice ${routeChoiceMode}`} aria-label="Route choice">
+                <span>{routeChoiceMode === "greed" ? "Greed route armed" : `Cashout now ${hud.escapePayout.cashout}`}</span>
+                <strong>{routeChoiceMode === "greed" ? routeChoiceRelic : "Greed route"}</strong>
+                <small>{routeChoiceMode === "greed" ? "Steal then escape" : `${routeChoiceRelic} · Press G`}</small>
               </div>
             ) : null}
             <div className="arcade-route" aria-label="Route distance">
