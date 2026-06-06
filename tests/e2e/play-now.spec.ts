@@ -10,9 +10,11 @@ async function startSoloArcade(page: Page) {
 test("solo match starts and reaches final case file", async ({ page }) => {
   await startSoloArcade(page);
 
+  const currentObjective = page.getByLabel(/current objective/i);
   await expect(page.getByText(/moon vault run/i)).toBeVisible();
   await expect(page.getByText(/timer/i)).toBeVisible();
   await expect(page.getByText(/steal the moon pearl/i)).toBeVisible();
+  await expect(currentObjective.getByText(/steal the moon pearl \+3/i)).toBeVisible();
   await expect(page.getByText(/1 steal/i)).toBeVisible();
   await expect(page.getByText(/target \d+m/i)).toBeVisible();
   await expect(page.getByText(/rivals enter in \d+s/i)).toBeVisible();
@@ -71,6 +73,7 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   expect(escapeTarget?.label).toMatch(/atrium lift/i);
   await page.keyboard.press("KeyG");
   await expect(page.getByLabel(/optional relic/i).getByText(/greed route/i)).toBeVisible();
+  await expect(currentObjective.getByText(/greed route: steal argent crown \+3/i)).toBeVisible();
   const greedTarget = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().target);
   expect(greedTarget?.kind).toBe("artifact");
   await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget());

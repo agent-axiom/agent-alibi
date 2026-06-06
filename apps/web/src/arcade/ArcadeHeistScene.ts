@@ -789,6 +789,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       this.spotlight = null;
     }
     const targetArtifact = this.primaryTargetArtifact();
+    const targetArtifactLabel = targetArtifact ? this.artifactTargetLabel(targetArtifact) : null;
     const nearArtifact = this.nearPlayerArtifact();
     const objectiveTarget = this.currentObjectiveTarget();
     const targetDistanceMeters =
@@ -802,7 +803,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       aiLootValue: this.aiLootValue,
       artifactsStolen: this.artifactsStolen,
       totalArtifacts: this.artifacts.length,
-      targetArtifactName: targetArtifact?.name ?? null,
+      targetArtifactName: targetArtifactLabel,
       nearArtifactName: nearArtifact?.name ?? null,
       nearExit: this.isNearExit(),
       canEscape,
@@ -821,7 +822,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       totalArtifacts: this.artifacts.length,
       canEscape,
       dashReady: this.dashCooldownMs <= 0,
-      objective: alibiPulseReady ? "Jam the rival scan" : greedPromptActive ? `Greed route: steal ${targetArtifact!.name}` : guidance.objective,
+      objective: alibiPulseReady ? "Jam the rival scan" : greedPromptActive ? `Greed route: steal ${this.artifactTargetLabel(targetArtifact!)}` : guidance.objective,
       prompt: alibiPulseReady ? "Press E / Space to jam rival scan" : greedPromptActive && nearArtifact ? "Press E / Space to steal" : guidance.prompt,
       activeAction: buildActiveActionHint({
         alibiPulseReady,
@@ -1011,7 +1012,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       return {
         kind: "artifact",
         id: artifact.id,
-        label: artifact.name,
+        label: this.artifactTargetLabel(artifact),
         x: artifact.x,
         y: artifact.y
       };
@@ -1031,11 +1032,15 @@ export class ArcadeHeistScene extends Phaser.Scene {
       ? {
           kind: "artifact",
           id: artifact.id,
-          label: artifact.name,
+          label: this.artifactTargetLabel(artifact),
           x: artifact.x,
           y: artifact.y
         }
       : undefined;
+  }
+
+  private artifactTargetLabel(artifact: RuntimeArtifact): string {
+    return `${artifact.name} +${artifact.value}`;
   }
 
   private nearPlayerArtifact(): RuntimeArtifact | undefined {
