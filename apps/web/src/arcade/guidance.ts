@@ -37,6 +37,8 @@ export type RivalPressure = {
 export type ActiveActionHintInput = {
   alibiPulseReady: boolean;
   nearRivalCarrierName?: string | null;
+  nearRivalCarrierRelicName?: string | null;
+  nearRivalCarrierValue?: number | null;
   nearArtifactName: string | null;
   nearArtifactValue?: number | null;
   nearExit: boolean;
@@ -134,7 +136,7 @@ export function buildActiveActionHint(input: ActiveActionHintInput): ActiveActio
   if (input.nearRivalCarrierName) {
     return {
       key: "E / Space",
-      label: "Intercept carrier",
+      label: buildRecoverActionLabel(input.nearRivalCarrierRelicName ?? null, input.nearRivalCarrierValue ?? null),
       tone: "danger"
     };
   }
@@ -172,4 +174,9 @@ export function buildActiveActionHint(input: ActiveActionHintInput): ActiveActio
 
 function buildStealActionLabel(artifactName: string, artifactValue: number | null): string {
   return artifactValue && artifactValue > 0 ? `Steal ${artifactName} +${artifactValue}` : `Steal ${artifactName}`;
+}
+
+function buildRecoverActionLabel(relicName: string | null, relicValue: number | null): string {
+  if (!relicName) return "Intercept carrier";
+  return relicValue && relicValue > 0 ? `Recover ${relicName} +${relicValue}` : `Recover ${relicName}`;
 }
