@@ -17,7 +17,7 @@ export function FinalCaseFile({ summary, onRematch, onHome }: FinalCaseFileProps
   const rematchHook = buildRematchHook(summary);
 
   async function copyResult() {
-    await navigator.clipboard?.writeText(summary.caseFile).catch(() => undefined);
+    await navigator.clipboard?.writeText(buildCaseShareText(summary)).catch(() => undefined);
     setCopied(true);
   }
 
@@ -155,4 +155,19 @@ export function buildRematchHook(summary: MatchSummary): string {
   }
 
   return "Next run: run it back and make the case file louder.";
+}
+
+export function buildCaseShareText(summary: MatchSummary): string {
+  const lines = [summary.caseFile];
+
+  if (summary.highlightLines?.length) {
+    lines.push(
+      "",
+      "CASE HIGHLIGHTS",
+      ...summary.highlightLines.map((line, index) => `${String(index + 1).padStart(2, "0")}. ${line}`)
+    );
+  }
+
+  lines.push("", "NEXT RUN", buildRematchHook(summary));
+  return lines.join("\n");
 }
