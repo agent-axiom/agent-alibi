@@ -823,6 +823,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.aiLootValue += artifact.value;
     this.rivalRelicNames.push(artifact.name);
     actor.carriedRelics.push({ name: artifact.name, value: artifact.value });
+    actor.targetRoomId = "atrium";
     this.alarm = Math.min(5, this.alarm + 0.12);
     this.lastRivalSteal = `Red +${artifact.value}: ${actorLabel} stole ${artifact.name}`;
     this.flashRivalBark({
@@ -1397,8 +1398,16 @@ export class ArcadeHeistScene extends Phaser.Scene {
       relicName: carrier.relic.name,
       value: carrier.relic.value,
       distanceMeters: carrier.distanceMeters,
-      directionLabel: carrier.directionLabel
+      directionLabel: carrier.directionLabel,
+      cashoutSeconds: this.carrierCashoutSeconds(carrier.agent)
     };
+  }
+
+  private carrierCashoutSeconds(agent: RuntimeAgent): number {
+    const target = this.escapeZone ?? this.rooms.get("atrium");
+    if (!target) return 0;
+    const distance = Phaser.Math.Distance.Between(agent.x, agent.y, target.x, target.y);
+    return Math.max(1, Math.ceil(distance / AI_SPEED));
   }
 
   private threatCue(
@@ -1410,7 +1419,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       return {
         tone: "danger",
         label: rivalIntercept.directionLabel,
-        detail: `${rivalIntercept.agentName} with ${rivalIntercept.relicName} +${rivalIntercept.value}`,
+        detail: `${rivalIntercept.agentName} with ${rivalIntercept.relicName} +${rivalIntercept.value} · cashout in ${rivalIntercept.cashoutSeconds}s`,
         action: "Close gap and press E"
       };
     }

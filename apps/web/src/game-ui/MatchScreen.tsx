@@ -210,7 +210,7 @@ export function MatchScreen({ match }: MatchScreenProps) {
                 <strong>
                   {hud.rivalIntercept.relicName} +{hud.rivalIntercept.value}
                 </strong>
-                <small>{hud.rivalIntercept.distanceMeters}m away · intercept with E</small>
+                <small>{hud.rivalIntercept.distanceMeters}m away · cashout in {hud.rivalIntercept.cashoutSeconds}s · intercept with E</small>
               </div>
             ) : null}
             {hud?.escapePayout ? (

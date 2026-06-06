@@ -37,7 +37,8 @@ describe("buildMissionBeat", () => {
         relicName: "Moon Pearl",
         value: 3,
         distanceMeters: 42,
-        directionLabel: "Carrier NE 42m"
+        directionLabel: "Carrier NE 42m",
+        cashoutSeconds: 9
       },
       alibiPulseReady: true,
       nearestRivalName: "Rook"
@@ -47,7 +48,7 @@ describe("buildMissionBeat", () => {
       tone: "danger",
       kicker: "Carrier run",
       title: "Rook has Moon Pearl",
-      detail: "42m away. Intercept before Red cashes out +3.",
+      detail: "42m away. Red cashout in 9s for +3.",
       action: "Chase the gold-red carrier blip"
     });
   });

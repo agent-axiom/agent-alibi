@@ -18,7 +18,7 @@ export function buildMissionBeat(input: MissionBeatInput): ArcadeMissionBeat {
       tone: "danger",
       kicker: "Carrier run",
       title: `${input.rivalCarrier.agentName} has ${input.rivalCarrier.relicName}`,
-      detail: `${input.rivalCarrier.distanceMeters}m away. Intercept before Red cashes out +${input.rivalCarrier.value}.`,
+      detail: `${input.rivalCarrier.distanceMeters}m away. Red cashout in ${input.rivalCarrier.cashoutSeconds}s for +${input.rivalCarrier.value}.`,
       action: input.rivalCarrier.distanceMeters <= 14 ? "Press E / Space to recover it" : "Chase the gold-red carrier blip"
     };
   }
