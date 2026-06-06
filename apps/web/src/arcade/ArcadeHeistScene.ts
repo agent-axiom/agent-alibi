@@ -297,6 +297,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
           }
         : null,
       target,
+      targetMarker: this.targetMarkerDebug(),
       hasTargetBeam: Boolean(this.targetBeam),
       routeGuide,
       threatHalo: this.threatHaloDebug(),
@@ -1975,6 +1976,14 @@ export class ArcadeHeistScene extends Phaser.Scene {
     };
   }
 
+  private targetMarkerDebug() {
+    if (!this.targetMarker) return null;
+    return {
+      label: String(this.targetMarker.getData("label") ?? ""),
+      visible: true
+    };
+  }
+
   private updateTargetMarker() {
     const target = this.currentObjectiveTarget();
     if (!target) {
@@ -1988,12 +1997,13 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.updateTargetBeam(target);
 
     const targetKey = `${target.kind}:${target.id}`;
-    if (!this.targetMarker || this.targetMarker.getData("targetKey") !== targetKey) {
+    const markerLabel = target.label;
+    if (!this.targetMarker || this.targetMarker.getData("targetKey") !== targetKey || this.targetMarker.getData("label") !== markerLabel) {
       this.targetMarker?.destroy(true);
       const ring = this.add.circle(0, 0, 44, 0xffd56a, 0.08).setStrokeStyle(4, 0xffd56a, 0.9);
       const pointer = this.add.triangle(0, -62, 0, -18, -16, 12, 16, 12, 0xffd56a, 0.92);
       const label = this.add
-        .text(0, -88, target.kind === "escape" ? "ESCAPE" : target.kind === "carrier" ? "CARRIER" : "TARGET", {
+        .text(0, -88, markerLabel.toUpperCase(), {
           color: "#ffd56a",
           fontFamily: "Inter, Arial, sans-serif",
           fontSize: "13px",
@@ -2004,6 +2014,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
         .setOrigin(0.5);
       this.targetMarker = this.add.container(target.x, target.y, [ring, pointer, label]).setDepth(16);
       this.targetMarker.setData("targetKey", targetKey);
+      this.targetMarker.setData("label", markerLabel);
       this.tweens.add({
         targets: ring,
         scale: { from: 0.9, to: 1.2 },
