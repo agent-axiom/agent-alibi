@@ -73,6 +73,12 @@ export type ArcadeObjectiveBanner = {
   detail: string;
 };
 
+export type ArcadeRivalBark = {
+  tone: "taunt" | "panic";
+  agentName: string;
+  line: string;
+};
+
 export type ArcadeHudState = {
   phase: ArcadeHudPhase;
   timeLeftMs: number;
@@ -106,6 +112,7 @@ export type ArcadeHudState = {
   missionBeat: ArcadeMissionBeat;
   threatCue: ArcadeThreatCue | null;
   objectiveBanner: ArcadeObjectiveBanner | null;
+  rivalBark: ArcadeRivalBark | null;
   scorePopup: ArcadeScorePopup | null;
   spotlight: string | null;
   feed: string[];

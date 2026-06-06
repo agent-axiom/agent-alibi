@@ -1247,7 +1247,8 @@ p {
 .arcade-objective,
 .arcade-objective-banner,
 .arcade-spotlight,
-.arcade-score-popup {
+.arcade-score-popup,
+.arcade-rival-bark {
   position: absolute;
   z-index: 2;
 }
@@ -1513,6 +1514,66 @@ p {
 
 .final-score-popup {
   top: 24px;
+}
+
+.arcade-rival-bark {
+  top: 164px;
+  right: 18px;
+  width: min(300px, calc(100vw - 36px));
+  display: grid;
+  gap: 6px;
+  border: 1px solid rgba(255, 79, 123, 0.64);
+  border-radius: 8px;
+  padding: 12px 14px;
+  background: rgba(25, 7, 17, 0.78);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.34), 0 0 24px rgba(255, 79, 123, 0.18);
+  color: #fff4f7;
+  text-transform: uppercase;
+  animation: arcade-rival-bark-in 2.6s ease both;
+}
+
+.arcade-rival-bark span,
+.arcade-rival-bark strong {
+  overflow-wrap: anywhere;
+}
+
+.arcade-rival-bark span {
+  color: #ff9bb3;
+  font-size: 0.76rem;
+  font-weight: 950;
+}
+
+.arcade-rival-bark strong {
+  font-size: 0.98rem;
+  line-height: 1.14;
+}
+
+.arcade-rival-bark.panic {
+  border-color: rgba(76, 244, 240, 0.6);
+  background: rgba(5, 29, 34, 0.78);
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.34), 0 0 24px rgba(76, 244, 240, 0.16);
+}
+
+.arcade-rival-bark.panic span {
+  color: #7effdf;
+}
+
+@keyframes arcade-rival-bark-in {
+  0% {
+    opacity: 0;
+    transform: translateX(14px) scale(0.98);
+  }
+
+  12%,
+  78% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateX(10px) scale(0.99);
+  }
 }
 
 @keyframes arcade-score-popup-rise {
@@ -2523,6 +2584,12 @@ p {
     top: 40%;
     width: calc(100vw - 24px);
     padding: 12px 14px;
+  }
+
+  .arcade-rival-bark {
+    top: 278px;
+    right: 12px;
+    width: min(260px, calc(100vw - 24px));
   }
 
   .arcade-objective {

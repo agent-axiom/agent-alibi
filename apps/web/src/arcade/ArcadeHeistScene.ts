@@ -9,6 +9,7 @@ import {
   type ArcadeMissionConfig,
   type ArcadeObjectiveBanner,
   type ArcadeRadarBlip,
+  type ArcadeRivalBark,
   type ArcadeRivalIntercept,
   type ArcadeScorePopup,
   type ArcadeThreatCue
@@ -143,6 +144,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private scorePopupUntilMs = 0;
   private objectiveBanner: ArcadeObjectiveBanner | null = null;
   private objectiveBannerUntilMs = 0;
+  private rivalBark: ArcadeRivalBark | null = null;
+  private rivalBarkUntilMs = 0;
   private finished = false;
   private aiReleased = false;
   private lastRivalPressureLevel: RivalPressure["level"] = "standby";
@@ -364,6 +367,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.scorePopupUntilMs = 0;
     this.objectiveBanner = null;
     this.objectiveBannerUntilMs = 0;
+    this.rivalBark = null;
+    this.rivalBarkUntilMs = 0;
     this.finished = false;
     this.aiReleased = false;
     this.lastRivalPressureLevel = "standby";
@@ -743,6 +748,11 @@ export class ArcadeHeistScene extends Phaser.Scene {
     actor.carriedRelics.push({ name: artifact.name, value: artifact.value });
     this.alarm = Math.min(5, this.alarm + 0.12);
     this.lastRivalSteal = `Red +${artifact.value}: ${actorLabel} stole ${artifact.name}`;
+    this.flashRivalBark({
+      tone: "taunt",
+      agentName: actorLabel,
+      line: `${artifact.name} is mine. Catch the carrier if you can.`
+    });
     this.feedLine(`${actorLabel} stole ${artifact.name}.`);
     this.collectArtifactVisual(artifact, TEAM_COLORS[actor.teamId]);
     this.updateTargetMarker();
@@ -763,6 +773,12 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private flashObjectiveBanner(banner: ArcadeObjectiveBanner, durationMs = 2_400) {
     this.objectiveBanner = banner;
     this.objectiveBannerUntilMs = this.elapsedMs + durationMs;
+    this.emitHudIfNeeded(true);
+  }
+
+  private flashRivalBark(bark: ArcadeRivalBark) {
+    this.rivalBark = bark;
+    this.rivalBarkUntilMs = this.elapsedMs + 2_600;
     this.emitHudIfNeeded(true);
   }
 
@@ -848,6 +864,11 @@ export class ArcadeHeistScene extends Phaser.Scene {
       detail: this.relicListLabel(recovered)
     });
     this.impactPulse("intercept");
+    this.flashRivalBark({
+      tone: "panic",
+      agentName: rival.name,
+      line: "That was almost elegant. Almost."
+    });
     this.feedLine(`Intercepted ${rival.name}. Recovered ${this.relicListLabel(recovered)}.`);
     this.addInterceptVisual(rival.x, rival.y);
     this.updateTargetMarker();
@@ -981,6 +1002,9 @@ export class ArcadeHeistScene extends Phaser.Scene {
     if (this.objectiveBanner && this.elapsedMs >= this.objectiveBannerUntilMs) {
       this.objectiveBanner = null;
     }
+    if (this.rivalBark && this.elapsedMs >= this.rivalBarkUntilMs) {
+      this.rivalBark = null;
+    }
     const targetArtifact = this.primaryTargetArtifact();
     const targetArtifactLabel = targetArtifact ? this.artifactTargetLabel(targetArtifact) : null;
     const nearArtifact = this.nearPlayerArtifact();
@@ -1074,6 +1098,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       }),
       threatCue: this.threatCue(rivalIntercept, alibiPulseReady, nearestRival),
       objectiveBanner: this.objectiveBanner,
+      rivalBark: this.rivalBark,
       scorePopup: this.scorePopup,
       spotlight: this.spotlight,
       feed: this.feed.slice(-5)

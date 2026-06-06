@@ -125,6 +125,13 @@ export function MatchScreen({ match }: MatchScreenProps) {
           </div>
         ) : null}
 
+        {hud?.rivalBark ? (
+          <div className={`arcade-rival-bark ${hud.rivalBark.tone}`} aria-label="Rival comms" aria-live="polite">
+            <span>{hud.rivalBark.agentName}</span>
+            <strong>{hud.rivalBark.line}</strong>
+          </div>
+        ) : null}
+
         <aside className="arcade-roster" aria-label="Live agents">
           {state.players.map((player) => (
             <button
