@@ -11,6 +11,7 @@ export type ArcadeGuidanceInput = {
   nearArtifactName: string | null;
   nearExit: boolean;
   canEscape: boolean;
+  cashoutValue?: number | null;
   timeLeftMs: number;
 };
 
@@ -68,7 +69,7 @@ export function buildArcadeGuidance(input: ArcadeGuidanceInput): ArcadeGuidance 
   if (input.canEscape) {
     return {
       objective: `Escape with ${input.lootValue} loot`,
-      prompt: input.nearExit ? "Press E / Space to escape" : "Return to the Atrium lift",
+      prompt: input.nearExit ? buildCashoutPrompt(input.cashoutValue ?? null) : "Return to the Atrium lift",
       loopStep: "escape",
       raceStatus,
       greedStatus: input.targetArtifactName && input.timeLeftMs > 45_000 ? `Optional relic: ${input.targetArtifactName}` : null
@@ -184,4 +185,8 @@ function buildRecoverActionLabel(relicName: string | null, relicValue: number | 
 
 function buildCashoutActionLabel(cashoutValue: number | null): string {
   return cashoutValue && cashoutValue > 0 ? `Cashout +${cashoutValue}` : "Escape";
+}
+
+function buildCashoutPrompt(cashoutValue: number | null): string {
+  return cashoutValue && cashoutValue > 0 ? `Press E / Space to cashout +${cashoutValue}` : "Press E / Space to escape";
 }

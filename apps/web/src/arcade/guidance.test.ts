@@ -57,6 +57,24 @@ describe("buildArcadeGuidance", () => {
     expect(guidance.greedStatus).toBe("Optional relic: Argent Crown");
   });
 
+  it("calls out cashout value when the player reaches the lift", () => {
+    const guidance = buildArcadeGuidance({
+      lootValue: 3,
+      aiLootValue: 1,
+      artifactsStolen: 1,
+      totalArtifacts: 5,
+      targetArtifactName: "Argent Crown",
+      nearArtifactName: null,
+      nearExit: true,
+      canEscape: true,
+      cashoutValue: 5,
+      timeLeftMs: 100_000
+    });
+
+    expect(guidance.objective).toBe("Escape with 3 loot");
+    expect(guidance.prompt).toBe("Press E / Space to cashout +5");
+  });
+
   it("calls out when the AI crew is ahead", () => {
     const guidance = buildArcadeGuidance({
       lootValue: 1,
