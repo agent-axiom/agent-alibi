@@ -1225,6 +1225,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     const nearestRival = this.nearestRivalScan();
     const rivalPressure = this.rivalPressure(nearestRival);
     const rivalCarrier = this.nearRivalCarrier();
+    const rivalCarrierRelic = rivalCarrier?.carriedRelics.at(-1) ?? null;
     const guidance = buildArcadeGuidance({
       lootValue: this.lootValue,
       aiLootValue: this.aiLootValue,
@@ -1262,6 +1263,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
       activeAction: buildActiveActionHint({
         alibiPulseReady,
         nearRivalCarrierName: rivalCarrier?.name ?? null,
+        nearRivalCarrierRelicName: rivalCarrierRelic?.name ?? null,
+        nearRivalCarrierValue: rivalCarrierRelic?.value ?? null,
         nearArtifactName: nearArtifact?.name ?? null,
         nearArtifactValue: nearArtifact?.value ?? null,
         nearExit: this.isNearExit(),

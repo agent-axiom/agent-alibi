@@ -154,13 +154,15 @@ describe("buildArcadeGuidance", () => {
     const hint = buildActiveActionHint({
       alibiPulseReady: true,
       nearRivalCarrierName: "Rook",
+      nearRivalCarrierRelicName: "Moon Pearl",
+      nearRivalCarrierValue: 3,
       nearArtifactName: null,
       nearExit: false,
       canEscape: false
     });
 
     expect(hint.key).toBe("E / Space");
-    expect(hint.label).toBe("Intercept carrier");
+    expect(hint.label).toBe("Recover Moon Pearl +3");
     expect(hint.tone).toBe("danger");
   });
 });

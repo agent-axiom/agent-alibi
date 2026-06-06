@@ -392,7 +392,7 @@ test("rival steals trigger a clear red loot alert", async ({ page }) => {
   expect(afterSteal).toBe(0);
   await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.forceRivalPressure(6));
   await expect(page.getByText(/press e \/ space to intercept/i)).toBeVisible();
-  await expect(page.getByLabel(/active action/i).getByText(/intercept carrier/i)).toBeVisible();
+  await expect(page.getByLabel(/active action/i).getByText(/recover moon pearl \+3/i)).toBeVisible();
   await page.keyboard.press("KeyE");
   await expect(page.getByText("Intercepted Rook", { exact: true })).toBeVisible();
   await expect(page.getByLabel(/score popup/i).getByText(/recovered \+3/i)).toBeVisible();
