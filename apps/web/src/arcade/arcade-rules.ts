@@ -37,7 +37,6 @@ export function buildArcadeMatchSummary(result: ArcadeMissionResult): MatchSumma
   const scanBurns = result.scanBurns ?? 0;
   const carrierIntercepts = result.carrierIntercepts ?? 0;
   const interceptedRelicNames = result.interceptedRelicNames ?? [];
-  const highlightLines = buildHighlightLines(result, styleBonus, stolenRelicNames, interceptedRelicNames, pendingRivalRelicNames);
   const blueScore: TeamScore = {
     teamId: "blue",
     loot: result.lootValue,
@@ -54,6 +53,14 @@ export function buildArcadeMatchSummary(result: ArcadeMissionResult): MatchSumma
   };
   const winnerTeamId = blueScore.total === redScore.total ? "tie" : blueScore.total > redScore.total ? "blue" : "red";
   const title = titleForResult(result, winnerTeamId);
+  const highlightLines = buildHighlightLines(
+    result,
+    title,
+    styleBonus,
+    stolenRelicNames,
+    interceptedRelicNames,
+    pendingRivalRelicNames
+  );
 
   return {
     winnerTeamId,
@@ -114,12 +121,16 @@ function titleForResult(result: ArcadeMissionResult, winnerTeamId: MatchSummary[
 
 function buildHighlightLines(
   result: ArcadeMissionResult,
+  title: string,
   styleBonus: number,
   stolenRelicNames: string[],
   interceptedRelicNames: string[],
   pendingRivalRelicNames: string[]
 ): string[] {
   const lines: string[] = [];
+  if (isSpecialCaseTitle(title)) {
+    lines.push(`Case title: ${title}`);
+  }
   if (stolenRelicNames.length > 0) {
     lines.push(`Stole ${stolenRelicNames.join(" + ")}`);
   } else if (result.artifactsStolen > 0) {
@@ -142,6 +153,10 @@ function buildHighlightLines(
     lines.push(`Clean exit bonus +${styleBonus}`);
   }
   return lines.slice(0, 4);
+}
+
+function isSpecialCaseTitle(title: string): boolean {
+  return title === "Carrier Denied" || title === "Lift Denied";
 }
 
 function buildCaseFile(

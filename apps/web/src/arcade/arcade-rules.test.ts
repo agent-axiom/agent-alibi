@@ -137,6 +137,7 @@ describe("buildArcadeMatchSummary", () => {
     expect(summary.carrierIntercepts).toBe(1);
     expect(summary.interceptedRelicNames).toEqual(["Moon Pearl"]);
     expect(summary.title).toBe("Carrier Denied");
+    expect(summary.highlightLines).toContain("Case title: Carrier Denied");
     expect(summary.caseFile).toContain("Carrier Intercepts: 1");
     expect(summary.caseFile).toContain("Recovered From Rivals: Moon Pearl");
   });
@@ -157,6 +158,7 @@ describe("buildArcadeMatchSummary", () => {
     expect(summary.rivalRelicNames).toEqual([]);
     expect(summary.pendingRivalRelicNames).toEqual(["Moon Pearl"]);
     expect(summary.title).toBe("Lift Denied");
+    expect(summary.highlightLines).toContain("Case title: Lift Denied");
     expect(summary.caseFile).toContain("Rival Relics: none");
     expect(summary.caseFile).toContain("Pending Carrier Loot: Moon Pearl");
   });
