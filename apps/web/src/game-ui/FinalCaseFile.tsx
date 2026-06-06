@@ -96,6 +96,16 @@ export function FinalCaseFile({ summary, onRematch, onHome }: FinalCaseFileProps
             <small>{redScore?.loot ?? 0} rival loot</small>
           </div>
         </section>
+        {summary.highlightLines && summary.highlightLines.length > 0 ? (
+          <section className="case-highlights" aria-label="Case highlights">
+            {summary.highlightLines.map((line, index) => (
+              <div className="case-highlight" key={`${line}-${index}`}>
+                <span>0{index + 1}</span>
+                <strong>{line}</strong>
+              </div>
+            ))}
+          </section>
+        ) : null}
         <pre>{summary.caseFile}</pre>
         <div className="final-actions">
           <button onClick={copyResult}>

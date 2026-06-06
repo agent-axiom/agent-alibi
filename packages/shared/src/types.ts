@@ -111,5 +111,6 @@ export type MatchSummary = {
   scanBurns?: number;
   carrierIntercepts?: number;
   interceptedRelicNames?: string[];
+  highlightLines?: string[];
   caseFile: string;
 };

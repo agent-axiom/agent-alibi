@@ -35,6 +35,7 @@ export function buildArcadeMatchSummary(result: ArcadeMissionResult): MatchSumma
   const scanBurns = result.scanBurns ?? 0;
   const carrierIntercepts = result.carrierIntercepts ?? 0;
   const interceptedRelicNames = result.interceptedRelicNames ?? [];
+  const highlightLines = buildHighlightLines(result, styleBonus, stolenRelicNames, interceptedRelicNames);
   const blueScore: TeamScore = {
     teamId: "blue",
     loot: result.lootValue,
@@ -69,6 +70,7 @@ export function buildArcadeMatchSummary(result: ArcadeMissionResult): MatchSumma
     scanBurns,
     carrierIntercepts,
     interceptedRelicNames,
+    highlightLines,
     caseFile: buildCaseFile(result, title, blueScore, redScore, runRating, styleBonus)
   };
 }
@@ -103,6 +105,29 @@ function titleForResult(result: ArcadeMissionResult, winnerTeamId: MatchSummary[
   if (result.outcome === "sealed") return "Vault sealed";
   if (result.outcome === "caught") return "Alarm Burn";
   return "Neon Disaster";
+}
+
+function buildHighlightLines(result: ArcadeMissionResult, styleBonus: number, stolenRelicNames: string[], interceptedRelicNames: string[]): string[] {
+  const lines: string[] = [];
+  if (stolenRelicNames.length > 0) {
+    lines.push(`Stole ${stolenRelicNames.join(" + ")}`);
+  } else if (result.artifactsStolen > 0) {
+    lines.push(`Stole ${result.artifactsStolen} relic${result.artifactsStolen === 1 ? "" : "s"}`);
+  }
+  if (interceptedRelicNames.length > 0) {
+    lines.push(`Recovered ${interceptedRelicNames.join(" + ")} from rivals`);
+  }
+  if (result.outcome === "escaped") {
+    lines.push(`Escaped with ${result.lootValue} loot`);
+  } else if (result.outcome === "sealed") {
+    lines.push("Vault sealed before extraction");
+  } else {
+    lines.push("Caught in the alarm wash");
+  }
+  if (styleBonus > 0) {
+    lines.push(`Clean exit bonus +${styleBonus}`);
+  }
+  return lines.slice(0, 4);
 }
 
 function buildCaseFile(
