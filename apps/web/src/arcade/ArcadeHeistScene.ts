@@ -2,7 +2,7 @@ import Phaser from "phaser";
 import type { ArtifactState, GameState, PlayerState, Room, TeamId } from "@agent-alibi/shared";
 import { ALIBI_PULSE_COOLDOWN_MS, buildAlibiPulseStatus, canUseAlibiPulse } from "./alibi-pulse";
 import { rateArcadeRun } from "./arcade-rules";
-import { ARCADE_MISSION_DURATION_MS, type ArcadeHudPhase, type ArcadeHudState, type ArcadeMissionConfig } from "./arcade-types";
+import { ARCADE_MISSION_DURATION_MS, type ArcadeHudPhase, type ArcadeHudState, type ArcadeMissionConfig, type ArcadeRadarBlip } from "./arcade-types";
 import { buildActiveActionHint, buildArcadeGuidance, buildRivalPressure, type RivalPressure } from "./guidance";
 import { nextMovementImpulse, selectMovementVector, type MovementImpulse, type MovementVector } from "./movement";
 import { buildRivalScanStatus, updateRivalScan as advanceRivalScan, type RivalScanState } from "./rival-scan";
@@ -822,6 +822,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       loopStep: alibiPulseReady ? "survive" : guidance.loopStep,
       raceStatus: guidance.raceStatus,
       lastRivalSteal: this.lastRivalSteal,
+      radarBlips: this.buildRadarBlips(objectiveTarget),
       greedStatus: this.greedStatus(guidance.greedStatus),
       targetDistanceLabel:
         objectiveTarget && targetDistanceMeters !== null
@@ -881,6 +882,46 @@ export class ArcadeHeistScene extends Phaser.Scene {
       nearestRivalName: scan?.name ?? null,
       distanceMeters: scan?.distanceMeters ?? null
     });
+  }
+
+  private buildRadarBlips(target?: ArcadeObjectiveTarget): ArcadeRadarBlip[] {
+    const blips: ArcadeRadarBlip[] = [];
+    if (this.player) {
+      blips.push({
+        id: this.player.id,
+        kind: "player",
+        label: this.player.name,
+        x: this.radarX(this.player.x),
+        y: this.radarY(this.player.y)
+      });
+    }
+    if (target) {
+      blips.push({
+        id: target.id,
+        kind: target.kind === "escape" ? "exit" : "target",
+        label: target.label,
+        x: this.radarX(target.x),
+        y: this.radarY(target.y)
+      });
+    }
+    for (const rival of this.aiAgents) {
+      blips.push({
+        id: rival.id,
+        kind: "rival",
+        label: rival.name,
+        x: this.radarX(rival.x),
+        y: this.radarY(rival.y)
+      });
+    }
+    return blips;
+  }
+
+  private radarX(x: number): number {
+    return Phaser.Math.Clamp((x / WORLD_WIDTH) * 100, 4, 96);
+  }
+
+  private radarY(y: number): number {
+    return Phaser.Math.Clamp((y / WORLD_HEIGHT) * 100, 4, 96);
   }
 
   private greedStatus(baseStatus: string | null): string | null {

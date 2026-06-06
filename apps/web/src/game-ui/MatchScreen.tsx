@@ -75,6 +75,20 @@ export function MatchScreen({ match }: MatchScreenProps) {
           </div>
         </header>
 
+        <aside className="arcade-radar" aria-label="Mini radar">
+          <span>Radar</span>
+          <div className="arcade-radar-map">
+            {(hud?.radarBlips ?? []).map((blip) => (
+              <span
+                aria-label={`Radar ${blip.kind}: ${blip.label}`}
+                className={`arcade-radar-blip ${blip.kind}`}
+                key={`${blip.kind}-${blip.id}`}
+                style={{ left: `${blip.x}%`, top: `${blip.y}%` }}
+              />
+            ))}
+          </div>
+        </aside>
+
         {hud?.spotlight ? (
           <div className="arcade-spotlight" aria-live="polite">
             {hud.spotlight}

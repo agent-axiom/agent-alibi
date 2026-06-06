@@ -7,6 +7,14 @@ export const ARCADE_MISSION_DURATION_MS = 150_000;
 
 export type ArcadeHudPhase = "stealth" | "alarm" | "lockdown" | "escaped" | "sealed" | "caught";
 
+export type ArcadeRadarBlip = {
+  id: string;
+  kind: "player" | "target" | "exit" | "rival";
+  label: string;
+  x: number;
+  y: number;
+};
+
 export type ArcadeHudState = {
   phase: ArcadeHudPhase;
   timeLeftMs: number;
@@ -23,6 +31,7 @@ export type ArcadeHudState = {
   loopStep: ArcadeLoopStep;
   raceStatus: string;
   lastRivalSteal: string | null;
+  radarBlips: ArcadeRadarBlip[];
   greedStatus: string | null;
   targetDistanceLabel: string | null;
   rivalStatus: string;

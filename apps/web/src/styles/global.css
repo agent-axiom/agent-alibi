@@ -1115,6 +1115,7 @@ p {
 .arcade-topbar,
 .arcade-roster,
 .arcade-feed,
+.arcade-radar,
 .arcade-objective,
 .arcade-spotlight {
   position: absolute;
@@ -1135,6 +1136,7 @@ p {
 .arcade-stat,
 .arcade-alarm,
 .arcade-agent,
+.arcade-radar,
 .arcade-feed,
 .arcade-objective {
   border: 1px solid rgba(216, 252, 255, 0.24);
@@ -1232,6 +1234,71 @@ p {
   width: 178px;
   display: grid;
   gap: 8px;
+}
+
+.arcade-radar {
+  top: 94px;
+  left: 204px;
+  width: 164px;
+  padding: 10px;
+}
+
+.arcade-radar > span {
+  display: block;
+  margin-bottom: 8px;
+  color: #ffd56a;
+  font-size: 0.72rem;
+  font-weight: 950;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.arcade-radar-map {
+  position: relative;
+  aspect-ratio: 1;
+  border: 1px solid rgba(216, 252, 255, 0.22);
+  border-radius: 6px;
+  overflow: hidden;
+  background:
+    linear-gradient(rgba(216, 252, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(216, 252, 255, 0.08) 1px, transparent 1px),
+    radial-gradient(circle at 50% 50%, rgba(76, 244, 240, 0.1), rgba(7, 16, 28, 0.62));
+  background-size: 25% 25%, 25% 25%, 100% 100%;
+}
+
+.arcade-radar-blip {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  border: 2px solid #07101c;
+  border-radius: 999px;
+  transform: translate(-50%, -50%);
+}
+
+.arcade-radar-blip.player {
+  width: 13px;
+  height: 13px;
+  background: #4cf4f0;
+  box-shadow: 0 0 16px rgba(76, 244, 240, 0.8);
+}
+
+.arcade-radar-blip.target {
+  border-radius: 3px;
+  background: #ffd56a;
+  box-shadow: 0 0 14px rgba(255, 213, 106, 0.72);
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.arcade-radar-blip.exit {
+  width: 12px;
+  height: 12px;
+  background: #39e5c0;
+  box-shadow: 0 0 14px rgba(57, 229, 192, 0.68);
+}
+
+.arcade-radar-blip.rival {
+  background: #ff4f7b;
+  box-shadow: 0 0 14px rgba(255, 79, 123, 0.72);
 }
 
 .arcade-agent {
@@ -1752,6 +1819,12 @@ p {
     display: none;
   }
 
+  .arcade-radar {
+    top: 148px;
+    left: 14px;
+    width: 132px;
+  }
+
   .arcade-feed {
     top: 148px;
     right: 14px;
@@ -1826,6 +1899,12 @@ p {
   .arcade-roster {
     top: 86px;
     grid-template-columns: repeat(4, 1fr);
+  }
+
+  .arcade-radar {
+    top: 146px;
+    width: 118px;
+    padding: 8px;
   }
 
   .arcade-feed {

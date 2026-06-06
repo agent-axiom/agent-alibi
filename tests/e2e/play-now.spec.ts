@@ -25,6 +25,11 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(heistRace.getByText(/blue 0/i)).toBeVisible();
   await expect(heistRace.getByText(/red 0/i)).toBeVisible();
   await expect(heistRace.getByText(/loot race is tied/i)).toBeVisible();
+  const miniRadar = page.getByLabel(/mini radar/i);
+  await expect(miniRadar.getByText(/radar/i)).toBeVisible();
+  await expect(page.getByLabel(/radar player: agent you/i)).toBeVisible();
+  await expect(page.getByLabel(/radar target: moon pearl/i)).toBeVisible();
+  await expect(page.getByLabel(/radar rival: rook/i)).toBeVisible();
   await expect(page.getByText(/rival agents enter in 5 seconds/i)).toBeVisible();
 
   await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_STATE__ === "function");
