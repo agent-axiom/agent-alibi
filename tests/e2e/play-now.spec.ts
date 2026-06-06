@@ -267,9 +267,9 @@ test("on-screen action buttons expose live context and cooldown state", async ({
   await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget());
   await expect(controls.getByRole("button", { name: /interact: steal moon pearl \+3/i })).toBeVisible();
   await controls.getByRole("button", { name: /interact: steal moon pearl \+3/i }).click();
-  await expect(controls.getByRole("button", { name: /switch route: greed route available/i })).toBeVisible();
-  await controls.getByRole("button", { name: /switch route: greed route available/i }).click();
-  await expect(controls.getByRole("button", { name: /switch route: greed route armed/i })).toBeVisible();
+  await expect(controls.getByRole("button", { name: /switch route: cashout \+5 or greed route available/i })).toBeVisible();
+  await controls.getByRole("button", { name: /switch route: cashout \+5 or greed route available/i }).click();
+  await expect(controls.getByRole("button", { name: /switch route: greed route armed \/ cashout \+5/i })).toBeVisible();
 });
 
 test("mobile arcade controls stay clear of the objective panel", async ({ page }) => {
