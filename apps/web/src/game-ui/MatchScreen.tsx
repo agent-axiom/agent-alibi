@@ -47,8 +47,11 @@ export function MatchScreen({ match, soundEnabled = false, onToggleSound }: Matc
     const raceStatusLabel = carriedLoot ? `Bank +${carriedLoot.cashout} at lift` : (hud?.raceStatus ?? "Loot race is tied");
     const SoundIcon = soundEnabled ? Volume2 : VolumeX;
     const breachAlert = hud?.rivalBark?.agentName === "Red Crew" && /breach live/i.test(hud.rivalBark.line);
+    const routePulse = hud?.routePulse ?? null;
     return (
-      <main className={`arcade-shell ${hud?.phase ?? "stealth"} ${hudDensity === "opening" ? "compact-opening" : ""} ${breachAlert ? "breach-alert" : ""}`}>
+      <main
+        className={`arcade-shell ${hud?.phase ?? "stealth"} ${hudDensity === "opening" ? "compact-opening" : ""} ${breachAlert ? "breach-alert" : ""} ${routePulse ? "route-pulse-active" : ""}`}
+      >
         <Suspense
           fallback={
             <div className="arcade-stage arcade-loading" aria-label="Loading Moon Vault arcade scene">
@@ -66,6 +69,13 @@ export function MatchScreen({ match, soundEnabled = false, onToggleSound }: Matc
         </Suspense>
         <div className="arcade-vignette" />
         {breachAlert ? <div className="arcade-breach-pulse" aria-label="Breach alert pulse" /> : null}
+        {routePulse ? (
+          <div className={`arcade-route-pulse ${routePulse.mode}`} aria-label="Route pulse">
+            <span>{routePulse.title}</span>
+            <strong>{routePulse.detail}</strong>
+            <small>{routePulse.action}</small>
+          </div>
+        ) : null}
 
         {hudDensity === "opening" ? (
           <aside className="arcade-opening-contract" aria-label="Opening contract">

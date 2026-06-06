@@ -42,6 +42,13 @@ export type ArcadeRouteChoice = {
   projectedCashout: number;
 };
 
+export type ArcadeRoutePulse = {
+  mode: "escape" | "greed";
+  title: string;
+  detail: string;
+  action: string;
+};
+
 export type ArcadeCleanBonusWindow = {
   label: string;
   detail: string;
@@ -118,6 +125,7 @@ export type ArcadeHudState = {
   escapePayout: ArcadeEscapePayout | null;
   extractionCue: ArcadeExtractionCue | null;
   routeChoice: ArcadeRouteChoice | null;
+  routePulse: ArcadeRoutePulse | null;
   radarBlips: ArcadeRadarBlip[];
   greedStatus: string | null;
   targetDistanceLabel: string | null;
