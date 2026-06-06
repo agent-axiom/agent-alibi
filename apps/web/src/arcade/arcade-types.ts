@@ -38,6 +38,7 @@ export type ArcadeRouteChoice = {
   cashoutNow: number;
   greedRelicName: string;
   greedRelicValue: number;
+  greedDistanceMeters: number;
   projectedCashout: number;
 };
 
