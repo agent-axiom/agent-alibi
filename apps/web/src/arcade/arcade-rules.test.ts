@@ -98,8 +98,10 @@ describe("buildArcadeMatchSummary", () => {
     });
 
     expect(summary.highlightLines).toContain("Stole Moon Pearl + Argent Crown");
+    expect(summary.highlightLines).toContain("Cashed out +8 at lift");
     expect(summary.highlightLines).toContain("Escaped with 6 loot");
     expect(summary.highlightLines).toContain("Clean exit bonus +3");
+    expect(summary.caseFile).toContain("Cashout Banked: +8");
   });
 
   it("records alibi pulse saves and scan burns in the shareable case file", () => {
