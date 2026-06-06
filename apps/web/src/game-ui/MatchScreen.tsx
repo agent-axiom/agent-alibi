@@ -114,6 +114,9 @@ export function MatchScreen({ match }: MatchScreenProps) {
             <div className="arcade-pace" aria-label="Run pace">
               {hud?.paceStatus ?? "Pace unknown"}
             </div>
+            <div className={`arcade-dash ${hud?.dashReady === false ? "cooling" : ""}`} aria-label="Dash status">
+              {hud?.dashReady === false ? "Dash cooling" : "Dash ready"}
+            </div>
           </div>
           <small>
             {hud?.raceStatus ?? "Loot race is tied"} · WASD / arrows move · click to run · Shift dash · E / Space interact

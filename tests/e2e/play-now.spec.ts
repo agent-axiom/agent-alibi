@@ -12,6 +12,7 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(page.getByText(/target \d+m/i)).toBeVisible();
   await expect(page.getByText(/rivals enter in \d+s/i)).toBeVisible();
   await expect(page.getByText(/s-rank pace/i)).toBeVisible();
+  await expect(page.getByText(/dash ready/i)).toBeVisible();
   await expect(page.getByText(/rival agents enter in 5 seconds/i)).toBeVisible();
 
   await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_STATE__ === "function");

@@ -1345,6 +1345,25 @@ p {
   text-transform: uppercase;
 }
 
+.arcade-dash {
+  width: fit-content;
+  border: 1px solid rgba(126, 255, 223, 0.4);
+  border-radius: 6px;
+  padding: 6px 9px;
+  background: rgba(126, 255, 223, 0.1);
+  color: #d8fff4;
+  font-size: 0.82rem;
+  font-weight: 900;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.arcade-dash.cooling {
+  border-color: rgba(216, 252, 255, 0.22);
+  background: rgba(216, 252, 255, 0.08);
+  color: #b7c8d8;
+}
+
 .arcade-objective small {
   color: #b7c8d8;
   font-weight: 800;
@@ -1551,6 +1570,10 @@ p {
   }
 
   .arcade-pace {
+    font-size: 0.72rem;
+  }
+
+  .arcade-dash {
     font-size: 0.72rem;
   }
 }
