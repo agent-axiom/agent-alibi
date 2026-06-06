@@ -11,9 +11,13 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await startSoloArcade(page);
 
   const currentObjective = page.getByLabel(/current objective/i);
+  const missionBeat = page.getByLabel(/mission beat/i);
   await expect(page.getByText(/moon vault run/i)).toBeVisible();
   await expect(page.getByText(/timer/i)).toBeVisible();
   await expect(page.getByText(/steal the moon pearl/i)).toBeVisible();
+  await expect(missionBeat.getByText(/first objective/i)).toBeVisible();
+  await expect(missionBeat.getByText(/steal moon pearl/i)).toBeVisible();
+  await expect(missionBeat.getByText(/move with wasd \/ arrows/i)).toBeVisible();
   await expect(currentObjective.getByText(/steal the moon pearl \+3/i)).toBeVisible();
   await expect(page.getByText(/1 steal/i)).toBeVisible();
   await expect(page.getByText(/target (?:n|ne|e|se|s|sw|w|nw|here) \d+m/i)).toBeVisible();
@@ -61,6 +65,9 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await page.keyboard.press("KeyE");
   await expect(page.getByText(/escape with/i)).toBeVisible();
   await expect(page.getByText(/moon pearl secured/i)).toBeVisible();
+  await expect(missionBeat.getByText(/loot secured/i)).toBeVisible();
+  await expect(missionBeat.getByText(/cashout worth 5/i)).toBeVisible();
+  await expect(missionBeat.getByText(/reach atrium lift or press g/i)).toBeVisible();
   await expect(page.getByText(/2 escape/i)).toBeVisible();
   await expect(page.getByText(/exit (?:n|ne|e|se|s|sw|w|nw|here) \d+m/i)).toBeVisible();
   const lootChainWindow = page.getByLabel(/loot chain window/i);
@@ -158,6 +165,10 @@ test("rival steals trigger a clear red loot alert", async ({ page }) => {
   const rivalLootAlert = page.getByLabel(/rival loot alert/i);
   await expect(rivalLootAlert.getByText(/red \+\d/i)).toBeVisible();
   await expect(rivalLootAlert.getByText(/stole/i)).toBeVisible();
+  const missionBeat = page.getByLabel(/mission beat/i);
+  await expect(missionBeat.getByText(/carrier run/i)).toBeVisible();
+  await expect(missionBeat.getByText(/rook has moon pearl/i)).toBeVisible();
+  await expect(missionBeat.getByText(/chase the gold-red carrier blip/i)).toBeVisible();
   const rivalIntercept = page.getByLabel(/rival intercept/i);
   await expect(rivalIntercept.getByText(/rook carrying/i)).toBeVisible();
   await expect(rivalIntercept.getByText(/moon pearl \+3/i)).toBeVisible();

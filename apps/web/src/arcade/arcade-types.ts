@@ -45,6 +45,14 @@ export type ArcadeLootChainWindow = {
   secondsLeft: number;
 };
 
+export type ArcadeMissionBeat = {
+  tone: "focus" | "danger" | "success";
+  kicker: string;
+  title: string;
+  detail: string;
+  action: string;
+};
+
 export type ArcadeHudState = {
   phase: ArcadeHudPhase;
   timeLeftMs: number;
@@ -75,6 +83,7 @@ export type ArcadeHudState = {
   paceStatus: string;
   cleanBonusWindow: ArcadeCleanBonusWindow | null;
   lootChainWindow: ArcadeLootChainWindow | null;
+  missionBeat: ArcadeMissionBeat;
   spotlight: string | null;
   feed: string[];
 };

@@ -4,6 +4,7 @@ import { ALIBI_PULSE_COOLDOWN_MS, buildAlibiPulseStatus, canUseAlibiPulse } from
 import { rateArcadeRun } from "./arcade-rules";
 import { ARCADE_MISSION_DURATION_MS, type ArcadeHudPhase, type ArcadeHudState, type ArcadeMissionConfig, type ArcadeRadarBlip } from "./arcade-types";
 import { buildActiveActionHint, buildArcadeGuidance, buildRivalPressure, type RivalPressure } from "./guidance";
+import { buildMissionBeat } from "./mission-beats";
 import { nextMovementImpulse, selectMovementVector, type MovementImpulse, type MovementVector } from "./movement";
 import { buildObjectiveDirectionLabel } from "./navigation";
 import { buildRivalScanStatus, updateRivalScan as advanceRivalScan, type RivalScanState } from "./rival-scan";
@@ -879,6 +880,13 @@ export class ArcadeHeistScene extends Phaser.Scene {
     const greedPromptActive = this.routeMode === "greed" && Boolean(targetArtifact);
     const alibiPulseReady = !rivalCarrier && canUseAlibiPulse(rivalPressure.level, this.alibiPulseCooldownMs);
     const prompt = rivalCarrier ? "Press E / Space to intercept" : alibiPulseReady ? "Press E / Space to jam rival scan" : greedPromptActive && nearArtifact ? "Press E / Space to steal" : guidance.prompt;
+    const escapePayout = this.escapePayout(canEscape);
+    const greedStatus = this.greedStatus(guidance.greedStatus);
+    const rivalIntercept = this.rivalIntercept();
+    const routeChoiceRelic = greedStatus
+      ?.replace(/^Optional relic:\s*/i, "")
+      .replace(/^Greed route:\s*/i, "")
+      .replace(/\s*·\s*press G$/i, "");
 
     const hud: ArcadeHudState = {
       phase: this.phase(),
@@ -902,11 +910,11 @@ export class ArcadeHeistScene extends Phaser.Scene {
       loopStep: rivalCarrier || alibiPulseReady ? "survive" : guidance.loopStep,
       raceStatus: guidance.raceStatus,
       lastRivalSteal: this.lastRivalSteal,
-      rivalIntercept: this.rivalIntercept(),
+      rivalIntercept,
       vaultCondition: this.vaultCondition(),
-      escapePayout: this.escapePayout(canEscape),
+      escapePayout,
       radarBlips: this.buildRadarBlips(objectiveTarget),
-      greedStatus: this.greedStatus(guidance.greedStatus),
+      greedStatus,
       targetDistanceLabel:
         objectiveTarget && targetDistanceMeters !== null && this.player
           ? buildObjectiveDirectionLabel({
@@ -927,6 +935,17 @@ export class ArcadeHeistScene extends Phaser.Scene {
       paceStatus: this.paceStatus(),
       cleanBonusWindow: this.cleanBonusWindow(),
       lootChainWindow: this.lootChainWindow(),
+      missionBeat: buildMissionBeat({
+        targetArtifactName: targetArtifact?.name ?? null,
+        lootValue: this.lootValue,
+        canEscape,
+        cashoutValue: escapePayout?.cashout ?? null,
+        routeChoiceRelic: routeChoiceRelic ?? null,
+        routeMode: this.routeMode,
+        rivalCarrier: rivalIntercept,
+        alibiPulseReady,
+        nearestRivalName: nearestRival?.name ?? null
+      }),
       spotlight: this.spotlight,
       feed: this.feed.slice(-5)
     };

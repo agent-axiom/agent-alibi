@@ -1,0 +1,75 @@
+import { describe, expect, it } from "vitest";
+import { buildMissionBeat } from "./mission-beats";
+
+describe("buildMissionBeat", () => {
+  it("starts the heist with one concrete objective beat", () => {
+    const beat = buildMissionBeat({
+      targetArtifactName: "Moon Pearl",
+      lootValue: 0,
+      canEscape: false,
+      cashoutValue: null,
+      routeChoiceRelic: null,
+      routeMode: "escape",
+      rivalCarrier: null,
+      alibiPulseReady: false,
+      nearestRivalName: null
+    });
+
+    expect(beat).toEqual({
+      tone: "focus",
+      kicker: "First objective",
+      title: "Steal Moon Pearl",
+      detail: "The gold marker points to the score. Rivals arrive fast.",
+      action: "Move with WASD / arrows"
+    });
+  });
+
+  it("prioritizes a rival carrier over cashout guidance", () => {
+    const beat = buildMissionBeat({
+      targetArtifactName: "Argent Crown",
+      lootValue: 3,
+      canEscape: true,
+      cashoutValue: 5,
+      routeChoiceRelic: "Argent Crown +3",
+      routeMode: "escape",
+      rivalCarrier: {
+        agentName: "Rook",
+        relicName: "Moon Pearl",
+        value: 3,
+        distanceMeters: 42
+      },
+      alibiPulseReady: true,
+      nearestRivalName: "Rook"
+    });
+
+    expect(beat).toEqual({
+      tone: "danger",
+      kicker: "Carrier run",
+      title: "Rook has Moon Pearl",
+      detail: "42m away. Intercept before Red cashes out +3.",
+      action: "Chase the gold-red carrier blip"
+    });
+  });
+
+  it("turns secured loot into a clear cashout decision", () => {
+    const beat = buildMissionBeat({
+      targetArtifactName: "Argent Crown",
+      lootValue: 3,
+      canEscape: true,
+      cashoutValue: 5,
+      routeChoiceRelic: "Argent Crown +3",
+      routeMode: "escape",
+      rivalCarrier: null,
+      alibiPulseReady: false,
+      nearestRivalName: null
+    });
+
+    expect(beat).toEqual({
+      tone: "success",
+      kicker: "Loot secured",
+      title: "Cashout worth 5",
+      detail: "Argent Crown +3 can extend the chain, but the lift is paying now.",
+      action: "Reach Atrium Lift or press G for greed route"
+    });
+  });
+});

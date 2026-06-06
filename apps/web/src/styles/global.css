@@ -1526,6 +1526,77 @@ p {
   font-size: 0.72rem;
 }
 
+.arcade-mission-beat {
+  border: 1px solid rgba(216, 252, 255, 0.3);
+  border-radius: 8px;
+  padding: 11px 12px;
+  background: linear-gradient(135deg, rgba(76, 244, 240, 0.14), rgba(255, 255, 255, 0.06));
+  box-shadow: inset 0 0 28px rgba(216, 252, 255, 0.08), 0 0 24px rgba(76, 244, 240, 0.12);
+  color: #f4fbff;
+  overflow: hidden;
+}
+
+.arcade-mission-beat span,
+.arcade-mission-beat strong,
+.arcade-mission-beat p,
+.arcade-mission-beat small {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.arcade-mission-beat span {
+  color: #ffd56a;
+  font-size: 0.68rem;
+  font-weight: 950;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.arcade-mission-beat strong {
+  margin-top: 7px;
+  font-size: 1rem;
+  line-height: 1.05;
+  text-transform: uppercase;
+}
+
+.arcade-mission-beat p {
+  margin: 7px 0 0;
+  color: #cce4f1;
+  font-size: 0.8rem;
+  font-weight: 850;
+  line-height: 1.22;
+}
+
+.arcade-mission-beat small {
+  margin-top: 8px;
+  color: #07101c;
+  width: fit-content;
+  max-width: 100%;
+  border-radius: 6px;
+  padding: 5px 7px;
+  background: #ffd56a;
+  font-size: 0.72rem;
+  font-weight: 950;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.arcade-mission-beat.danger {
+  border-color: rgba(255, 79, 123, 0.7);
+  background: linear-gradient(135deg, rgba(255, 79, 123, 0.23), rgba(255, 213, 106, 0.1));
+  box-shadow: inset 0 0 32px rgba(255, 79, 123, 0.13), 0 0 30px rgba(255, 79, 123, 0.2);
+}
+
+.arcade-mission-beat.danger strong {
+  color: #fff4f7;
+}
+
+.arcade-mission-beat.success {
+  border-color: rgba(57, 229, 192, 0.68);
+  background: linear-gradient(135deg, rgba(57, 229, 192, 0.18), rgba(255, 213, 106, 0.08));
+  box-shadow: inset 0 0 30px rgba(57, 229, 192, 0.1), 0 0 28px rgba(57, 229, 192, 0.16);
+}
+
 .arcade-mission-meta {
   display: flex;
   flex-wrap: wrap;
