@@ -38,6 +38,7 @@ export type ActiveActionHintInput = {
   alibiPulseReady: boolean;
   nearRivalCarrierName?: string | null;
   nearArtifactName: string | null;
+  nearArtifactValue?: number | null;
   nearExit: boolean;
   canEscape: boolean;
 };
@@ -157,7 +158,7 @@ export function buildActiveActionHint(input: ActiveActionHintInput): ActiveActio
   if (input.nearArtifactName) {
     return {
       key: "E / Space",
-      label: "Steal relic",
+      label: buildStealActionLabel(input.nearArtifactName, input.nearArtifactValue ?? null),
       tone: "success"
     };
   }
@@ -167,4 +168,8 @@ export function buildActiveActionHint(input: ActiveActionHintInput): ActiveActio
     label: "Follow marker",
     tone: "neutral"
   };
+}
+
+function buildStealActionLabel(artifactName: string, artifactValue: number | null): string {
+  return artifactValue && artifactValue > 0 ? `Steal ${artifactName} +${artifactValue}` : `Steal ${artifactName}`;
 }

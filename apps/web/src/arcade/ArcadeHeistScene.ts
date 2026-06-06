@@ -1263,6 +1263,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
         alibiPulseReady,
         nearRivalCarrierName: rivalCarrier?.name ?? null,
         nearArtifactName: nearArtifact?.name ?? null,
+        nearArtifactValue: nearArtifact?.value ?? null,
         nearExit: this.isNearExit(),
         canEscape
       }),
