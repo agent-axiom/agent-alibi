@@ -13,6 +13,7 @@ export function FinalCaseFile({ summary, onRematch, onHome }: FinalCaseFileProps
   const blueScore = summary.teamScores.find((score) => score.teamId === "blue");
   const redScore = summary.teamScores.find((score) => score.teamId === "red");
   const winner = summary.winnerTeamId === "tie" ? "Tie" : summary.winnerTeamId === "blue" ? "Blue Crew" : "Red Crew";
+  const escapeBonus = blueScore?.escape ?? 0;
 
   async function copyResult() {
     await navigator.clipboard?.writeText(summary.caseFile).catch(() => undefined);
@@ -21,6 +22,12 @@ export function FinalCaseFile({ summary, onRematch, onHome }: FinalCaseFileProps
 
   return (
     <main className="final-shell">
+      {escapeBonus > 0 ? (
+        <div className="arcade-score-popup bonus final-score-popup" aria-label="Score popup" aria-live="polite">
+          <strong>+{escapeBonus} Escape bonus</strong>
+          <span>Cashout {(blueScore?.loot ?? 0) + escapeBonus}</span>
+        </div>
+      ) : null}
       <section className="case-file">
         <p className="eyebrow">Final Case File</p>
         <h1>{summary.title}</h1>

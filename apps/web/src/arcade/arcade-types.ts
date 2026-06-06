@@ -61,6 +61,12 @@ export type ArcadeThreatCue = {
   action: string;
 };
 
+export type ArcadeScorePopup = {
+  tone: "loot" | "bonus" | "recover";
+  label: string;
+  detail: string;
+};
+
 export type ArcadeHudState = {
   phase: ArcadeHudPhase;
   timeLeftMs: number;
@@ -93,6 +99,7 @@ export type ArcadeHudState = {
   lootChainWindow: ArcadeLootChainWindow | null;
   missionBeat: ArcadeMissionBeat;
   threatCue: ArcadeThreatCue | null;
+  scorePopup: ArcadeScorePopup | null;
   spotlight: string | null;
   feed: string[];
 };

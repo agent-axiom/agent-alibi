@@ -9,6 +9,7 @@ import {
   type ArcadeMissionConfig,
   type ArcadeRadarBlip,
   type ArcadeRivalIntercept,
+  type ArcadeScorePopup,
   type ArcadeThreatCue
 } from "./arcade-types";
 import { buildActiveActionHint, buildArcadeGuidance, buildRivalPressure, type RivalPressure } from "./guidance";
@@ -135,6 +136,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private feed: string[] = [];
   private spotlight: string | null = null;
   private spotlightUntilMs = 0;
+  private scorePopup: ArcadeScorePopup | null = null;
+  private scorePopupUntilMs = 0;
   private finished = false;
   private aiReleased = false;
   private lastRivalPressureLevel: RivalPressure["level"] = "standby";
@@ -346,6 +349,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.feed = ["Moon Vault breach started.", "Rival agents enter in 5 seconds.", "Move fast. Steal clean. Escape before lockdown."];
     this.spotlight = null;
     this.spotlightUntilMs = 0;
+    this.scorePopup = null;
+    this.scorePopupUntilMs = 0;
     this.finished = false;
     this.aiReleased = false;
     this.lastRivalPressureLevel = "standby";
@@ -701,6 +706,11 @@ export class ArcadeHeistScene extends Phaser.Scene {
       this.feedLine(`You stole ${artifact.name}. Escape route unlocked.`);
       this.routeMode = "escape";
       this.flashSpotlight(this.artifactsStolen > 1 ? `Loot chain x${this.artifactsStolen}` : `${artifact.name} secured`);
+      this.flashScorePopup({
+        tone: "loot",
+        label: `+${artifact.value} ${artifact.name}`,
+        detail: this.artifactsStolen > 1 ? `Loot chain x${this.artifactsStolen}` : "Relic secured"
+      });
       this.collectArtifactVisual(artifact, 0xffd56a);
       this.updateTargetMarker();
       return;
@@ -719,6 +729,12 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private flashSpotlight(text: string) {
     this.spotlight = text;
     this.spotlightUntilMs = this.elapsedMs + 1_800;
+    this.emitHudIfNeeded(true);
+  }
+
+  private flashScorePopup(popup: ArcadeScorePopup) {
+    this.scorePopup = popup;
+    this.scorePopupUntilMs = this.elapsedMs + 1_800;
     this.emitHudIfNeeded(true);
   }
 
@@ -772,6 +788,11 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.alarm = Math.min(5, this.alarm + 0.16);
     this.shoveRivalAway(rival);
     this.flashSpotlight(`Intercepted ${rival.name}`);
+    this.flashScorePopup({
+      tone: "recover",
+      label: `Recovered +${recoveredValue}`,
+      detail: this.relicListLabel(recovered)
+    });
     this.feedLine(`Intercepted ${rival.name}. Recovered ${this.relicListLabel(recovered)}.`);
     this.addInterceptVisual(rival.x, rival.y);
     this.updateTargetMarker();
@@ -898,6 +919,9 @@ export class ArcadeHeistScene extends Phaser.Scene {
     if (this.spotlight && this.elapsedMs >= this.spotlightUntilMs) {
       this.spotlight = null;
     }
+    if (this.scorePopup && this.elapsedMs >= this.scorePopupUntilMs) {
+      this.scorePopup = null;
+    }
     const targetArtifact = this.primaryTargetArtifact();
     const targetArtifactLabel = targetArtifact ? this.artifactTargetLabel(targetArtifact) : null;
     const nearArtifact = this.nearPlayerArtifact();
@@ -990,6 +1014,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
         nearestRivalName: nearestRival?.name ?? null
       }),
       threatCue: this.threatCue(rivalIntercept, alibiPulseReady, nearestRival),
+      scorePopup: this.scorePopup,
       spotlight: this.spotlight,
       feed: this.feed.slice(-5)
     };
@@ -1409,6 +1434,14 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private finish(outcome: "escaped" | "sealed" | "caught") {
     if (!this.config || this.finished) return;
     this.finished = true;
+    if (outcome === "escaped") {
+      this.scorePopup = {
+        tone: "bonus",
+        label: "+2 Escape bonus",
+        detail: `Cashout ${this.lootValue + 2}`
+      };
+      this.scorePopupUntilMs = this.elapsedMs + 1_800;
+    }
     this.emitHudIfNeeded(true);
     this.config.onFinish({
       outcome,
