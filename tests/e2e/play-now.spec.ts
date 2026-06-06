@@ -421,6 +421,7 @@ test("security sweeps telegraph danger and punish standing in the beam", async (
     inWarning: false,
     telegraphVisible: false,
     hitCount: 0,
+    dodgeCount: 0,
     label: "Laser sweep"
   });
 
@@ -464,6 +465,47 @@ test("security sweeps telegraph danger and punish standing in the beam", async (
   const punishedSweep = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());
   expect(punishedSweep?.securitySweep?.hitCount).toBeGreaterThan(0);
   expect(punishedSweep?.alarmRaw).toBeGreaterThan(alarmBeforeSweep + 0.35);
+});
+
+test("cleanly dodging a security sweep gives immediate reward feedback", async ({ page }) => {
+  await startSoloArcade(page);
+  await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_STATE__ === "function");
+
+  await page.evaluate(() =>
+    (
+      window.__AGENT_ALIBI_ARCADE_DEBUG__ as
+        | {
+            forceSecuritySweepWarning?: () => void;
+          }
+        | undefined
+    )?.forceSecuritySweepWarning?.()
+  );
+  const warningSweep = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().securitySweep);
+  expect(warningSweep).toEqual(
+    expect.objectContaining({
+      active: true,
+      inBeam: false,
+      inWarning: true,
+      dodgeCount: 0,
+      hitCount: 0
+    })
+  );
+
+  await page.keyboard.down("ArrowLeft");
+  await page.waitForTimeout(360);
+  await page.keyboard.up("ArrowLeft");
+
+  await expect(page.getByLabel("Score popup").getByText(/clean dodge/i)).toBeVisible();
+  const dodgedSweep = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());
+  expect(dodgedSweep?.securitySweep).toEqual(
+    expect.objectContaining({
+      active: true,
+      inWarning: false,
+      dodgeCount: 1,
+      hitCount: 0
+    })
+  );
+  expect(dodgedSweep?.lastImpact?.kind).toBe("dodge");
 });
 
 test("on-screen arcade controls move, dash, interact, and switch route", async ({ page }) => {
