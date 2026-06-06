@@ -69,6 +69,7 @@ type RuntimeAgent = {
   carriedRelics: CarriedRelic[];
   body: Phaser.GameObjects.Container;
   dot: Phaser.GameObjects.Arc;
+  label: Phaser.GameObjects.Text;
   ship: Phaser.GameObjects.Container;
   carrierBadge: Phaser.GameObjects.Container;
   carrierBadgeLabel: Phaser.GameObjects.Text;
@@ -308,6 +309,16 @@ export class ArcadeHeistScene extends Phaser.Scene {
       arenaLabels: this.arenaLabelsDebug(),
       routeMode: this.routeMode,
       nearestRival,
+      rivalsReleased: this.aiReleased,
+      rivalsActive: this.rivalsAreActive(),
+      rivalWakeHoldMs: Math.round(this.aiWakeHoldMs),
+      rivals: this.aiAgents.map((agent) => ({
+        name: agent.name,
+        visualLabel: agent.label.text,
+        alpha: Number(agent.body.alpha.toFixed(2)),
+        x: Math.round(agent.x),
+        y: Math.round(agent.y)
+      })),
       lastRivalSteal: this.lastRivalSteal,
       rivalIntercept: this.rivalIntercept(),
       impulse: this.keyboardImpulse ?? null,
@@ -332,7 +343,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     const distancePx = Math.max(1, distanceMeters) * 8;
     const direction = this.player.x + distancePx < WORLD_WIDTH - 82 ? 1 : -1;
     this.moveAgent(rival, this.player.x + direction * distancePx - rival.x, this.player.y - rival.y);
-    this.aiReleased = true;
+    this.releaseRivals({ announce: false, holdMs: 0 });
     this.aiWakeHoldMs = 0;
     this.aiActionHoldMs = 10_000;
     this.updateRivalPressureFeed();
@@ -345,7 +356,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     const artifact = this.artifacts.find((candidate) => !candidate.takenBy);
     if (!rival || !artifact) return;
 
-    this.aiReleased = true;
+    this.releaseRivals({ announce: false, holdMs: 0 });
     this.aiWakeHoldMs = 0;
     this.aiActionHoldMs = 10_000;
     this.moveAgent(rival, artifact.x - rival.x, artifact.y - rival.y);
@@ -677,6 +688,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       runtime.targetRoomId = this.pickAiTarget(runtime);
       this.aiAgents.push(runtime);
     }
+    this.setRivalStandbyVisuals(true);
 
     this.cameras.main.startFollow(this.player.body, true, 0.06, 0.06);
   }
@@ -729,6 +741,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       carriedRelics: [],
       body,
       dot,
+      label,
       ship,
       carrierBadge,
       carrierBadgeLabel
@@ -853,9 +866,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     if (!this.aiReleased) {
       const firstScoreWokeRivals = this.artifactsStolen > 0;
       if (!firstScoreWokeRivals && this.elapsedMs < AI_GRACE_MS) return;
-      this.aiReleased = true;
-      this.aiWakeHoldMs = AI_WAKE_HOLD_MS;
-      this.feedLine("Rival agents entered the vault.");
+      this.releaseRivals({ announce: true, holdMs: AI_WAKE_HOLD_MS });
       return;
     }
 
@@ -926,6 +937,9 @@ export class ArcadeHeistScene extends Phaser.Scene {
       this.impactPulse("steal");
       this.collectArtifactVisual(artifact, 0xffd56a);
       this.updateEscapePayoutBadge();
+      if (this.artifactsStolen === 1) {
+        this.releaseRivals({ announce: true, holdMs: AI_WAKE_HOLD_MS });
+      }
       this.updateTargetMarker();
       this.updateThreatHalo();
       return;
@@ -1002,6 +1016,27 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.rivalBark = bark;
     this.rivalBarkUntilMs = this.elapsedMs + 2_600;
     this.emitHudIfNeeded(true);
+  }
+
+  private releaseRivals({ announce, holdMs }: { announce: boolean; holdMs: number }) {
+    if (this.aiReleased) return;
+    this.aiReleased = true;
+    this.aiWakeHoldMs = holdMs;
+    this.setRivalStandbyVisuals(false);
+    if (announce) {
+      this.feedLine("Rival agents entered the vault.");
+    }
+    this.emitHudIfNeeded(true);
+  }
+
+  private setRivalStandbyVisuals(standby: boolean) {
+    for (const agent of this.aiAgents) {
+      agent.body.setAlpha(standby ? 0.46 : 1);
+      agent.body.setDepth(standby ? 10 : 12);
+      agent.ship.setScale(standby ? 0.86 : 1);
+      agent.label.setText(standby ? "STANDBY" : agent.name.toUpperCase());
+      agent.label.setColor(standby ? "#ff9fbd" : "#f8fdff");
+    }
   }
 
   private impactPulse(kind: ImpactKind) {
