@@ -1300,6 +1300,7 @@ p {
 .arcade-feed,
 .arcade-radar,
 .arcade-objective,
+.arcade-opening-contract,
 .arcade-objective-banner,
 .arcade-spotlight,
 .arcade-score-popup,
@@ -1528,6 +1529,109 @@ p {
   font-size: clamp(1.7rem, 5.2vw, 3.8rem);
   font-weight: 950;
   line-height: 0.92;
+}
+
+.arcade-opening-contract {
+  top: 98px;
+  left: 24px;
+  width: min(330px, calc(100vw - 48px));
+  display: grid;
+  gap: 8px;
+  border: 1px solid rgba(255, 213, 106, 0.54);
+  border-radius: 8px;
+  padding: 14px;
+  background: rgba(7, 16, 28, 0.78);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.32), 0 0 30px rgba(255, 213, 106, 0.14);
+  backdrop-filter: blur(14px);
+  animation: arcade-contract-in 520ms ease both;
+}
+
+.arcade-opening-contract > span {
+  color: #ffd56a;
+  font-size: 0.72rem;
+  font-weight: 950;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.arcade-opening-contract > strong {
+  color: #f8fdff;
+  font-size: clamp(1.25rem, 2.2vw, 1.9rem);
+  line-height: 0.98;
+  text-transform: uppercase;
+}
+
+.arcade-opening-contract div {
+  min-height: 34px;
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(216, 252, 255, 0.18);
+  border-radius: 7px;
+  padding: 6px;
+  background: rgba(216, 252, 255, 0.08);
+}
+
+.arcade-opening-contract small {
+  width: 26px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 5px;
+  background: #ffd56a;
+  color: #07101c;
+  font-size: 0.72rem;
+  font-weight: 950;
+}
+
+.arcade-opening-contract b {
+  min-width: 0;
+  color: #dffcff;
+  font-size: 0.78rem;
+  line-height: 1.05;
+  overflow-wrap: anywhere;
+  text-transform: uppercase;
+}
+
+@keyframes arcade-contract-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.arcade-shell.compact-opening .arcade-roster,
+.arcade-shell.compact-opening .arcade-feed,
+.arcade-shell.compact-opening .arcade-radar {
+  display: none;
+}
+
+.arcade-shell.compact-opening .arcade-objective {
+  width: min(760px, calc(100vw - 380px));
+  max-height: 236px;
+  border-color: rgba(255, 213, 106, 0.34);
+  background: rgba(7, 16, 28, 0.78);
+  box-shadow: 0 20px 54px rgba(0, 0, 0, 0.34), 0 0 26px rgba(255, 213, 106, 0.12);
+}
+
+.arcade-shell.compact-opening .arcade-mission-meta {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.arcade-shell.compact-opening .arcade-mission-meta > :not(.arcade-race):not(.arcade-route):not(.arcade-rivals) {
+  display: none;
+}
+
+.arcade-shell.compact-opening .arcade-race,
+.arcade-shell.compact-opening .arcade-route,
+.arcade-shell.compact-opening .arcade-rivals {
+  min-height: 32px;
 }
 
 .arcade-objective-banner.escape {
@@ -2767,6 +2871,10 @@ p {
     max-height: 22vh;
     overflow: hidden;
   }
+
+  .arcade-shell.compact-opening .arcade-objective {
+    width: min(720px, calc(100vw - 28px));
+  }
 }
 
 @media (max-width: 620px) {
@@ -2879,6 +2987,20 @@ p {
     max-height: min(360px, 38svh);
     overflow-y: auto;
     padding: 12px;
+  }
+
+  .arcade-opening-contract {
+    top: 92px;
+    left: 10px;
+    right: 10px;
+    width: auto;
+    max-height: 30svh;
+    overflow: hidden;
+  }
+
+  .arcade-shell.compact-opening .arcade-objective {
+    width: calc(100vw - 20px);
+    max-height: min(330px, 36svh);
   }
 
   .arcade-mission-beat {

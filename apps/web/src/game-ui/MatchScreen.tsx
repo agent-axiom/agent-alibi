@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react";
 import { Eye, Footprints, Gem, Hand, LockKeyhole, Radio, Shield, Sparkles, Volume2, VolumeX, Zap } from "lucide-react";
 import type { ActionKind } from "@agent-alibi/shared";
+import { selectArcadeHudDensity } from "../arcade/hud-density";
 import type { LocalMatchController } from "../local/useLocalMatch";
 
 type MatchScreenProps = {
@@ -39,13 +40,14 @@ export function MatchScreen({ match, soundEnabled = false, onToggleSound }: Matc
       ? `${radarFocusPrefix(radarFocus.kind, hud?.escapePayout?.cashout ?? null)}: ${radarFocus.label}`
       : "Sweep clear";
     const routeChoice = hud?.routeChoice ?? null;
+    const hudDensity = selectArcadeHudDensity(hud);
     const cashoutStepLabel = hud?.escapePayout ? `Cashout +${hud.escapePayout.cashout}` : "Escape";
     const carriedLoot = hud && hud.lootValue > 0 && hud.escapePayout ? { loot: hud.lootValue, cashout: hud.escapePayout.cashout } : null;
     const blueRaceLabel = carriedLoot ? `Blue carrying +${carriedLoot.loot}` : `Blue ${blueLoot}`;
     const raceStatusLabel = carriedLoot ? `Bank +${carriedLoot.cashout} at lift` : (hud?.raceStatus ?? "Loot race is tied");
     const SoundIcon = soundEnabled ? Volume2 : VolumeX;
     return (
-      <main className={`arcade-shell ${hud?.phase ?? "stealth"}`}>
+      <main className={`arcade-shell ${hud?.phase ?? "stealth"} ${hudDensity === "opening" ? "compact-opening" : ""}`}>
         <Suspense
           fallback={
             <div className="arcade-stage arcade-loading" aria-label="Loading Moon Vault arcade scene">
@@ -62,6 +64,25 @@ export function MatchScreen({ match, soundEnabled = false, onToggleSound }: Matc
           />
         </Suspense>
         <div className="arcade-vignette" />
+
+        {hudDensity === "opening" ? (
+          <aside className="arcade-opening-contract" aria-label="Opening contract">
+            <span>Moon Vault Contract</span>
+            <strong>Steal Moon Pearl +3</strong>
+            <div>
+              <small>1</small>
+              <b>Follow gold marker</b>
+            </div>
+            <div>
+              <small>2</small>
+              <b>Cashout at Atrium Lift</b>
+            </div>
+            <div>
+              <small>3</small>
+              <b>Red crew breaches after first score</b>
+            </div>
+          </aside>
+        ) : null}
 
         {hud?.objectiveBanner ? (
           <div className={`arcade-objective-banner ${hud.objectiveBanner.tone}`} aria-label="Objective banner" aria-live="polite">
