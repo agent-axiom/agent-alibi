@@ -48,13 +48,15 @@ export function MatchScreen({ match, soundEnabled = false, onToggleSound }: Matc
     const SoundIcon = soundEnabled ? Volume2 : VolumeX;
     const routePulse = hud?.routePulse ?? null;
     const scanLockActive = hud?.threatCue?.label === "Scan lock" && /jam/i.test(hud.threatCue.action);
+    const threatCueActive = Boolean(hud?.threatCue);
+    const denseThreatActive = hud?.threatCue?.label === "Laser sweep";
     const countdownPulseActive = hud?.phase === "lockdown";
     const countdownPulseAction = (hud?.lootValue ?? 0) > 0 ? "Cashout now" : "Escape now";
     const visibleRivalBark = countdownPulseActive ? null : (hud?.rivalBark ?? null);
     const breachAlert = visibleRivalBark?.agentName === "Red Crew" && /breach live/i.test(visibleRivalBark.line);
     return (
       <main
-        className={`arcade-shell ${hud?.phase ?? "stealth"} ${hudDensity === "opening" ? "compact-opening" : ""} ${breachAlert ? "breach-alert" : ""} ${routePulse ? "route-pulse-active" : ""} ${scanLockActive ? "scan-lock-active" : ""} ${countdownPulseActive ? "countdown-pulse-active" : ""}`}
+        className={`arcade-shell ${hud?.phase ?? "stealth"} ${hudDensity === "opening" ? "compact-opening" : ""} ${breachAlert ? "breach-alert" : ""} ${routePulse ? "route-pulse-active" : ""} ${scanLockActive ? "scan-lock-active" : ""} ${threatCueActive ? "threat-cue-active" : ""} ${denseThreatActive ? "dense-threat-active" : ""} ${countdownPulseActive ? "countdown-pulse-active" : ""}`}
       >
         <Suspense
           fallback={
