@@ -5,6 +5,7 @@ import { rateArcadeRun } from "./arcade-rules";
 import { ARCADE_MISSION_DURATION_MS, type ArcadeHudPhase, type ArcadeHudState, type ArcadeMissionConfig, type ArcadeRadarBlip } from "./arcade-types";
 import { buildActiveActionHint, buildArcadeGuidance, buildRivalPressure, type RivalPressure } from "./guidance";
 import { nextMovementImpulse, selectMovementVector, type MovementImpulse, type MovementVector } from "./movement";
+import { buildObjectiveDirectionLabel } from "./navigation";
 import { buildRivalScanStatus, updateRivalScan as advanceRivalScan, type RivalScanState } from "./rival-scan";
 
 const WORLD_WIDTH = 1680;
@@ -905,8 +906,13 @@ export class ArcadeHeistScene extends Phaser.Scene {
       radarBlips: this.buildRadarBlips(objectiveTarget),
       greedStatus: this.greedStatus(guidance.greedStatus),
       targetDistanceLabel:
-        objectiveTarget && targetDistanceMeters !== null
-          ? `${objectiveTarget.kind === "escape" ? "Exit" : "Target"} ${targetDistanceMeters}m`
+        objectiveTarget && targetDistanceMeters !== null && this.player
+          ? buildObjectiveDirectionLabel({
+              kind: objectiveTarget.kind === "escape" ? "exit" : "target",
+              dx: objectiveTarget.x - this.player.x,
+              dy: objectiveTarget.y - this.player.y,
+              distanceMeters: targetDistanceMeters
+            })
           : null,
       rivalStatus: this.rivalStatus(),
       rivalDistanceLabel: rivalPressure.label,

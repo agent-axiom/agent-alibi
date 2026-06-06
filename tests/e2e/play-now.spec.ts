@@ -16,7 +16,7 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(page.getByText(/steal the moon pearl/i)).toBeVisible();
   await expect(currentObjective.getByText(/steal the moon pearl \+3/i)).toBeVisible();
   await expect(page.getByText(/1 steal/i)).toBeVisible();
-  await expect(page.getByText(/target \d+m/i)).toBeVisible();
+  await expect(page.getByText(/target (?:n|ne|e|se|s|sw|w|nw|here) \d+m/i)).toBeVisible();
   await expect(page.getByText(/rivals enter in \d+s/i)).toBeVisible();
   await expect(page.getByText(/nearest rival \d+m/i)).toBeVisible();
   await expect(page.getByText(/s-rank pace/i)).toBeVisible();
@@ -62,7 +62,7 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(page.getByText(/escape with/i)).toBeVisible();
   await expect(page.getByText(/moon pearl secured/i)).toBeVisible();
   await expect(page.getByText(/2 escape/i)).toBeVisible();
-  await expect(page.getByText(/exit \d+m/i)).toBeVisible();
+  await expect(page.getByText(/exit (?:n|ne|e|se|s|sw|w|nw|here) \d+m/i)).toBeVisible();
   const lootChainWindow = page.getByLabel(/loot chain window/i);
   await expect(lootChainWindow.getByText(/loot chain x1/i)).toBeVisible();
   await expect(lootChainWindow.getByText(/next relic keeps streak/i)).toBeVisible();
