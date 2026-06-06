@@ -51,6 +51,7 @@ export function MatchScreen({ match }: MatchScreenProps) {
           }
         >
           <ArcadeHeistStage
+            hud={hud}
             state={state}
             runId={match.arcade.runId}
             onHudUpdate={match.arcade.updateHud}

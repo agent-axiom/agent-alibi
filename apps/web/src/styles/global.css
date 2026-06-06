@@ -1196,6 +1196,30 @@ p {
   color: #ffd56a;
 }
 
+.arcade-touch-actions button.cooling {
+  opacity: 0.64;
+  color: #9eb3c4;
+  border-color: rgba(158, 179, 196, 0.3);
+  background: rgba(7, 16, 28, 0.58);
+}
+
+.arcade-touch-actions button.ready {
+  border-color: rgba(57, 229, 192, 0.54);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.28), 0 0 18px rgba(57, 229, 192, 0.16), inset 0 0 22px rgba(57, 229, 192, 0.08);
+}
+
+.arcade-touch-actions button.route-available {
+  border-color: rgba(255, 213, 106, 0.55);
+  color: #ffd56a;
+}
+
+.arcade-touch-actions button.route-armed {
+  border-color: rgba(255, 79, 123, 0.68);
+  background: rgba(255, 79, 123, 0.16);
+  color: #fff4f7;
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.28), 0 0 22px rgba(255, 79, 123, 0.2);
+}
+
 .arcade-vignette {
   position: absolute;
   inset: 0;

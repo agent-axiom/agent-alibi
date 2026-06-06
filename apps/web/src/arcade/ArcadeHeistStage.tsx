@@ -2,9 +2,11 @@ import { useEffect, useRef, type PointerEvent } from "react";
 import Phaser from "phaser";
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Hand, Route, Zap } from "lucide-react";
 import { ArcadeHeistScene } from "./ArcadeHeistScene";
-import type { ArcadeMissionConfig } from "./arcade-types";
+import type { ArcadeHudState, ArcadeMissionConfig } from "./arcade-types";
 
-type ArcadeHeistStageProps = ArcadeMissionConfig;
+type ArcadeHeistStageProps = ArcadeMissionConfig & {
+  hud?: ArcadeHudState | null;
+};
 
 declare global {
   interface Window {
@@ -19,7 +21,7 @@ declare global {
   }
 }
 
-export function ArcadeHeistStage({ state, runId, onHudUpdate, onFinish }: ArcadeHeistStageProps) {
+export function ArcadeHeistStage({ state, runId, onHudUpdate, onFinish, hud }: ArcadeHeistStageProps) {
   const hostRef = useRef<HTMLDivElement | null>(null);
   const gameRef = useRef<Phaser.Game | null>(null);
   const sceneRef = useRef<ArcadeHeistScene | null>(null);
@@ -124,6 +126,13 @@ export function ArcadeHeistStage({ state, runId, onHudUpdate, onFinish }: Arcade
     hostRef.current?.focus({ preventScroll: true });
   };
 
+  const dashLabel = hud?.dashReady === false ? "Dash cooling" : "Dash ready";
+  const canInteract = Boolean(hud?.activeAction.key.toLowerCase().startsWith("e"));
+  const interactLabel = canInteract ? `Interact: ${hud?.activeAction.label ?? "action"}` : "Interact";
+  const routeArmed = Boolean(hud?.greedStatus?.toLowerCase().startsWith("greed route"));
+  const routeAvailable = Boolean(hud?.greedStatus && !routeArmed);
+  const routeLabel = routeArmed ? "Switch route: greed route armed" : routeAvailable ? "Switch route: greed route available" : "Switch route";
+
   return (
     <>
       <div className="arcade-stage" ref={hostRef} aria-label="Playable Moon Vault arcade scene" tabIndex={0} />
@@ -179,13 +188,19 @@ export function ArcadeHeistStage({ state, runId, onHudUpdate, onFinish }: Arcade
           </button>
         </div>
         <div className="arcade-touch-actions" aria-label="Action pad">
-          <button aria-label="Dash" onClick={tapDash} type="button">
+          <button aria-label={dashLabel} className={hud?.dashReady === false ? "cooling" : "ready"} onClick={tapDash} title={dashLabel} type="button">
             <Zap size={20} />
           </button>
-          <button aria-label="Interact" onClick={tapInteract} type="button">
+          <button aria-label={interactLabel} className={canInteract ? "ready" : ""} onClick={tapInteract} title={interactLabel} type="button">
             <Hand size={20} />
           </button>
-          <button aria-label="Switch route" onClick={tapRoute} type="button">
+          <button
+            aria-label={routeLabel}
+            className={routeArmed ? "route-armed" : routeAvailable ? "route-available" : ""}
+            onClick={tapRoute}
+            title={routeLabel}
+            type="button"
+          >
             <Route size={20} />
           </button>
         </div>
