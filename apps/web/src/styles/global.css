@@ -45,6 +45,30 @@ p {
 
 .final-shell {
   position: relative;
+  overflow: hidden;
+  place-items: start center;
+  color: #f8fdff;
+  background:
+    linear-gradient(180deg, rgba(5, 8, 17, 0.96), rgba(8, 15, 31, 0.98)),
+    repeating-linear-gradient(90deg, rgba(76, 244, 240, 0.08) 0 1px, transparent 1px 74px),
+    repeating-linear-gradient(0deg, rgba(255, 79, 123, 0.07) 0 1px, transparent 1px 58px),
+    #050811;
+}
+
+.final-shell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(115deg, rgba(255, 79, 123, 0.18), transparent 34%),
+    linear-gradient(250deg, transparent 46%, rgba(76, 244, 240, 0.14) 80%),
+    linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.22));
+}
+
+.final-shell > * {
+  position: relative;
+  z-index: 1;
 }
 
 .home-panel,
@@ -777,6 +801,92 @@ p {
 .final-rating strong,
 .final-rating small {
   color: inherit;
+}
+
+.final-shell .eyebrow {
+  color: #ffd56a;
+  text-shadow: 0 0 16px rgba(255, 213, 106, 0.36);
+}
+
+.final-shell .case-file {
+  color: #f8fdff;
+}
+
+.final-shell .case-file h1 {
+  color: #ffffff;
+  text-shadow: 0 0 26px rgba(76, 244, 240, 0.18), 0 10px 36px rgba(0, 0, 0, 0.48);
+}
+
+.final-shell .case-stamp {
+  border-color: rgba(76, 244, 240, 0.54);
+  background:
+    linear-gradient(135deg, rgba(10, 13, 28, 0.98), rgba(54, 18, 45, 0.9)),
+    repeating-linear-gradient(90deg, rgba(76, 244, 240, 0.1) 0 1px, transparent 1px 42px);
+  box-shadow: 0 12px 0 rgba(57, 229, 192, 0.22), 0 0 42px rgba(76, 244, 240, 0.16);
+}
+
+.final-shell .final-score {
+  border-color: rgba(76, 244, 240, 0.35);
+  background:
+    linear-gradient(180deg, rgba(13, 20, 38, 0.96), rgba(9, 13, 26, 0.98)),
+    linear-gradient(90deg, rgba(76, 244, 240, 0.09), transparent);
+  box-shadow: 0 8px 0 rgba(76, 244, 240, 0.12), 0 0 26px rgba(0, 0, 0, 0.28);
+}
+
+.final-shell .final-score span {
+  color: #ffd56a;
+}
+
+.final-shell .final-score strong {
+  color: #ffffff;
+}
+
+.final-shell .final-score small {
+  color: #bceff2;
+}
+
+.final-shell .final-margin,
+.final-shell .final-chain,
+.final-shell .final-alibi {
+  border-color: rgba(57, 229, 192, 0.72);
+}
+
+.final-shell .final-rating,
+.final-shell .final-relics,
+.final-shell .final-intercepts {
+  border-color: rgba(255, 213, 106, 0.76);
+}
+
+.final-shell .final-rival-relics,
+.final-shell .final-burn {
+  border-color: rgba(255, 79, 123, 0.74);
+}
+
+.final-shell .case-highlight,
+.final-shell .rematch-hook {
+  border-color: rgba(76, 244, 240, 0.4);
+  background:
+    linear-gradient(180deg, rgba(10, 14, 28, 0.98), rgba(8, 10, 20, 0.98)),
+    linear-gradient(90deg, rgba(255, 79, 123, 0.12), transparent);
+  box-shadow: 0 8px 0 rgba(57, 229, 192, 0.18), 0 0 28px rgba(76, 244, 240, 0.1);
+}
+
+.final-shell .rematch-hook {
+  border-left-color: #ffd56a;
+}
+
+.final-shell .case-file pre {
+  border-color: rgba(76, 244, 240, 0.42);
+  background: #070c18;
+  color: #d8fcff;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04), 0 18px 48px rgba(0, 0, 0, 0.32);
+}
+
+.final-shell .final-actions button {
+  background:
+    linear-gradient(180deg, rgba(19, 26, 45, 0.98), rgba(9, 13, 26, 0.98));
+  color: #f8fdff;
+  box-shadow: 0 9px 0 rgba(255, 79, 123, 0.72), 0 0 22px rgba(76, 244, 240, 0.12);
 }
 
 .slot-list {
