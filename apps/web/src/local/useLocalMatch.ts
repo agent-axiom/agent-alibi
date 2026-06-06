@@ -264,7 +264,7 @@ function makeInitialArcadeHud(state: GameState): ArcadeHudState {
     radarBlips: [],
     greedStatus: null,
     targetDistanceLabel: "Target plotting",
-    rivalStatus: "Rivals enter in 5s",
+    rivalStatus: "Rivals wake after first score or 10s",
     rivalDistanceLabel: "Nearest rival scanning",
     rivalPressureLevel: "standby",
     rivalScanStatus: {
@@ -298,6 +298,6 @@ function makeInitialArcadeHud(state: GameState): ArcadeHudState {
     rivalBark: null,
     scorePopup: null,
     spotlight: null,
-    feed: ["Moon Vault breach started.", "Rival agents enter in 5 seconds.", "Move fast. Steal clean. Escape before lockdown."]
+    feed: ["Moon Vault breach started.", "Rival agents wait for your first score.", "Move fast. Steal clean. Escape before lockdown."]
   };
 }

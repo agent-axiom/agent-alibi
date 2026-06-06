@@ -31,7 +31,8 @@ const PICKUP_RADIUS = 42;
 const EXIT_RADIUS = 74;
 const INTERCEPT_RADIUS = 64;
 const DASH_COOLDOWN_MS = 1150;
-const AI_GRACE_MS = 5_500;
+const AI_GRACE_MS = 10_500;
+const AI_WAKE_HOLD_MS = 4_000;
 const LOOT_CHAIN_WINDOW_MS = 12_000;
 
 const TEAM_COLORS: Record<TeamId, number> = {
@@ -164,6 +165,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private rivalBarkUntilMs = 0;
   private finished = false;
   private aiReleased = false;
+  private aiWakeHoldMs = 0;
+  private aiActionHoldMs = 0;
   private lastRivalPressureLevel: RivalPressure["level"] = "standby";
   private rivalScanState: RivalScanState = { chargeMs: 0, cooldownMs: 0 };
   private alibiPulseCooldownMs = 0;
@@ -329,6 +332,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
     const direction = this.player.x + distancePx < WORLD_WIDTH - 82 ? 1 : -1;
     this.moveAgent(rival, this.player.x + direction * distancePx - rival.x, this.player.y - rival.y);
     this.aiReleased = true;
+    this.aiWakeHoldMs = 0;
+    this.aiActionHoldMs = 10_000;
     this.updateRivalPressureFeed();
     this.updateThreatHalo();
     this.emitHudIfNeeded(true);
@@ -340,6 +345,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
     if (!rival || !artifact) return;
 
     this.aiReleased = true;
+    this.aiWakeHoldMs = 0;
+    this.aiActionHoldMs = 10_000;
     this.moveAgent(rival, artifact.x - rival.x, artifact.y - rival.y);
     this.stealArtifact(artifact, rival, rival.name);
     this.updateThreatHalo();
@@ -426,7 +433,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.lastLootChainAtMs = Number.NEGATIVE_INFINITY;
     this.aiLootValue = 0;
     this.lastHudAt = -1;
-    this.feed = ["Moon Vault breach started.", "Rival agents enter in 5 seconds.", "Move fast. Steal clean. Escape before lockdown."];
+    this.feed = ["Moon Vault breach started.", "Rival agents wait for your first score.", "Move fast. Steal clean. Escape before lockdown."];
     this.spotlight = null;
     this.spotlightUntilMs = 0;
     this.scorePopup = null;
@@ -437,6 +444,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.rivalBarkUntilMs = 0;
     this.finished = false;
     this.aiReleased = false;
+    this.aiWakeHoldMs = 0;
+    this.aiActionHoldMs = 0;
     this.lastRivalPressureLevel = "standby";
     this.rivalScanState = { chargeMs: 0, cooldownMs: 0 };
     this.alibiPulseCooldownMs = 0;
@@ -840,10 +849,23 @@ export class ArcadeHeistScene extends Phaser.Scene {
   }
 
   private updateAi(delta: number) {
-    if (this.elapsedMs < AI_GRACE_MS) return;
     if (!this.aiReleased) {
+      const firstScoreWokeRivals = this.artifactsStolen > 0;
+      if (!firstScoreWokeRivals && this.elapsedMs < AI_GRACE_MS) return;
       this.aiReleased = true;
+      this.aiWakeHoldMs = AI_WAKE_HOLD_MS;
       this.feedLine("Rival agents entered the vault.");
+      return;
+    }
+
+    if (this.aiWakeHoldMs > 0) {
+      this.aiWakeHoldMs = Math.max(0, this.aiWakeHoldMs - delta);
+      return;
+    }
+
+    if (this.aiActionHoldMs > 0) {
+      this.aiActionHoldMs = Math.max(0, this.aiActionHoldMs - delta);
+      return;
     }
 
     for (const agent of this.aiAgents) {
@@ -1378,10 +1400,14 @@ export class ArcadeHeistScene extends Phaser.Scene {
 
   private rivalPressure(scan = this.nearestRivalScan()): RivalPressure {
     return buildRivalPressure({
-      aiReleased: this.aiReleased,
+      aiReleased: this.rivalsAreActive(),
       nearestRivalName: scan?.name ?? null,
       distanceMeters: scan?.distanceMeters ?? null
     });
+  }
+
+  private rivalsAreActive(): boolean {
+    return this.aiReleased && this.aiWakeHoldMs <= 0;
   }
 
   private vaultCondition() {
@@ -1613,9 +1639,10 @@ export class ArcadeHeistScene extends Phaser.Scene {
   }
 
   private rivalStatus(): string {
-    if (this.aiReleased) return "Rivals active";
+    if (this.rivalsAreActive()) return "Rivals active";
+    if (this.aiReleased) return `Rivals waking in ${Math.max(1, Math.ceil(this.aiWakeHoldMs / 1000))}s`;
     const seconds = Math.max(1, Math.ceil(Math.max(0, AI_GRACE_MS - this.elapsedMs - 500) / 1000));
-    return `Rivals enter in ${seconds}s`;
+    return `Rivals wake after first score or ${seconds}s`;
   }
 
   private primaryTargetArtifact(): RuntimeArtifact | undefined {
