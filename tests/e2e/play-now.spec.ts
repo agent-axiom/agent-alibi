@@ -697,8 +697,8 @@ test("rival steals trigger a clear red loot alert", async ({ page }) => {
   await expect(rivalLootAlert.getByText(/stole/i)).toBeVisible();
   const rivalComms = page.getByLabel(/rival comms/i);
   await expect(rivalComms.getByText(/rook/i)).toBeVisible();
-  await expect(rivalComms.getByText(/moon pearl is mine/i)).toBeVisible();
-  await expect(rivalComms.getByText(/catch the carrier/i)).toBeVisible();
+  await expect(rivalComms.getByText(/moon pearl secured/i)).toBeVisible();
+  await expect(rivalComms.getByText(/mapped the exit/i)).toBeVisible();
   const missionBeat = page.getByLabel(/mission beat/i);
   await expect(missionBeat.getByText(/carrier run/i)).toBeVisible();
   await expect(missionBeat.getByText(/rook has moon pearl/i)).toBeVisible();
@@ -753,7 +753,8 @@ test("rival steals trigger a clear red loot alert", async ({ page }) => {
       })
     ])
   );
-  await expect(rivalComms.getByText(/that was almost elegant/i)).toBeVisible();
+  await expect(rivalComms.getByText(/good read/i)).toBeVisible();
+  await expect(rivalComms.getByText(/one narrow angle/i)).toBeVisible();
   const afterIntercept = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());
   expect(afterIntercept?.lootValue).toBeGreaterThan(0);
   expect(afterIntercept?.aiLootValue).toBe(0);
@@ -791,6 +792,9 @@ test("rival carriers only score after cashout", async ({ page }) => {
   await expect(page.getByLabel(/rival loot alert/i).getByText(/red cashed out \+3/i)).toBeVisible();
   await expect(page.getByLabel(/score popup/i).getByText(/red \+3 cashout/i)).toBeVisible();
   await expect(page.getByLabel(/score popup/i).getByText(/rook reached atrium lift/i)).toBeVisible();
+  const rivalComms = page.getByLabel(/rival comms/i);
+  await expect(rivalComms.getByText(/moon pearl \+3 banked/i)).toBeVisible();
+  await expect(rivalComms.getByText(/planning beats panic/i)).toBeVisible();
   const cashoutCallouts = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().arenaCallouts);
   expect(cashoutCallouts).toEqual(
     expect.arrayContaining([
