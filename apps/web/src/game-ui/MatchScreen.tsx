@@ -48,9 +48,10 @@ export function MatchScreen({ match, soundEnabled = false, onToggleSound }: Matc
     const SoundIcon = soundEnabled ? Volume2 : VolumeX;
     const breachAlert = hud?.rivalBark?.agentName === "Red Crew" && /breach live/i.test(hud.rivalBark.line);
     const routePulse = hud?.routePulse ?? null;
+    const scanLockActive = hud?.threatCue?.label === "Scan lock" && /jam/i.test(hud.threatCue.action);
     return (
       <main
-        className={`arcade-shell ${hud?.phase ?? "stealth"} ${hudDensity === "opening" ? "compact-opening" : ""} ${breachAlert ? "breach-alert" : ""} ${routePulse ? "route-pulse-active" : ""}`}
+        className={`arcade-shell ${hud?.phase ?? "stealth"} ${hudDensity === "opening" ? "compact-opening" : ""} ${breachAlert ? "breach-alert" : ""} ${routePulse ? "route-pulse-active" : ""} ${scanLockActive ? "scan-lock-active" : ""}`}
       >
         <Suspense
           fallback={
@@ -69,6 +70,13 @@ export function MatchScreen({ match, soundEnabled = false, onToggleSound }: Matc
         </Suspense>
         <div className="arcade-vignette" />
         {breachAlert ? <div className="arcade-breach-pulse" aria-label="Breach alert pulse" /> : null}
+        {scanLockActive ? (
+          <div className="arcade-scan-lock-pulse" aria-label="Scan lock pulse">
+            <span>Scan lock</span>
+            <strong>Press E / Space</strong>
+            <small>Jam scan before alarm burns</small>
+          </div>
+        ) : null}
         {routePulse ? (
           <div className={`arcade-route-pulse ${routePulse.mode}`} aria-label="Route pulse">
             <span>{routePulse.title}</span>

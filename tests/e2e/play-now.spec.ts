@@ -660,6 +660,30 @@ test("alibi pulse jams a close rival scan", async ({ page }) => {
   await expect(threatVector.getByText(/scan lock/i)).toBeVisible();
   await expect(threatVector.getByText(/scanner is charging your alarm/i)).toBeVisible();
   await expect(threatVector.getByText(/press e \/ space to jam/i)).toBeVisible();
+  await expect(page.locator(".arcade-shell")).toHaveClass(/scan-lock-active/);
+  const scanLockPulse = page.getByLabel(/scan lock pulse/i);
+  await expect(scanLockPulse.getByText(/scan lock/i)).toBeVisible();
+  await expect(scanLockPulse.getByText(/press e \/ space/i)).toBeVisible();
+  const scanLockPulseState = await page.evaluate(() => {
+    const pulse = document.querySelector(`[aria-label="Scan lock pulse"]`);
+    const objective = document.querySelector(`[aria-label="Current objective"]`);
+    const pulseRect = pulse?.getBoundingClientRect();
+    const objectiveRect = objective?.getBoundingClientRect();
+    const overlapsObjective = Boolean(
+      pulseRect &&
+        objectiveRect &&
+        pulseRect.left < objectiveRect.right &&
+        pulseRect.right > objectiveRect.left &&
+        pulseRect.top < objectiveRect.bottom &&
+        pulseRect.bottom > objectiveRect.top
+    );
+    return {
+      pointerEvents: pulse ? getComputedStyle(pulse).pointerEvents : null,
+      overlapsObjective,
+      present: Boolean(pulse)
+    };
+  });
+  expect(scanLockPulseState).toEqual({ pointerEvents: "none", overlapsObjective: false, present: true });
   await expect(page.getByLabel(/rival scan meter/i).getByText(/scan charg/i)).toBeVisible();
 
   const beforePulse = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());
