@@ -43,6 +43,7 @@ export type ActiveActionHintInput = {
   nearArtifactValue?: number | null;
   nearExit: boolean;
   canEscape: boolean;
+  cashoutValue?: number | null;
 };
 
 export type ActiveActionHint = {
@@ -152,7 +153,7 @@ export function buildActiveActionHint(input: ActiveActionHintInput): ActiveActio
   if (input.nearExit && input.canEscape) {
     return {
       key: "E / Space",
-      label: "Escape",
+      label: buildCashoutActionLabel(input.cashoutValue ?? null),
       tone: "success"
     };
   }
@@ -179,4 +180,8 @@ function buildStealActionLabel(artifactName: string, artifactValue: number | nul
 function buildRecoverActionLabel(relicName: string | null, relicValue: number | null): string {
   if (!relicName) return "Intercept carrier";
   return relicValue && relicValue > 0 ? `Recover ${relicName} +${relicValue}` : `Recover ${relicName}`;
+}
+
+function buildCashoutActionLabel(cashoutValue: number | null): string {
+  return cashoutValue && cashoutValue > 0 ? `Cashout +${cashoutValue}` : "Escape";
 }

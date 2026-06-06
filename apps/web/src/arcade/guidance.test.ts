@@ -136,6 +136,20 @@ describe("buildArcadeGuidance", () => {
     expect(hint.tone).toBe("success");
   });
 
+  it("shows the cashout value when escape is in reach", () => {
+    const hint = buildActiveActionHint({
+      alibiPulseReady: false,
+      nearArtifactName: null,
+      nearExit: true,
+      canEscape: true,
+      cashoutValue: 5
+    });
+
+    expect(hint.key).toBe("E / Space");
+    expect(hint.label).toBe("Cashout +5");
+    expect(hint.tone).toBe("success");
+  });
+
   it("prioritizes alibi pulse over other contextual actions", () => {
     const hint = buildActiveActionHint({
       alibiPulseReady: true,
