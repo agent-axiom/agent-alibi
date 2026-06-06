@@ -2166,6 +2166,44 @@ p {
   color: #fffaf2;
 }
 
+.arcade-extraction-cue {
+  width: fit-content;
+  max-width: 100%;
+  border: 1px solid rgba(126, 255, 223, 0.62);
+  border-radius: 6px;
+  padding: 7px 10px;
+  background: rgba(5, 29, 34, 0.68);
+  box-shadow: 0 0 26px rgba(76, 244, 240, 0.18);
+  color: #d8fff4;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.arcade-extraction-cue span,
+.arcade-extraction-cue strong,
+.arcade-extraction-cue small {
+  display: block;
+  overflow-wrap: anywhere;
+  font-size: 0.78rem;
+  font-weight: 950;
+}
+
+.arcade-extraction-cue strong {
+  margin-top: 4px;
+  color: #fffaf2;
+}
+
+.arcade-extraction-cue small {
+  margin-top: 4px;
+  color: #7effdf;
+}
+
+.arcade-extraction-cue.ready {
+  border-color: rgba(57, 229, 192, 0.86);
+  background: rgba(22, 62, 57, 0.78);
+  box-shadow: 0 0 30px rgba(57, 229, 192, 0.28);
+}
+
 .arcade-route-choice {
   width: fit-content;
   border: 1px solid rgba(255, 213, 106, 0.56);
@@ -2645,7 +2683,10 @@ p {
 
   .arcade-route-choice span,
   .arcade-route-choice strong,
-  .arcade-route-choice small {
+  .arcade-route-choice small,
+  .arcade-extraction-cue span,
+  .arcade-extraction-cue strong,
+  .arcade-extraction-cue small {
     font-size: 0.7rem;
   }
 
