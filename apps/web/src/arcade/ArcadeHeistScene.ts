@@ -1685,11 +1685,12 @@ export class ArcadeHeistScene extends Phaser.Scene {
     }
 
     if (this.phase() === "lockdown") {
+      const action = this.lootValue > 0 ? "Cashout before the doors close" : "Escape before the doors close";
       return {
         tone: "danger",
         label: "Vault sealing",
         detail: `${Math.max(1, Math.ceil(this.timeLeftMs() / 1000))}s before the Moon Vault closes`,
-        action: "Cashout before the doors close"
+        action
       };
     }
 

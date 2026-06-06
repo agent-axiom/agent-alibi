@@ -49,6 +49,7 @@ export function MatchScreen({ match, soundEnabled = false, onToggleSound }: Matc
     const routePulse = hud?.routePulse ?? null;
     const scanLockActive = hud?.threatCue?.label === "Scan lock" && /jam/i.test(hud.threatCue.action);
     const countdownPulseActive = hud?.phase === "lockdown";
+    const countdownPulseAction = (hud?.lootValue ?? 0) > 0 ? "Cashout now" : "Escape now";
     const visibleRivalBark = countdownPulseActive ? null : (hud?.rivalBark ?? null);
     const breachAlert = visibleRivalBark?.agentName === "Red Crew" && /breach live/i.test(visibleRivalBark.line);
     return (
@@ -82,7 +83,7 @@ export function MatchScreen({ match, soundEnabled = false, onToggleSound }: Matc
         {countdownPulseActive ? (
           <div className="arcade-countdown-pulse" aria-label="Final countdown pulse">
             <span>Final 30s</span>
-            <strong>Cashout now</strong>
+            <strong>{countdownPulseAction}</strong>
             <small>{formatClock(hud.timeLeftMs)} before the vault seals</small>
           </div>
         ) : null}
