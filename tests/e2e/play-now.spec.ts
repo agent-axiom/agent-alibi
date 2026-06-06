@@ -436,6 +436,11 @@ test("rival carriers only score after cashout", async ({ page }) => {
   await expect(missionBeat.getByText(/score pressure/i)).toBeVisible();
   await expect(missionBeat.getByText(/red leads by 3/i)).toBeVisible();
   await expect(missionBeat.getByText(/argent crown \+3 plus lift bonus can beat red/i)).toBeVisible();
+
+  await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget());
+  await expect(page.getByLabel(/active action/i).getByText(/steal/i)).toBeVisible();
+  await page.keyboard.press("KeyE");
+  await expect(missionBeat.getByText(/cashout beats red by 2/i)).toBeVisible();
 });
 
 test("rival carrier near cashout triggers an imminent warning", async ({ page }) => {

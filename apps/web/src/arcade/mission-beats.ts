@@ -33,7 +33,7 @@ export function buildMissionBeat(input: MissionBeatInput): ArcadeMissionBeat {
     return {
       tone: "success",
       kicker: input.routeMode === "greed" ? "Greed route" : "Loot secured",
-      title: input.routeMode === "greed" && input.routeChoiceRelic ? `Chain target: ${input.routeChoiceRelic}` : `Cashout worth ${cashoutValue}`,
+      title: input.routeMode === "greed" && input.routeChoiceRelic ? `Chain target: ${input.routeChoiceRelic}` : buildCashoutTitle(cashoutValue, input.rivalLootValue),
       detail: input.routeChoiceRelic
         ? `${input.routeChoiceRelic} can extend the chain, but the lift is paying now.`
         : "Escape before lockdown seals the vault.",
@@ -80,4 +80,13 @@ function buildComebackDetail(targetName: string, targetArtifactValue: number | n
   }
 
   return `${targetName} can swing the race. Steal it, then cash out.`;
+}
+
+function buildCashoutTitle(cashoutValue: number, rivalLootValue: number): string {
+  if (rivalLootValue <= 0) return `Cashout worth ${cashoutValue}`;
+
+  const lead = cashoutValue - rivalLootValue;
+  if (lead > 0) return `Cashout beats Red by ${lead}`;
+  if (lead === 0) return "Cashout ties Red";
+  return `Cashout trails Red by ${Math.abs(lead)}`;
 }
