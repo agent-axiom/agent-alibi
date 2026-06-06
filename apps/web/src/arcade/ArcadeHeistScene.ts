@@ -4,6 +4,7 @@ import { ALIBI_PULSE_COOLDOWN_MS, buildAlibiPulseStatus, canUseAlibiPulse } from
 import { rateArcadeRun } from "./arcade-rules";
 import {
   ARCADE_MISSION_DURATION_MS,
+  type ArcadeExtractionCue,
   type ArcadeHudPhase,
   type ArcadeHudState,
   type ArcadeMissionConfig,
@@ -1063,6 +1064,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       rivalIntercept,
       vaultCondition: this.vaultCondition(),
       escapePayout,
+      extractionCue: this.extractionCue(escapePayout),
       radarBlips: this.buildRadarBlips(objectiveTarget),
       greedStatus,
       targetDistanceLabel:
@@ -1191,6 +1193,17 @@ export class ArcadeHeistScene extends Phaser.Scene {
     return {
       escapeBonus,
       cashout: this.lootValue + escapeBonus
+    };
+  }
+
+  private extractionCue(escapePayout: { cashout: number } | null): ArcadeExtractionCue | null {
+    if (!escapePayout) return null;
+    const ready = this.isNearExit();
+    return {
+      tone: ready ? "ready" : "armed",
+      label: ready ? "Extract now" : "Extraction armed",
+      detail: `Atrium Lift · Cashout ${escapePayout.cashout}`,
+      action: ready ? "Press E / Space" : "Follow the cyan ring"
     };
   }
 

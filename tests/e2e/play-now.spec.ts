@@ -93,6 +93,11 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   const escapePayout = page.getByLabel(/escape payout/i);
   await expect(escapePayout.getByText(/escape bonus \+2/i)).toBeVisible();
   await expect(escapePayout.getByText(/cashout 5/i)).toBeVisible();
+  const extractionCue = page.getByLabel(/extraction cue/i);
+  await expect(extractionCue.getByText(/extraction armed/i)).toBeVisible();
+  await expect(extractionCue.getByText(/atrium lift/i)).toBeVisible();
+  await expect(extractionCue.getByText(/cashout 5/i)).toBeVisible();
+  await expect(extractionCue.getByText(/follow the cyan ring/i)).toBeVisible();
   const routeChoice = page.getByLabel(/route choice/i);
   await expect(routeChoice.getByText(/cashout now 5/i)).toBeVisible();
   await expect(routeChoice.getByText(/greed route/i)).toBeVisible();
@@ -129,6 +134,8 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget());
   await expect(page.getByText(/press e \/ space to escape/i)).toBeVisible();
   await expect(page.getByLabel(/active action/i).getByText(/escape/i)).toBeVisible();
+  await expect(extractionCue.getByText(/extract now/i)).toBeVisible();
+  await expect(extractionCue.getByText(/press e \/ space/i)).toBeVisible();
   await page.keyboard.press("KeyE");
   await expect(scorePopup.getByText(/\+2 escape bonus/i)).toBeVisible();
 

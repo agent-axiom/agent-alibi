@@ -26,6 +26,13 @@ export type ArcadeEscapePayout = {
   cashout: number;
 };
 
+export type ArcadeExtractionCue = {
+  tone: "armed" | "ready";
+  label: string;
+  detail: string;
+  action: string;
+};
+
 export type ArcadeCleanBonusWindow = {
   label: string;
   detail: string;
@@ -98,6 +105,7 @@ export type ArcadeHudState = {
   rivalIntercept: ArcadeRivalIntercept | null;
   vaultCondition: ArcadeVaultCondition;
   escapePayout: ArcadeEscapePayout | null;
+  extractionCue: ArcadeExtractionCue | null;
   radarBlips: ArcadeRadarBlip[];
   greedStatus: string | null;
   targetDistanceLabel: string | null;

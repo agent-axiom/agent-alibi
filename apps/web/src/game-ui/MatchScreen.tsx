@@ -219,6 +219,13 @@ export function MatchScreen({ match }: MatchScreenProps) {
                 <strong>Cashout {hud.escapePayout.cashout}</strong>
               </div>
             ) : null}
+            {hud?.extractionCue ? (
+              <div className={`arcade-extraction-cue ${hud.extractionCue.tone}`} aria-label="Extraction cue">
+                <span>{hud.extractionCue.label}</span>
+                <strong>{hud.extractionCue.detail}</strong>
+                <small>{hud.extractionCue.action}</small>
+              </div>
+            ) : null}
             {hud?.escapePayout && routeChoiceRelic ? (
               <div className={`arcade-route-choice ${routeChoiceMode}`} aria-label="Route choice">
                 <span>{routeChoiceMode === "greed" ? "Greed route armed" : `Cashout now ${hud.escapePayout.cashout}`}</span>
