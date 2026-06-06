@@ -135,7 +135,12 @@ export function ArcadeHeistStage({ state, runId, onHudUpdate, onFinish, hud }: A
   const interactLabel = canInteract ? `Interact: ${hud?.activeAction.label ?? "action"}` : "Interact";
   const routeArmed = Boolean(hud?.greedStatus?.toLowerCase().startsWith("greed route"));
   const routeAvailable = Boolean(hud?.greedStatus && !routeArmed);
-  const routeLabel = routeArmed ? "Switch route: greed route armed" : routeAvailable ? "Switch route: greed route available" : "Switch route";
+  const cashoutRouteLabel = hud?.escapePayout ? `cashout +${hud.escapePayout.cashout}` : "cashout";
+  const routeLabel = routeArmed
+    ? `Switch route: greed route armed / ${cashoutRouteLabel}`
+    : routeAvailable
+      ? `Switch route: ${cashoutRouteLabel} or greed route available`
+      : "Switch route";
 
   return (
     <>
