@@ -43,6 +43,20 @@ export function FinalCaseFile({ summary, onRematch, onHome }: FinalCaseFileProps
               <small>{summary.greedRoute === "successful" ? "Greed route successful" : "Main route only"}</small>
             </div>
           ) : null}
+          {summary.alibiPulsesUsed && summary.alibiPulsesUsed > 0 ? (
+            <div className="final-score final-alibi">
+              <span>Alibi Pulses</span>
+              <strong>x{summary.alibiPulsesUsed}</strong>
+              <small>Scanner jams</small>
+            </div>
+          ) : null}
+          {summary.scanBurns && summary.scanBurns > 0 ? (
+            <div className="final-score final-burn">
+              <span>Scan Burns</span>
+              <strong>x{summary.scanBurns}</strong>
+              <small>Alarm spikes</small>
+            </div>
+          ) : null}
           <div className="final-score">
             <span>Blue Crew</span>
             <strong>{blueScore?.total ?? 0}</strong>

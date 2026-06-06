@@ -128,4 +128,10 @@ test("alibi pulse jams a close rival scan", async ({ page }) => {
 
   const afterCooldownContact = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());
   expect(afterCooldownContact?.alarmRaw).toBeLessThan((beforePulse?.alarmRaw ?? 0) + 0.4);
+
+  await page.evaluate(() => window.__AGENT_ALIBI_FINISH_ARCADE__?.());
+  const finalScores = page.getByLabel(/final scores/i);
+  await expect(finalScores.getByText(/alibi pulses/i)).toBeVisible();
+  await expect(finalScores.getByText(/x1/i)).toBeVisible();
+  await expect(page.getByText(/alibi pulses: 1/i)).toBeVisible();
 });

@@ -636,6 +636,18 @@ p {
   box-shadow: 0 8px 0 rgba(57, 229, 192, 0.34);
 }
 
+.final-alibi {
+  border-color: #4cf4f0;
+  background: #e8feff;
+  box-shadow: 0 8px 0 rgba(76, 244, 240, 0.32);
+}
+
+.final-burn {
+  border-color: #ff4f7b;
+  background: #fff0f4;
+  box-shadow: 0 8px 0 rgba(255, 79, 123, 0.3);
+}
+
 .final-rating span,
 .final-rating strong,
 .final-rating small {

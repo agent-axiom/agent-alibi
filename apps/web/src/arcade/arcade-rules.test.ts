@@ -68,4 +68,23 @@ describe("buildArcadeMatchSummary", () => {
     expect(summary.caseFile).toContain("Loot Chain: x2");
     expect(summary.caseFile).toContain("Greed Route: successful");
   });
+
+  it("records alibi pulse saves and scan burns in the shareable case file", () => {
+    const summary = buildArcadeMatchSummary({
+      outcome: "escaped",
+      playerName: "Agent You",
+      lootValue: 3,
+      artifactsStolen: 1,
+      aiLootValue: 0,
+      alarm: 3,
+      elapsedMs: 58_000,
+      alibiPulsesUsed: 2,
+      scanBurns: 1
+    });
+
+    expect(summary.alibiPulsesUsed).toBe(2);
+    expect(summary.scanBurns).toBe(1);
+    expect(summary.caseFile).toContain("Alibi Pulses: 2");
+    expect(summary.caseFile).toContain("Scan Burns: 1");
+  });
 });

@@ -105,5 +105,7 @@ export type MatchSummary = {
   styleBonus?: number;
   lootChain?: number;
   greedRoute?: "successful" | "skipped";
+  alibiPulsesUsed?: number;
+  scanBurns?: number;
   caseFile: string;
 };

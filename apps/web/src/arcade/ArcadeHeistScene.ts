@@ -109,6 +109,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private lastRivalPressureLevel: RivalPressure["level"] = "standby";
   private rivalScanState: RivalScanState = { chargeMs: 0, cooldownMs: 0 };
   private alibiPulseCooldownMs = 0;
+  private alibiPulsesUsed = 0;
+  private scanBurns = 0;
   private playerName = "Agent You";
   private routeMode: RouteMode = "escape";
   private escapeZone?: Phaser.GameObjects.Container;
@@ -265,6 +267,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.lastRivalPressureLevel = "standby";
     this.rivalScanState = { chargeMs: 0, cooldownMs: 0 };
     this.alibiPulseCooldownMs = 0;
+    this.alibiPulsesUsed = 0;
+    this.scanBurns = 0;
     this.routeMode = "escape";
     this.targetMarker = undefined;
     this.targetBeam = undefined;
@@ -655,6 +659,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     if (!rival) return false;
 
     this.alibiPulseCooldownMs = ALIBI_PULSE_COOLDOWN_MS;
+    this.alibiPulsesUsed += 1;
     this.rivalScanState = { chargeMs: 0, cooldownMs: 900 };
     this.shoveRivalAway(rival);
     this.addAlibiPulseVisual();
@@ -834,6 +839,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     const result = advanceRivalScan(this.rivalScanState, pressure.level, delta);
     this.rivalScanState = result.state;
     if (result.alarmDelta <= 0) return;
+    this.scanBurns += 1;
     this.alarm = Math.min(5, this.alarm + result.alarmDelta);
     if (result.spotlight) this.flashSpotlight(result.spotlight);
     if (result.radioLine) this.feedLine(result.radioLine);
@@ -1017,7 +1023,9 @@ export class ArcadeHeistScene extends Phaser.Scene {
       artifactsStolen: this.artifactsStolen,
       aiLootValue: this.aiLootValue,
       alarm: Math.ceil(this.alarm),
-      elapsedMs: this.elapsedMs
+      elapsedMs: this.elapsedMs,
+      alibiPulsesUsed: this.alibiPulsesUsed,
+      scanBurns: this.scanBurns
     });
   }
 
