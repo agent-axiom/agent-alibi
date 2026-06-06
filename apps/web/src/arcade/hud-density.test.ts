@@ -15,6 +15,13 @@ function hud(overrides: Partial<ArcadeHudState> = {}): ArcadeHudState {
     dashReady: true,
     objective: "Steal the Moon Pearl",
     prompt: "Follow the gold marker",
+    objectiveCompass: {
+      tone: "focus",
+      verb: "STEAL",
+      target: "Moon Pearl +3",
+      route: "NE 71m",
+      detail: "Follow gold beam"
+    },
     activeAction: {
       key: "Move",
       label: "Follow marker",

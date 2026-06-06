@@ -29,7 +29,7 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(missionBeat.getByText(/steal moon pearl/i)).toBeVisible();
   await expect(missionBeat.getByText(/move with wasd \/ arrows/i)).toBeVisible();
   await expect(currentObjective.getByText(/steal the moon pearl \+3/i)).toBeVisible();
-  await expect(page.getByText(/1 steal/i)).toBeVisible();
+  await expect(page.getByLabel(/mission loop/i)).toBeHidden();
   await expect(page.getByText(/target (?:n|ne|e|se|s|sw|w|nw|here) \d+m/i)).toBeVisible();
   await expect(page.getByText(/rivals wake after first score or \d+s/i)).toBeVisible();
   await expect(page.getByLabel(/live agents/i)).toBeHidden();
@@ -41,6 +41,11 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(page.getByText(/dash ready/i)).toBeHidden();
   await expect(page.getByLabel(/active action/i).getByText(/move/i)).toBeVisible();
   await expect(page.getByLabel(/active action/i).getByText(/follow marker/i)).toBeVisible();
+  const objectiveCompass = page.getByLabel(/objective compass/i);
+  await expect(objectiveCompass.getByText(/steal/i)).toBeVisible();
+  await expect(objectiveCompass.getByText(/moon pearl \+3/i)).toBeVisible();
+  await expect(objectiveCompass.getByText(/(?:n|ne|e|se|s|sw|w|nw) \d+m/i)).toBeVisible();
+  await expect(objectiveCompass.getByText(/follow gold beam/i)).toBeVisible();
   const heistRace = page.getByLabel(/heist race/i);
   await expect(heistRace.getByText(/blue 0/i)).toBeVisible();
   await expect(heistRace.getByText(/red 0/i)).toBeVisible();
@@ -74,6 +79,9 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await page.keyboard.press("KeyE");
   await expect(objectiveBanner.getByText(/escape with 3 loot/i)).toBeVisible();
   await expect(objectiveBanner.getByText(/cashout 5 or risk greed route/i)).toBeVisible();
+  await expect(objectiveCompass.getByText(/cashout/i)).toBeVisible();
+  await expect(objectiveCompass.getByText(/\+5 at atrium lift/i)).toBeVisible();
+  await expect(objectiveCompass.getByText(/follow cyan ring/i)).toBeVisible();
   const scorePopup = page.getByLabel(/score popup/i);
   await expect(scorePopup.getByText(/\+3 moon pearl/i)).toBeVisible();
   await expect(page.locator(".arcade-shell")).not.toHaveClass(/compact-opening/);

@@ -4,6 +4,7 @@ import { chooseFallbackDecision } from "@agent-alibi/ai";
 import { buildMatchSummary, createInitialGameState, generateLegalActions, resolveRound } from "@agent-alibi/game";
 import { buildArcadeMatchSummary, type ArcadeMissionResult } from "../arcade/arcade-rules";
 import { ARCADE_MISSION_DURATION_MS, type ArcadeController, type ArcadeHudState } from "../arcade/arcade-types";
+import { buildObjectiveCompass } from "../arcade/guidance";
 import { buildMissionBeat } from "../arcade/mission-beats";
 import { buildActionCards, type ActionCard } from "../game-ui/action-cards";
 
@@ -244,6 +245,14 @@ function makeInitialArcadeHud(state: GameState): ArcadeHudState {
     dashReady: true,
     objective: "Steal the Moon Pearl",
     prompt: "Follow the gold marker",
+    objectiveCompass: buildObjectiveCompass({
+      kind: "artifact",
+      targetLabel: "Moon Pearl +3",
+      directionLabel: null,
+      distanceMeters: null,
+      cashoutValue: null,
+      timeLeftMs: ARCADE_MISSION_DURATION_MS
+    }),
     activeAction: {
       key: "Move",
       label: "Follow marker",

@@ -1692,6 +1692,7 @@ p {
 }
 
 .arcade-shell.breach-alert .arcade-objective {
+  max-height: 360px;
   border-color: rgba(76, 244, 240, 0.42);
   box-shadow: 0 20px 54px rgba(0, 0, 0, 0.34), 0 0 30px rgba(76, 244, 240, 0.14);
 }
@@ -1704,12 +1705,23 @@ p {
   display: none;
 }
 
+.arcade-shell.breach-alert .arcade-mission-beat p {
+  display: none;
+}
+
 .arcade-shell.breach-alert .arcade-steps {
   display: none;
 }
 
 .arcade-shell.breach-alert .arcade-objective > small {
   display: none;
+}
+
+@media (min-width: 900px) {
+  .arcade-shell.breach-alert .arcade-rival-bark {
+    top: 238px;
+    right: 380px;
+  }
 }
 
 @keyframes arcade-breach-pulse-hit {
@@ -2049,7 +2061,7 @@ p {
 
 .arcade-shell.compact-opening .arcade-objective {
   width: min(760px, calc(100vw - 380px));
-  max-height: 236px;
+  max-height: 252px;
   border-color: rgba(255, 213, 106, 0.34);
   background: rgba(7, 16, 28, 0.78);
   box-shadow: 0 20px 54px rgba(0, 0, 0, 0.34), 0 0 26px rgba(255, 213, 106, 0.12);
@@ -2060,6 +2072,11 @@ p {
 }
 
 .arcade-shell.compact-opening .arcade-mission-meta > :not(.arcade-race):not(.arcade-route):not(.arcade-rivals) {
+  display: none;
+}
+
+.arcade-shell.compact-opening .arcade-steps,
+.arcade-shell.compact-opening .arcade-objective > small {
   display: none;
 }
 
@@ -2450,6 +2467,94 @@ p {
   border-color: rgba(255, 79, 123, 0.72);
   background: rgba(255, 79, 123, 0.18);
   color: #fff2f5;
+}
+
+.arcade-objective-compass {
+  grid-column: 1 / -1;
+  min-height: 40px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto minmax(128px, 0.8fr);
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(255, 213, 106, 0.48);
+  border-radius: 8px;
+  padding: 7px 9px;
+  background:
+    linear-gradient(90deg, rgba(255, 213, 106, 0.16), rgba(76, 244, 240, 0.08)),
+    rgba(5, 8, 17, 0.58);
+  box-shadow: inset 0 0 26px rgba(255, 213, 106, 0.08), 0 0 24px rgba(255, 213, 106, 0.12);
+  color: #fff7d6;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.arcade-objective-compass span {
+  border-radius: 6px;
+  padding: 6px 8px;
+  background: rgba(255, 213, 106, 0.2);
+  color: #ffd56a;
+  font-size: 0.72rem;
+  font-weight: 950;
+}
+
+.arcade-objective-compass strong,
+.arcade-objective-compass i,
+.arcade-objective-compass small {
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 950;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.arcade-objective-compass strong {
+  color: #fffaf2;
+  font-size: 0.82rem;
+}
+
+.arcade-objective-compass i {
+  font-size: 0.78rem;
+  font-style: normal;
+  color: #d8fcff;
+}
+
+.arcade-objective-compass small {
+  color: #ffd56a;
+  font-size: 0.72rem;
+}
+
+.arcade-objective-compass.success {
+  border-color: rgba(126, 255, 223, 0.58);
+  background:
+    linear-gradient(90deg, rgba(126, 255, 223, 0.18), rgba(255, 213, 106, 0.08)),
+    rgba(5, 29, 34, 0.62);
+  box-shadow: inset 0 0 26px rgba(126, 255, 223, 0.1), 0 0 24px rgba(76, 244, 240, 0.14);
+}
+
+.arcade-objective-compass.success span,
+.arcade-objective-compass.success small {
+  color: #7effdf;
+}
+
+.arcade-objective-compass.success span {
+  background: rgba(126, 255, 223, 0.18);
+}
+
+.arcade-objective-compass.danger {
+  border-color: rgba(255, 79, 123, 0.72);
+  background:
+    linear-gradient(90deg, rgba(255, 79, 123, 0.2), rgba(255, 213, 106, 0.1)),
+    rgba(30, 6, 18, 0.68);
+  box-shadow: inset 0 0 26px rgba(255, 79, 123, 0.12), 0 0 28px rgba(255, 79, 123, 0.2);
+}
+
+.arcade-objective-compass.danger span,
+.arcade-objective-compass.danger small {
+  color: #ffb6c8;
+}
+
+.arcade-objective-compass.danger span {
+  background: rgba(255, 79, 123, 0.2);
 }
 
 .arcade-steps {
@@ -3482,6 +3587,16 @@ p {
 
   .arcade-objective small {
     font-size: 0.78rem;
+  }
+
+  .arcade-objective-compass {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 6px;
+  }
+
+  .arcade-objective-compass i,
+  .arcade-objective-compass small {
+    font-size: 0.68rem;
   }
 
   .arcade-steps {
