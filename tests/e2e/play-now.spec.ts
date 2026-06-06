@@ -370,6 +370,9 @@ test("rival steals trigger a clear red loot alert", async ({ page }) => {
   await expect(rivalIntercept.getByText(/rook carrying/i)).toBeVisible();
   await expect(rivalIntercept.getByText(/moon pearl \+3/i)).toBeVisible();
   await expect(rivalIntercept.getByText(/\d+m away/i)).toBeVisible();
+  await expect(rivalIntercept.getByText(/cashout in \d+s/i)).toBeVisible();
+  const carrierRun = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().rivalIntercept);
+  expect(carrierRun?.cashoutSeconds).toBeGreaterThan(0);
   const miniRadar = page.getByLabel(/mini radar/i);
   await expect(miniRadar.getByText(/carrier: rook carrying moon pearl/i)).toBeVisible();
   await expect(page.getByLabel(/radar carrier: rook carrying moon pearl/i)).toBeVisible();
