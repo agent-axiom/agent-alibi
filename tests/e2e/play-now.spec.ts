@@ -65,6 +65,8 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await page.keyboard.press("KeyE");
   await expect(page.getByText(/escape with/i)).toBeVisible();
   await expect(page.getByText(/moon pearl secured/i)).toBeVisible();
+  const scorePopup = page.getByLabel(/score popup/i);
+  await expect(scorePopup.getByText(/\+3 moon pearl/i)).toBeVisible();
   await expect(missionBeat.getByText(/loot secured/i)).toBeVisible();
   await expect(missionBeat.getByText(/cashout worth 5/i)).toBeVisible();
   await expect(missionBeat.getByText(/reach atrium lift or press g/i)).toBeVisible();
@@ -112,6 +114,7 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(page.getByText(/press e \/ space to escape/i)).toBeVisible();
   await expect(page.getByLabel(/active action/i).getByText(/escape/i)).toBeVisible();
   await page.keyboard.press("KeyE");
+  await expect(scorePopup.getByText(/\+2 escape bonus/i)).toBeVisible();
 
   await expect(page.getByText(/agent alibi case file/i)).toBeVisible();
   const finalScores = page.getByLabel(/final scores/i);
@@ -300,6 +303,7 @@ test("rival steals trigger a clear red loot alert", async ({ page }) => {
   await expect(page.getByLabel(/active action/i).getByText(/intercept carrier/i)).toBeVisible();
   await page.keyboard.press("KeyE");
   await expect(page.getByText("Intercepted Rook", { exact: true })).toBeVisible();
+  await expect(page.getByLabel(/score popup/i).getByText(/recovered \+3/i)).toBeVisible();
   const afterIntercept = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());
   expect(afterIntercept?.lootValue).toBeGreaterThan(0);
   expect(afterIntercept?.aiLootValue).toBe(0);

@@ -110,6 +110,13 @@ export function MatchScreen({ match }: MatchScreenProps) {
           </div>
         ) : null}
 
+        {hud?.scorePopup ? (
+          <div className={`arcade-score-popup ${hud.scorePopup.tone}`} aria-label="Score popup" aria-live="polite">
+            <strong>{hud.scorePopup.label}</strong>
+            <span>{hud.scorePopup.detail}</span>
+          </div>
+        ) : null}
+
         <aside className="arcade-roster" aria-label="Live agents">
           {state.players.map((player) => (
             <button
