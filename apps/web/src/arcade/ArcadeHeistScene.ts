@@ -1226,6 +1226,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     const rivalPressure = this.rivalPressure(nearestRival);
     const rivalCarrier = this.nearRivalCarrier();
     const rivalCarrierRelic = rivalCarrier?.carriedRelics.at(-1) ?? null;
+    const escapePayout = this.escapePayout(canEscape);
     const guidance = buildArcadeGuidance({
       lootValue: this.lootValue,
       aiLootValue: this.aiLootValue,
@@ -1235,12 +1236,12 @@ export class ArcadeHeistScene extends Phaser.Scene {
       nearArtifactName: nearArtifact?.name ?? null,
       nearExit: this.isNearExit(),
       canEscape,
+      cashoutValue: escapePayout?.cashout ?? null,
       timeLeftMs: this.timeLeftMs()
     });
     const greedPromptActive = this.routeMode === "greed" && Boolean(targetArtifact);
     const alibiPulseReady = !rivalCarrier && canUseAlibiPulse(rivalPressure.level, this.alibiPulseCooldownMs);
     const prompt = rivalCarrier ? "Press E / Space to intercept" : alibiPulseReady ? "Press E / Space to jam rival scan" : greedPromptActive && nearArtifact ? "Press E / Space to steal" : guidance.prompt;
-    const escapePayout = this.escapePayout(canEscape);
     const greedStatus = this.greedStatus(guidance.greedStatus);
     const rivalIntercept = this.rivalIntercept();
     const routeChoiceRelic = greedStatus
