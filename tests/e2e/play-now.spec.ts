@@ -738,6 +738,36 @@ test("no-loot lockdown escape final case avoids cashout wording", async ({ page 
   await expect(page.getByLabel(/rematch hook/i)).not.toContainText(/cashout/i);
   await expect(page.getByLabel(/share case stamp/i)).not.toContainText(/cashed out/i);
   await expect(page.locator(".case-file")).not.toContainText(/silent moon run/i);
+  const finalSkin = await page.evaluate(() => {
+    const parseRgb = (value: string) => {
+      const [r = 255, g = 255, b = 255] = value.match(/\d+(?:\.\d+)?/g)?.slice(0, 3).map(Number) ?? [];
+      return { r, g, b, luminance: 0.2126 * r + 0.7152 * g + 0.0722 * b };
+    };
+    const styleFor = (selector: string) => {
+      const element = document.querySelector(selector);
+      if (!element) return null;
+      const style = getComputedStyle(element);
+      return {
+        background: parseRgb(style.backgroundColor),
+        color: parseRgb(style.color),
+        backgroundImage: style.backgroundImage,
+        borderColor: style.borderColor,
+        boxShadow: style.boxShadow
+      };
+    };
+
+    return {
+      shell: styleFor(".final-shell"),
+      score: styleFor(".final-score"),
+      pre: styleFor(".case-file pre"),
+      action: styleFor(".final-actions button")
+    };
+  });
+  expect(finalSkin.shell?.background.luminance).toBeLessThan(46);
+  expect(finalSkin.shell?.backgroundImage).toMatch(/radial-gradient|linear-gradient/i);
+  expect(finalSkin.score?.background.luminance).toBeLessThan(72);
+  expect(finalSkin.pre?.background.luminance).toBeLessThan(58);
+  expect(finalSkin.action?.boxShadow).not.toBe("none");
 });
 
 test("alibi pulse jams a close rival scan", async ({ page }) => {
