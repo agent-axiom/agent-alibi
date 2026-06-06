@@ -1116,6 +1116,86 @@ p {
   outline: none;
 }
 
+.arcade-touch-controls {
+  position: absolute;
+  inset: auto 18px 24px 18px;
+  z-index: 3;
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 18px;
+  pointer-events: none;
+}
+
+.arcade-touch-dpad,
+.arcade-touch-actions {
+  pointer-events: auto;
+}
+
+.arcade-touch-dpad {
+  display: grid;
+  grid-template-columns: repeat(3, 52px);
+  grid-template-rows: repeat(3, 52px);
+  gap: 8px;
+}
+
+.arcade-touch-dpad button,
+.arcade-touch-actions button {
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(216, 252, 255, 0.36);
+  border-radius: 8px;
+  background: rgba(7, 16, 28, 0.72);
+  color: #f4fbff;
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.28), inset 0 0 22px rgba(76, 244, 240, 0.08);
+  backdrop-filter: blur(12px);
+  touch-action: none;
+  user-select: none;
+}
+
+.arcade-touch-dpad button:active,
+.arcade-touch-actions button:active {
+  border-color: rgba(255, 213, 106, 0.72);
+  background: rgba(255, 213, 106, 0.18);
+  color: #ffd56a;
+  transform: translateY(1px);
+}
+
+.arcade-touch-dpad .up {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.arcade-touch-dpad .left {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.arcade-touch-dpad .right {
+  grid-column: 3;
+  grid-row: 2;
+}
+
+.arcade-touch-dpad .down {
+  grid-column: 2;
+  grid-row: 3;
+}
+
+.arcade-touch-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.arcade-touch-actions button:nth-child(2) {
+  width: 64px;
+  height: 64px;
+  border-color: rgba(255, 213, 106, 0.62);
+  background: rgba(255, 213, 106, 0.14);
+  color: #ffd56a;
+}
+
 .arcade-vignette {
   position: absolute;
   inset: 0;
@@ -2264,7 +2344,34 @@ p {
   .arcade-objective {
     bottom: 10px;
     width: calc(100vw - 20px);
+    max-height: min(360px, 38svh);
+    overflow-y: auto;
     padding: 12px;
+  }
+
+  .arcade-touch-controls {
+    inset: auto 10px calc(38svh + 26px) 10px;
+  }
+
+  .arcade-touch-dpad {
+    grid-template-columns: repeat(3, 46px);
+    grid-template-rows: repeat(3, 46px);
+    gap: 6px;
+  }
+
+  .arcade-touch-dpad button,
+  .arcade-touch-actions button {
+    width: 46px;
+    height: 46px;
+  }
+
+  .arcade-touch-actions {
+    flex-direction: column;
+  }
+
+  .arcade-touch-actions button:nth-child(2) {
+    width: 54px;
+    height: 54px;
   }
 
   .arcade-objective small {

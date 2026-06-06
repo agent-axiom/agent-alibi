@@ -1,5 +1,6 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type PointerEvent } from "react";
 import Phaser from "phaser";
+import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Hand, Route, Zap } from "lucide-react";
 import { ArcadeHeistScene } from "./ArcadeHeistScene";
 import type { ArcadeMissionConfig } from "./arcade-types";
 
@@ -92,5 +93,103 @@ export function ArcadeHeistStage({ state, runId, onHudUpdate, onFinish }: Arcade
     hostRef.current?.focus({ preventScroll: true });
   }, [runId, state]);
 
-  return <div className="arcade-stage" ref={hostRef} aria-label="Playable Moon Vault arcade scene" tabIndex={0} />;
+  const pressDirection = (direction: "up" | "down" | "left" | "right") => (event: PointerEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    sceneRef.current?.setVirtualDirection(direction, true);
+    hostRef.current?.focus({ preventScroll: true });
+  };
+
+  const releaseDirection = (direction: "up" | "down" | "left" | "right") => (event: PointerEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    sceneRef.current?.setVirtualDirection(direction, false);
+    hostRef.current?.focus({ preventScroll: true });
+  };
+
+  const tapDash = () => {
+    sceneRef.current?.tapVirtualDash();
+    hostRef.current?.focus({ preventScroll: true });
+  };
+
+  const tapInteract = () => {
+    sceneRef.current?.tapVirtualInteract();
+    hostRef.current?.focus({ preventScroll: true });
+  };
+
+  const tapRoute = () => {
+    sceneRef.current?.tapVirtualRoute();
+    hostRef.current?.focus({ preventScroll: true });
+  };
+
+  return (
+    <>
+      <div className="arcade-stage" ref={hostRef} aria-label="Playable Moon Vault arcade scene" tabIndex={0} />
+      <div className="arcade-touch-controls" aria-label="Arcade touch controls">
+        <div className="arcade-touch-dpad" aria-label="Movement pad">
+          <button
+            aria-label="Move up"
+            className="up"
+            onContextMenu={(event) => event.preventDefault()}
+            onPointerCancel={releaseDirection("up")}
+            onPointerDown={pressDirection("up")}
+            onPointerLeave={releaseDirection("up")}
+            onPointerUp={releaseDirection("up")}
+            type="button"
+          >
+            <ArrowUp size={20} />
+          </button>
+          <button
+            aria-label="Move left"
+            className="left"
+            onContextMenu={(event) => event.preventDefault()}
+            onPointerCancel={releaseDirection("left")}
+            onPointerDown={pressDirection("left")}
+            onPointerLeave={releaseDirection("left")}
+            onPointerUp={releaseDirection("left")}
+            type="button"
+          >
+            <ArrowLeft size={20} />
+          </button>
+          <button
+            aria-label="Move right"
+            className="right"
+            onContextMenu={(event) => event.preventDefault()}
+            onPointerCancel={releaseDirection("right")}
+            onPointerDown={pressDirection("right")}
+            onPointerLeave={releaseDirection("right")}
+            onPointerUp={releaseDirection("right")}
+            type="button"
+          >
+            <ArrowRight size={20} />
+          </button>
+          <button
+            aria-label="Move down"
+            className="down"
+            onContextMenu={(event) => event.preventDefault()}
+            onPointerCancel={releaseDirection("down")}
+            onPointerDown={pressDirection("down")}
+            onPointerLeave={releaseDirection("down")}
+            onPointerUp={releaseDirection("down")}
+            type="button"
+          >
+            <ArrowDown size={20} />
+          </button>
+        </div>
+        <div className="arcade-touch-actions" aria-label="Action pad">
+          <button aria-label="Dash" onClick={tapDash} type="button">
+            <Zap size={20} />
+          </button>
+          <button aria-label="Interact" onClick={tapInteract} type="button">
+            <Hand size={20} />
+          </button>
+          <button aria-label="Switch route" onClick={tapRoute} type="button">
+            <Route size={20} />
+          </button>
+        </div>
+      </div>
+    </>
+  );
 }
