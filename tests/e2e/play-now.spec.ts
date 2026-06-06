@@ -190,6 +190,31 @@ test("on-screen arcade controls move, dash, interact, and switch route", async (
   expect(afterRoute).toBe("greed");
 });
 
+test("on-screen action buttons expose live context and cooldown state", async ({ page }) => {
+  await startSoloArcade(page);
+  await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_STATE__ === "function");
+
+  const controls = page.getByLabel(/arcade touch controls/i);
+  await expect(controls.getByRole("button", { name: /dash ready/i })).toBeVisible();
+  await expect(controls.getByRole("button", { name: /^interact$/i })).toBeVisible();
+  await expect(controls.getByRole("button", { name: /^switch route$/i })).toBeVisible();
+
+  const moveRight = controls.getByRole("button", { name: /move right/i });
+  await controls.getByRole("button", { name: /dash ready/i }).click();
+  await moveRight.hover();
+  await page.mouse.down();
+  await page.waitForTimeout(120);
+  await page.mouse.up();
+  await expect(controls.getByRole("button", { name: /dash cooling/i })).toBeVisible();
+
+  await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget());
+  await expect(controls.getByRole("button", { name: /interact: steal relic/i })).toBeVisible();
+  await controls.getByRole("button", { name: /interact: steal relic/i }).click();
+  await expect(controls.getByRole("button", { name: /switch route: greed route available/i })).toBeVisible();
+  await controls.getByRole("button", { name: /switch route: greed route available/i }).click();
+  await expect(controls.getByRole("button", { name: /switch route: greed route armed/i })).toBeVisible();
+});
+
 test("mobile arcade controls stay clear of the objective panel", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await startSoloArcade(page);
