@@ -1371,6 +1371,68 @@ p {
   box-shadow: 0 22px 52px rgba(0, 0, 0, 0.38), 0 0 46px rgba(189, 169, 255, 0.24);
 }
 
+.arcade-scan-lock-pulse {
+  position: absolute;
+  top: clamp(214px, 31vh, 312px);
+  left: 50%;
+  z-index: 5;
+  width: min(360px, calc(100vw - 32px));
+  pointer-events: none;
+  transform: translateX(-50%);
+  display: grid;
+  gap: 4px;
+  padding: 11px 15px;
+  border: 1px solid rgba(255, 79, 123, 0.72);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgba(30, 8, 22, 0.94), rgba(12, 21, 34, 0.9)),
+    radial-gradient(circle at 50% 0%, rgba(255, 79, 123, 0.24), transparent 62%);
+  box-shadow: 0 22px 52px rgba(0, 0, 0, 0.38), 0 0 44px rgba(255, 79, 123, 0.28);
+  color: #fff2f5;
+  text-align: center;
+  text-transform: uppercase;
+  animation: arcade-scan-lock-pulse 880ms ease-in-out infinite alternate;
+}
+
+.arcade-scan-lock-pulse span,
+.arcade-scan-lock-pulse strong,
+.arcade-scan-lock-pulse small {
+  display: block;
+  overflow-wrap: anywhere;
+  line-height: 1;
+}
+
+.arcade-scan-lock-pulse span {
+  color: #ff8fb0;
+  font-size: 0.78rem;
+  font-weight: 950;
+}
+
+.arcade-scan-lock-pulse strong {
+  color: #ffffff;
+  font-size: clamp(1rem, 2vw, 1.35rem);
+  font-weight: 950;
+}
+
+.arcade-scan-lock-pulse small {
+  color: #d8fcff;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.arcade-shell.scan-lock-active .arcade-vignette {
+  background:
+    linear-gradient(90deg, rgba(55, 7, 20, 0.74), transparent 24%, transparent 76%, rgba(55, 7, 20, 0.68)),
+    linear-gradient(0deg, rgba(5, 8, 17, 0.88), transparent 34%, transparent 70%, rgba(38, 5, 18, 0.62));
+}
+
+.arcade-shell.scan-lock-active .arcade-objective-banner,
+.arcade-shell.scan-lock-active .arcade-spotlight {
+  opacity: 0;
+  animation: none;
+  pointer-events: none;
+}
+
 .arcade-shell.route-pulse-active .arcade-mission-beat,
 .arcade-shell.route-pulse-active .arcade-threat-cue,
 .arcade-shell.route-pulse-active .arcade-objective > small {
@@ -1400,6 +1462,18 @@ p {
   100% {
     opacity: 0;
     transform: translateX(-50%) translateY(-8px) scale(0.98);
+  }
+}
+
+@keyframes arcade-scan-lock-pulse {
+  0% {
+    opacity: 0.78;
+    transform: translateX(-50%) scale(0.985);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1.015);
   }
 }
 
