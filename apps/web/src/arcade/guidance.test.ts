@@ -78,6 +78,27 @@ describe("buildArcadeGuidance", () => {
     });
   });
 
+  it("turns a relic target into a comeback call when Red has already banked loot", () => {
+    const compass = buildObjectiveCompass({
+      kind: "artifact",
+      targetLabel: "Argent Crown +3",
+      directionLabel: "Target E 38m",
+      distanceMeters: 38,
+      cashoutValue: null,
+      timeLeftMs: 84_000,
+      rivalLead: 3,
+      swingValue: 5
+    });
+
+    expect(compass).toEqual({
+      tone: "danger",
+      verb: "COMEBACK",
+      target: "Argent Crown +3",
+      route: "E 38m",
+      detail: "Steal + cashout beats Red"
+    });
+  });
+
   it("starts with a concrete theft objective instead of a vague instruction", () => {
     const guidance = buildArcadeGuidance({
       lootValue: 0,

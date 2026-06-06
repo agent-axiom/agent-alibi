@@ -613,6 +613,13 @@ test("rival carriers only score after cashout", async ({ page }) => {
   await expect(missionBeat.getByText(/score pressure/i)).toBeVisible();
   await expect(missionBeat.getByText(/red leads by 3/i)).toBeVisible();
   await expect(missionBeat.getByText(/argent crown \+3 plus lift bonus can beat red/i)).toBeVisible();
+  const objectiveCompass = page.getByLabel(/objective compass/i);
+  await expect(objectiveCompass.getByText(/jam/i)).toBeVisible();
+  await expect(objectiveCompass.getByText(/rook scan/i)).toBeVisible();
+  await page.keyboard.press("KeyE");
+  await expect(objectiveCompass.getByText(/comeback/i)).toBeVisible();
+  await expect(objectiveCompass.getByText(/argent crown \+3/i)).toBeVisible();
+  await expect(objectiveCompass.getByText(/steal \+ cashout beats red/i)).toBeVisible();
 
   await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget());
   await expect(page.getByLabel(/active action/i).getByText(/steal/i)).toBeVisible();
