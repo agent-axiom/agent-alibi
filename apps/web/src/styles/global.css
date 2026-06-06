@@ -1649,6 +1649,19 @@ p {
   display: none;
 }
 
+.arcade-shell.dense-threat-active .arcade-steps,
+.arcade-shell.dense-threat-active .arcade-mission-meta,
+.arcade-shell.dense-threat-active .arcade-objective > small,
+.arcade-shell.dense-threat-active .arcade-mission-beat p {
+  display: none;
+}
+
+.arcade-shell.dense-threat-active .arcade-mission-beat {
+  min-height: 34px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+}
+
 @keyframes arcade-route-pulse-lock {
   0% {
     opacity: 0;

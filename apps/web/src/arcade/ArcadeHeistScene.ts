@@ -35,6 +35,11 @@ const DASH_COOLDOWN_MS = 1150;
 const AI_GRACE_MS = 10_500;
 const AI_WAKE_HOLD_MS = 14_000;
 const LOOT_CHAIN_WINDOW_MS = 12_000;
+const SECURITY_SWEEP_PERIOD_MS = 5_600;
+const SECURITY_SWEEP_WARNING_WIDTH = 112;
+const SECURITY_SWEEP_BEAM_WIDTH = 34;
+const SECURITY_SWEEP_HIT_ALARM_DELTA = 0.46;
+const SECURITY_SWEEP_HIT_COOLDOWN_MS = 1_350;
 
 const TEAM_COLORS: Record<TeamId, number> = {
   blue: 0x4cf4f0,
@@ -97,7 +102,7 @@ type RivalCarrierRun = {
   directionLabel: string;
 };
 
-type ImpactKind = "steal" | "intercept" | "alibi" | "escape" | "lockdown" | "cashout";
+type ImpactKind = "steal" | "intercept" | "alibi" | "escape" | "lockdown" | "cashout" | "laser";
 type CameraKickKind = ImpactKind | "dash";
 type ArenaCalloutKind = ImpactKind | "rival-steal";
 
@@ -121,6 +126,15 @@ type CameraLookaheadState = {
   offsetY: number;
   magnitude: number;
   distanceMeters: number;
+};
+
+type SecuritySweepDebug = {
+  active: boolean;
+  inBeam: boolean;
+  inWarning: boolean;
+  telegraphVisible: boolean;
+  hitCount: number;
+  label: "Laser sweep";
 };
 
 type MotionTrailPoint = {
@@ -216,6 +230,18 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private threatHalo?: Phaser.GameObjects.Graphics;
   private carrierRoute?: Phaser.GameObjects.Graphics;
   private rivalIntentRoutes?: Phaser.GameObjects.Graphics;
+  private securitySweep?: Phaser.GameObjects.Graphics;
+  private securitySweepHitCooldownMs = 0;
+  private securitySweepHitCount = 0;
+  private securitySweepOverrideUntilMs = 0;
+  private securitySweepState: SecuritySweepDebug = {
+    active: false,
+    inBeam: false,
+    inWarning: false,
+    telegraphVisible: false,
+    hitCount: 0,
+    label: "Laser sweep"
+  };
   private motionTrail?: Phaser.GameObjects.Graphics;
   private motionTrailPoints: MotionTrailPoint[] = [];
   private motionTrailBurstCount = 0;
@@ -346,6 +372,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       threatHalo: this.threatHaloDebug(),
       carrierCashoutRoute: this.carrierCashoutRouteDebug(),
       rivalIntentRoutes: this.rivalIntentRoutesDebug(),
+      securitySweep: this.securitySweepDebug(),
       carrierBadges: this.carrierBadgesDebug(),
       escapeZoneBadge: this.escapeZoneBadgeDebug(),
       motionTrail: this.motionTrailDebug(),
@@ -441,12 +468,23 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.emitHudIfNeeded(true);
   }
 
+  forceSecuritySweepForDebug() {
+    this.releaseRivals({ announce: false, holdMs: 0 });
+    this.aiWakeHoldMs = 0;
+    this.aiActionHoldMs = 5_000;
+    this.securitySweepOverrideUntilMs = this.elapsedMs + 2_400;
+    this.securitySweepHitCooldownMs = Math.max(this.securitySweepHitCooldownMs, 420);
+    this.updateSecuritySweep(0);
+    this.emitHudIfNeeded(true);
+  }
+
   override update(_time: number, delta: number) {
     if (!this.state || !this.player || this.finished) return;
 
     this.elapsedMs += delta;
     this.dashCooldownMs = Math.max(0, this.dashCooldownMs - delta);
     this.alibiPulseCooldownMs = Math.max(0, this.alibiPulseCooldownMs - delta);
+    this.securitySweepHitCooldownMs = Math.max(0, this.securitySweepHitCooldownMs - delta);
 
     this.updatePlayer(delta);
     this.updateMotionTrail(delta);
@@ -459,6 +497,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.updateThreatHalo();
     this.updateCarrierCashoutRoute();
     this.updateRivalIntentRoutes();
+    this.updateSecuritySweep(delta);
     this.updateEscapePayoutBadge();
     this.updateAlarm(delta);
     this.emitHudIfNeeded(false);
@@ -526,6 +565,18 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.escapePayoutBadgeLabel = undefined;
     this.carrierRoute = undefined;
     this.rivalIntentRoutes = undefined;
+    this.securitySweep = undefined;
+    this.securitySweepHitCooldownMs = 0;
+    this.securitySweepHitCount = 0;
+    this.securitySweepOverrideUntilMs = 0;
+    this.securitySweepState = {
+      active: false,
+      inBeam: false,
+      inWarning: false,
+      telegraphVisible: false,
+      hitCount: 0,
+      label: "Laser sweep"
+    };
     this.motionTrail = undefined;
     this.motionTrailPoints = [];
     this.motionTrailBurstCount = 0;
@@ -555,6 +606,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.updateThreatHalo();
     this.updateCarrierCashoutRoute();
     this.updateRivalIntentRoutes();
+    this.updateSecuritySweep(16);
     this.updateCarrierBadges();
     this.updateEscapePayoutBadge();
     this.scale.off("resize", this.resizeCamera, this);
@@ -1218,7 +1270,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
       alibi: { duration: 150, intensity: 0.0048, color: [76, 244, 240] },
       escape: { duration: 190, intensity: 0.0055, color: [126, 255, 223] },
       lockdown: { duration: 220, intensity: 0.007, color: [255, 79, 123] },
-      cashout: { duration: 190, intensity: 0.0065, color: [255, 79, 123] }
+      cashout: { duration: 190, intensity: 0.0065, color: [255, 79, 123] },
+      laser: { duration: 140, intensity: 0.0048, color: [255, 213, 106] }
     } satisfies Record<CameraKickKind, { duration: number; intensity: number; color: [number, number, number] | null }>;
     const kick = settings[kind];
     camera.shake(kick.duration, kick.intensity, true);
@@ -1870,6 +1923,15 @@ export class ArcadeHeistScene extends Phaser.Scene {
       };
     }
 
+    if (this.securitySweepState.active && this.securitySweepState.inWarning) {
+      return {
+        tone: this.securitySweepState.inBeam ? "danger" : "warning",
+        label: "Laser sweep",
+        detail: this.securitySweepState.inBeam ? "Security beam is on you." : "Sweep lane crossing your route.",
+        action: this.securitySweepState.inBeam ? "Dash clear now" : "Time your crossing"
+      };
+    }
+
     if (alibiPulseReady && nearestRival) {
       return {
         tone: "warning",
@@ -2177,6 +2239,86 @@ export class ArcadeHeistScene extends Phaser.Scene {
       routeCount: Number(this.rivalIntentRoutes.getData("routeCount") ?? 0),
       targetLabels: (this.rivalIntentRoutes.getData("targetLabels") as string[] | undefined) ?? []
     };
+  }
+
+  private updateSecuritySweep(_delta: number) {
+    if (!this.player || !this.securitySweepActive()) {
+      this.clearSecuritySweep();
+      return;
+    }
+
+    const sweepX = this.securitySweepX();
+    const inWarning = Math.abs(this.player.x - sweepX) <= SECURITY_SWEEP_WARNING_WIDTH / 2;
+    const inBeam = Math.abs(this.player.x - sweepX) <= SECURITY_SWEEP_BEAM_WIDTH / 2;
+
+    if (!this.securitySweep) {
+      this.securitySweep = this.add.graphics().setDepth(8);
+    }
+
+    this.securitySweep.clear();
+    this.securitySweep.fillStyle(0xffd56a, inWarning ? 0.18 : 0.1);
+    this.securitySweep.fillRect(sweepX - SECURITY_SWEEP_WARNING_WIDTH / 2, 80, SECURITY_SWEEP_WARNING_WIDTH, WORLD_HEIGHT - 160);
+    this.securitySweep.fillStyle(0xff4f7b, inBeam ? 0.42 : 0.28);
+    this.securitySweep.fillRect(sweepX - SECURITY_SWEEP_BEAM_WIDTH / 2, 80, SECURITY_SWEEP_BEAM_WIDTH, WORLD_HEIGHT - 160);
+    this.securitySweep.lineStyle(2, 0xffd56a, 0.72);
+    this.securitySweep.lineBetween(sweepX - SECURITY_SWEEP_WARNING_WIDTH / 2, 80, sweepX - SECURITY_SWEEP_WARNING_WIDTH / 2, WORLD_HEIGHT - 80);
+    this.securitySweep.lineBetween(sweepX + SECURITY_SWEEP_WARNING_WIDTH / 2, 80, sweepX + SECURITY_SWEEP_WARNING_WIDTH / 2, WORLD_HEIGHT - 80);
+    this.securitySweep.lineStyle(3, 0xff4f7b, 0.84);
+    this.securitySweep.lineBetween(sweepX, 80, sweepX, WORLD_HEIGHT - 80);
+    this.securitySweep.setData("visible", true);
+
+    this.securitySweepState = {
+      active: true,
+      inBeam,
+      inWarning,
+      telegraphVisible: true,
+      hitCount: this.securitySweepHitCount,
+      label: "Laser sweep"
+    };
+
+    if (inBeam && this.securitySweepHitCooldownMs <= 0) {
+      this.securitySweepHitCooldownMs = SECURITY_SWEEP_HIT_COOLDOWN_MS;
+      this.securitySweepHitCount += 1;
+      this.securitySweepState.hitCount = this.securitySweepHitCount;
+      this.alarm = Math.min(5, this.alarm + SECURITY_SWEEP_HIT_ALARM_DELTA);
+      this.flashSpotlight("Laser sweep +1 alarm");
+      this.flashArenaCallout("laser", "Laser sweep +1 alarm", this.player.x, this.player.y, 0xffd56a);
+      this.feedLine("Security laser clipped your alibi. Dash clear of the sweep.");
+      this.impactPulse("laser");
+    }
+  }
+
+  private securitySweepActive() {
+    return this.securitySweepOverrideUntilMs > this.elapsedMs || (this.aiReleased && this.aiWakeHoldMs <= 0);
+  }
+
+  private securitySweepX() {
+    if (this.securitySweepOverrideUntilMs > this.elapsedMs && this.player) {
+      return this.player.x;
+    }
+
+    const spanStart = 188;
+    const spanEnd = WORLD_WIDTH - 188;
+    const phase = (this.elapsedMs % SECURITY_SWEEP_PERIOD_MS) / SECURITY_SWEEP_PERIOD_MS;
+    const wave = 0.5 - Math.cos(phase * Math.PI * 2) / 2;
+    return Phaser.Math.Linear(spanStart, spanEnd, wave);
+  }
+
+  private clearSecuritySweep() {
+    this.securitySweep?.clear();
+    this.securitySweep?.setData("visible", false);
+    this.securitySweepState = {
+      active: false,
+      inBeam: false,
+      inWarning: false,
+      telegraphVisible: false,
+      hitCount: this.securitySweepHitCount,
+      label: "Laser sweep"
+    };
+  }
+
+  private securitySweepDebug(): SecuritySweepDebug {
+    return this.securitySweepState;
   }
 
   private drawCarrierCashoutChevrons(from: { x: number; y: number }, target: { x: number; y: number }, chevronCount: number) {

@@ -410,6 +410,62 @@ test("close rivals burn the player's alibi if contact is not broken", async ({ p
   expect(alarmAfterScan).toBeGreaterThan((alarmBeforeScan ?? 0) + 0.4);
 });
 
+test("security sweeps telegraph danger and punish standing in the beam", async ({ page }) => {
+  await startSoloArcade(page);
+  await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_STATE__ === "function");
+
+  const staged = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());
+  expect(staged?.securitySweep).toEqual({
+    active: false,
+    inBeam: false,
+    inWarning: false,
+    telegraphVisible: false,
+    hitCount: 0,
+    label: "Laser sweep"
+  });
+
+  const alarmBeforeSweep = staged?.alarmRaw ?? 0;
+  await page.evaluate(() =>
+    (
+      window.__AGENT_ALIBI_ARCADE_DEBUG__ as
+        | {
+            forceSecuritySweep?: () => void;
+          }
+        | undefined
+    )?.forceSecuritySweep?.()
+  );
+
+  const armedSweep = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().securitySweep);
+  expect(armedSweep).toEqual(
+    expect.objectContaining({
+      active: true,
+      inBeam: true,
+      inWarning: true,
+      telegraphVisible: true,
+      hitCount: 0,
+      label: "Laser sweep"
+    })
+  );
+  const threatVector = page.getByLabel(/threat vector/i);
+  await expect(threatVector.getByText(/laser sweep/i)).toBeVisible();
+  await expect(threatVector.getByText(/dash clear/i)).toBeVisible();
+  const sweepLayout = await page.evaluate(() => {
+    const objective = document.querySelector(`[aria-label="Current objective"]`);
+    const steps = document.querySelector(".arcade-steps");
+    return {
+      objectiveCut: objective ? objective.scrollHeight > objective.clientHeight + 2 : true,
+      stepsDisplay: steps ? getComputedStyle(steps).display : null
+    };
+  });
+  expect(sweepLayout).toEqual({ objectiveCut: false, stepsDisplay: "none" });
+
+  await page.waitForTimeout(850);
+  await expect(page.getByText(/laser sweep \+1 alarm/i)).toBeVisible();
+  const punishedSweep = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());
+  expect(punishedSweep?.securitySweep?.hitCount).toBeGreaterThan(0);
+  expect(punishedSweep?.alarmRaw).toBeGreaterThan(alarmBeforeSweep + 0.35);
+});
+
 test("on-screen arcade controls move, dash, interact, and switch route", async ({ page }) => {
   await startSoloArcade(page);
   await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_STATE__ === "function");
