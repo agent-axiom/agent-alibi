@@ -147,6 +147,8 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(page.getByText(/agent alibi case file/i)).toBeVisible();
   const finalScores = page.getByLabel(/final scores/i);
   await expect(finalScores).toBeVisible();
+  await expect(finalScores.getByText(/score margin/i)).toBeVisible();
+  await expect(finalScores.getByText(/blue by \d+/i)).toBeVisible();
   await expect(finalScores.getByText(/s-rank/i)).toBeVisible();
   await expect(finalScores.getByText(/clean exit bonus/i)).toBeVisible();
   await expect(finalScores.getByText(/loot chain/i)).toBeVisible();

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { MatchSummary } from "@agent-alibi/shared";
-import { buildCaseShareText, buildRematchHook } from "./FinalCaseFile";
+import { buildCaseShareText, buildRematchHook, buildScoreMarginLabel } from "./FinalCaseFile";
 
 function summary(overrides: Partial<MatchSummary> = {}): MatchSummary {
   return {
@@ -53,5 +53,25 @@ describe("buildCaseShareText", () => {
     expect(text).toContain("02. Escaped with 6 loot");
     expect(text).toContain("NEXT RUN");
     expect(text).toContain("Next run: run it back and make the case file louder.");
+  });
+});
+
+describe("buildScoreMarginLabel", () => {
+  it("shows the winning side and score margin", () => {
+    expect(
+      buildScoreMarginLabel([
+        { teamId: "blue", loot: 6, escape: 2, penalties: 0, total: 8 },
+        { teamId: "red", loot: 4, escape: 0, penalties: 0, total: 4 }
+      ])
+    ).toBe("Blue by 4");
+  });
+
+  it("shows tie game when totals match", () => {
+    expect(
+      buildScoreMarginLabel([
+        { teamId: "blue", loot: 3, escape: 0, penalties: 0, total: 3 },
+        { teamId: "red", loot: 3, escape: 0, penalties: 0, total: 3 }
+      ])
+    ).toBe("Tie game");
   });
 });
