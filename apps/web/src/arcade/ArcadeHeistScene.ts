@@ -1444,7 +1444,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       tone: ready ? "ready" : "armed",
       label: ready ? "Extract now" : "Extraction armed",
       detail: `Atrium Lift · Cashout ${escapePayout.cashout}`,
-      action: ready ? "Press E / Space" : "Follow the cyan ring"
+      action: ready ? `Press E / Space to cashout +${escapePayout.cashout}` : "Follow the cyan ring"
     };
   }
 
