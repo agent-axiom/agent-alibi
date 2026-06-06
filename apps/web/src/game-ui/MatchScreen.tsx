@@ -29,6 +29,9 @@ export function MatchScreen({ match }: MatchScreenProps) {
 
   if (match.arcade?.enabled) {
     const hud = match.arcade.hud;
+    const blueLoot = hud?.lootValue ?? 0;
+    const redLoot = hud?.aiLootValue ?? 0;
+    const raceTone = blueLoot > redLoot ? "leading" : blueLoot < redLoot ? "trailing" : "tied";
     return (
       <main className={`arcade-shell ${hud?.phase ?? "stealth"}`}>
         <Suspense
@@ -59,7 +62,7 @@ export function MatchScreen({ match }: MatchScreenProps) {
           <div className="arcade-stat">
             <span>Loot</span>
             <strong>
-              {hud?.lootValue ?? 0} / AI {hud?.aiLootValue ?? 0}
+              {blueLoot} / AI {redLoot}
             </strong>
           </div>
           <div className="arcade-alarm" aria-label={`Alarm ${hud?.alarm ?? match.state.alarm} of 5`}>
@@ -121,6 +124,15 @@ export function MatchScreen({ match }: MatchScreenProps) {
             </span>
           </div>
           <div className="arcade-mission-meta">
+            <div className={`arcade-race ${raceTone}`} aria-label="Heist race">
+              <span>Heist Race</span>
+              <div>
+                <strong>Blue {blueLoot}</strong>
+                <i />
+                <strong>Red {redLoot}</strong>
+              </div>
+              <small>{hud?.raceStatus ?? "Loot race is tied"}</small>
+            </div>
             <div className="arcade-route" aria-label="Route distance">
               {hud?.targetDistanceLabel ?? "Target plotting"}
             </div>
@@ -152,7 +164,7 @@ export function MatchScreen({ match }: MatchScreenProps) {
             ) : null}
           </div>
           <small>
-            {hud?.raceStatus ?? "Loot race is tied"} · WASD / arrows move · click to run · Shift dash · E / Space interact · G route
+            WASD / arrows move · click to run · Shift dash · E / Space interact · G route
           </small>
         </section>
       </main>

@@ -21,6 +21,10 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(page.getByText(/dash ready/i)).toBeVisible();
   await expect(page.getByLabel(/active action/i).getByText(/move/i)).toBeVisible();
   await expect(page.getByLabel(/active action/i).getByText(/follow marker/i)).toBeVisible();
+  const heistRace = page.getByLabel(/heist race/i);
+  await expect(heistRace.getByText(/blue 0/i)).toBeVisible();
+  await expect(heistRace.getByText(/red 0/i)).toBeVisible();
+  await expect(heistRace.getByText(/loot race is tied/i)).toBeVisible();
   await expect(page.getByText(/rival agents enter in 5 seconds/i)).toBeVisible();
 
   await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_STATE__ === "function");
@@ -49,6 +53,9 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(page.getByText(/2 escape/i)).toBeVisible();
   await expect(page.getByText(/exit \d+m/i)).toBeVisible();
   await expect(page.getByText(/optional relic/i)).toBeVisible();
+  await expect(heistRace.getByText(/blue 3/i)).toBeVisible();
+  await expect(heistRace.getByText(/red 0/i)).toBeVisible();
+  await expect(heistRace.getByText(/you lead by 3/i)).toBeVisible();
   const afterSteal = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().lootValue);
   expect(afterSteal).toBeGreaterThan(0);
   const escapeTarget = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().target);

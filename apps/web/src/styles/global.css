@@ -1394,6 +1394,79 @@ p {
   gap: 8px;
 }
 
+.arcade-race {
+  flex: 1 1 260px;
+  min-width: min(100%, 260px);
+  border: 1px solid rgba(216, 252, 255, 0.28);
+  border-radius: 8px;
+  padding: 9px 10px;
+  background: rgba(216, 252, 255, 0.08);
+  color: #d8fcff;
+  box-shadow: inset 0 0 24px rgba(76, 244, 240, 0.08);
+}
+
+.arcade-race span {
+  display: block;
+  margin-bottom: 6px;
+  color: #ffd56a;
+  font-size: 0.68rem;
+  font-weight: 950;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.arcade-race div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+}
+
+.arcade-race strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 0.95rem;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.arcade-race i {
+  width: 32px;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(216, 252, 255, 0.2);
+}
+
+.arcade-race small {
+  display: block;
+  margin-top: 6px;
+  color: #b7c8d8;
+  font-size: 0.74rem;
+  font-weight: 900;
+  line-height: 1.15;
+  text-transform: uppercase;
+}
+
+.arcade-race.leading {
+  border-color: rgba(57, 229, 192, 0.58);
+  background: rgba(57, 229, 192, 0.11);
+}
+
+.arcade-race.leading i {
+  background: #39e5c0;
+  box-shadow: 0 0 18px rgba(57, 229, 192, 0.56);
+}
+
+.arcade-race.trailing {
+  border-color: rgba(255, 79, 123, 0.58);
+  background: rgba(255, 79, 123, 0.12);
+}
+
+.arcade-race.trailing i {
+  background: #ff4f7b;
+  box-shadow: 0 0 18px rgba(255, 79, 123, 0.5);
+}
+
 .arcade-route {
   width: fit-content;
   border: 1px solid rgba(76, 244, 240, 0.34);
