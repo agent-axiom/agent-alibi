@@ -1,41 +1,51 @@
 # Agent Alibi
 
-Agent Alibi is a short online heist game where every seat can be human or AI. Bluff through six simultaneous-planning rounds, steal artifacts from the Moon Vault, cover teammates with alibis, and escape before the vault seals.
+Agent Alibi is a neon sci-fi heist game where every seat can be human or AI. The first-click experience is a live top-down Moon Vault run: move through the vault, steal lunar relics, decide whether to bank or gamble for greed, dodge rival agents, and cash out before lockdown.
 
 ## What I made
 
 I made a playable browser game with:
 
-- Play Now vs AI solo mode.
-- Create Room lobby with shareable room codes.
+- Play Now vs AI top-down arcade mode.
+- WASD / arrow movement, dash, steal, alibi pulse, greed-route toggle, and touch controls.
+- Dynamic music loops for menu, stealth, alarm, and lockdown, plus mission stingers.
+- Rival AI agents that wake after the first score, steal relics, carry loot, and race for cashout.
+- Clear objective markers, radar, route chevrons, carrier warnings, cashout stakes, and final case highlights.
+- Create Room lobby with shareable room codes and the original round/card multiplayer layer.
 - AI seats with five personalities: Rook, Moth, Gremlin, Vesper, Anchor.
 - One polished heist map: Moon Vault.
 - Six-round deterministic game engine.
 - Eight actions: Move, Scout, Steal, Distract, Guard, Sabotage, Cover, Escape.
 - Fallback scripted bots, so the game works without an OpenAI API key.
 - Optional server-side OpenAI decision hook.
-- Final Agent Alibi case file with winner, MVP, betrayal, score, and replay-style summary.
+- Final Agent Alibi case file with winner, score margin, loot chain, cashout banked value, stolen relics, and shareable highlights.
 
 ## How Codex helped
 
-Codex helped turn the game concept into a scoped MVP, design the deterministic game engine, implement legal action generation and round resolution, add fallback bot personalities, build the React game UI, create the Fastify/Socket.IO room flow, add an optional OpenAI decision schema, write tests and simulations, and prepare the README/deployment checklist.
+Codex helped turn the game concept into a playable heist, design the deterministic engine, implement legal action generation and round resolution, add fallback bot personalities, build the React/Phaser arcade layer, create the Fastify/Socket.IO room flow, wire dynamic music and stingers, add optional OpenAI decision schemas, write unit/e2e/simulation tests, and prepare the README/deployment checklist.
 
 ## How to play / controls
 
 Click **Play Now vs AI** for the fastest start.
 
-Each round:
+In arcade mode:
 
-1. Read the AI briefing.
-2. Pick one action.
-3. Lock it.
-4. Watch the reveal log update.
-5. Steal artifacts and escape before round 6 ends.
+1. Follow the gold marker to the current relic.
+2. Steal it with `E` / `Space`.
+3. Choose the safe cashout route or press `G` to arm the greed route.
+4. Watch rival carriers and intercept them before they bank loot.
+5. Reach the Atrium Lift and cash out before lockdown.
+
+Create Room keeps the multiplayer planning mode: invite friends, fill empty seats with AI, lock one action per round, then watch the reveal.
 
 Controls:
 
-- Mouse or touch UI.
-- No keyboard required.
+- Move: `WASD` or arrow keys.
+- Steal / cashout / alibi pulse / intercept: `E` or `Space`.
+- Dash: `Shift`.
+- Toggle greed route: `G`.
+- Sound: speaker button on Home or inside the arcade HUD.
+- Touch: on-screen movement and action buttons.
 
 ## OpenAI API
 
