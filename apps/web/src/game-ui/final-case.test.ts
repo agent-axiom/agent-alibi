@@ -35,6 +35,22 @@ describe("buildRematchHook", () => {
   it("turns a non-perfect blue win into an S-Rank chase prompt", () => {
     expect(buildRematchHook(summary({ runRating: "A-Rank", styleBonus: 2 }))).toBe("Next run: chase S-Rank with a faster, lower-alarm cashout.");
   });
+
+  it("turns an empty escape into a relic-first rematch prompt", () => {
+    expect(
+      buildRematchHook(
+        summary({
+          runRating: "C-Rank",
+          styleBonus: 0,
+          stolenRelicNames: [],
+          teamScores: [
+            { teamId: "blue", loot: 0, escape: 2, penalties: 0, total: 2 },
+            { teamId: "red", loot: 0, escape: 0, penalties: 0, total: 0 }
+          ]
+        })
+      )
+    ).toBe("Next run: steal one relic before you call the lift.");
+  });
 });
 
 describe("buildCaseShareText", () => {

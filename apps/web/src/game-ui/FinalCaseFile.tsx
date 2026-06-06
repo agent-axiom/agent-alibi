@@ -16,6 +16,7 @@ export function FinalCaseFile({ summary, soundEnabled = false, onToggleSound, on
   const redScore = summary.teamScores.find((score) => score.teamId === "red");
   const winner = summary.winnerTeamId === "tie" ? "Tie" : summary.winnerTeamId === "blue" ? "Blue Crew" : "Red Crew";
   const escapeBonus = blueScore?.escape ?? 0;
+  const finalPopupDetail = (blueScore?.loot ?? 0) > 0 ? `Cashout ${(blueScore?.loot ?? 0) + escapeBonus}` : "No relics banked";
   const rematchHook = buildRematchHook(summary);
   const scoreMargin = buildScoreMarginLabel(summary.teamScores);
   const caseStamp = buildCaseStamp(summary);
@@ -30,7 +31,7 @@ export function FinalCaseFile({ summary, soundEnabled = false, onToggleSound, on
       {escapeBonus > 0 ? (
         <div className="arcade-score-popup bonus final-score-popup" aria-label="Score popup" aria-live="polite">
           <strong>+{escapeBonus} Escape bonus</strong>
-          <span>Cashout {(blueScore?.loot ?? 0) + escapeBonus}</span>
+          <span>{finalPopupDetail}</span>
         </div>
       ) : null}
       <section className="case-file">
@@ -164,6 +165,10 @@ export function buildRematchHook(summary: MatchSummary): string {
 
   if (redWon || (summary.rivalRelicNames?.length ?? 0) > 0) {
     return "Next run: deny the carrier before Red reaches the Atrium Lift.";
+  }
+
+  if ((blueScore?.escape ?? 0) > 0 && (blueScore?.loot ?? 0) <= 0) {
+    return "Next run: steal one relic before you call the lift.";
   }
 
   if (summary.runRating && summary.runRating !== "S-Rank") {
