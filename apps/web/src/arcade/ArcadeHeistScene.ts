@@ -175,6 +175,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private targetMarker?: Phaser.GameObjects.Container;
   private targetBeam?: Phaser.GameObjects.Graphics;
   private threatHalo?: Phaser.GameObjects.Graphics;
+  private carrierRoute?: Phaser.GameObjects.Graphics;
   private motionTrail?: Phaser.GameObjects.Graphics;
   private motionTrailPoints: MotionTrailPoint[] = [];
   private motionTrailBurstCount = 0;
@@ -291,6 +292,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       hasTargetBeam: Boolean(this.targetBeam),
       routeGuide,
       threatHalo: this.threatHaloDebug(),
+      carrierCashoutRoute: this.carrierCashoutRouteDebug(),
       motionTrail: this.motionTrailDebug(),
       arenaLabels: this.arenaLabelsDebug(),
       routeMode: this.routeMode,
@@ -369,6 +371,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.updateRivalScan(delta);
     this.updateTargetMarker();
     this.updateThreatHalo();
+    this.updateCarrierCashoutRoute();
     this.updateAlarm(delta);
     this.emitHudIfNeeded(false);
 
@@ -423,6 +426,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.targetMarker = undefined;
     this.targetBeam = undefined;
     this.threatHalo = undefined;
+    this.carrierRoute = undefined;
     this.motionTrail = undefined;
     this.motionTrailPoints = [];
     this.motionTrailBurstCount = 0;
@@ -440,6 +444,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.resizeCamera();
     this.updateTargetMarker();
     this.updateThreatHalo();
+    this.updateCarrierCashoutRoute();
     this.scale.off("resize", this.resizeCamera, this);
     this.scale.on("resize", this.resizeCamera, this);
     this.flashObjectiveBanner({
@@ -857,6 +862,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.collectArtifactVisual(artifact, TEAM_COLORS[actor.teamId]);
     this.updateTargetMarker();
     this.updateThreatHalo();
+    this.updateCarrierCashoutRoute();
   }
 
   private cashoutRivalCarrier(rival: RuntimeAgent): boolean {
@@ -878,6 +884,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.feedLine(`${rival.name} cashed out ${this.relicListLabel(cashed)} at the Atrium Lift.`);
     this.updateTargetMarker();
     this.updateThreatHalo();
+    this.updateCarrierCashoutRoute();
     return true;
   }
 
@@ -1003,6 +1010,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.addInterceptVisual(rival.x, rival.y);
     this.updateTargetMarker();
     this.updateThreatHalo();
+    this.updateCarrierCashoutRoute();
   }
 
   private tryAlibiPulse(): boolean {
@@ -1612,6 +1620,73 @@ export class ArcadeHeistScene extends Phaser.Scene {
         agent.carriedRelics.length > 0 &&
         Phaser.Math.Distance.Between(this.player!.x, this.player!.y, agent.x, agent.y) <= INTERCEPT_RADIUS
     );
+  }
+
+  private updateCarrierCashoutRoute() {
+    const carrier = this.nearestRivalCarrierRun();
+    const target = this.escapeZone ?? this.rooms.get("atrium");
+    if (!carrier || !target) {
+      this.clearCarrierCashoutRoute();
+      return;
+    }
+
+    if (!this.carrierRoute) {
+      this.carrierRoute = this.add.graphics().setDepth(7);
+    }
+
+    const from = carrier.agent;
+    const distance = Phaser.Math.Distance.Between(from.x, from.y, target.x, target.y);
+    const chevronCount = this.routeChevronCount(distance);
+    const pulseAlpha = 0.22 + Math.sin(this.elapsedMs / 140) * 0.07;
+
+    this.carrierRoute.clear();
+    this.carrierRoute.lineStyle(18, 0xff4f7b, 0.08);
+    this.carrierRoute.strokeLineShape(new Phaser.Geom.Line(from.x, from.y, target.x, target.y));
+    this.carrierRoute.lineStyle(5, 0xff4f7b, pulseAlpha);
+    this.carrierRoute.strokeLineShape(new Phaser.Geom.Line(from.x, from.y, target.x, target.y));
+    this.carrierRoute.fillStyle(0xff4f7b, 0.13);
+    this.carrierRoute.fillCircle(target.x, target.y, 58);
+    this.drawCarrierCashoutChevrons(from, target, chevronCount);
+    this.carrierRoute.setData("visible", true);
+    this.carrierRoute.setData("targetLabel", "Atrium Lift");
+    this.carrierRoute.setData("chevronCount", chevronCount);
+    this.carrierRoute.setData("distanceMeters", Math.max(0, Math.round(distance / 8)));
+  }
+
+  private drawCarrierCashoutChevrons(from: { x: number; y: number }, target: { x: number; y: number }, chevronCount: number) {
+    if (!this.carrierRoute || chevronCount <= 0) return;
+    const angle = Phaser.Math.Angle.Between(from.x, from.y, target.x, target.y);
+    const forwardX = Math.cos(angle);
+    const forwardY = Math.sin(angle);
+    const sideX = Math.cos(angle + Math.PI / 2);
+    const sideY = Math.sin(angle + Math.PI / 2);
+    this.carrierRoute.fillStyle(0xff4f7b, 0.78);
+
+    for (let index = 1; index <= chevronCount; index += 1) {
+      const progress = index / (chevronCount + 1);
+      const x = Phaser.Math.Linear(from.x, target.x, progress);
+      const y = Phaser.Math.Linear(from.y, target.y, progress);
+      const tipX = x + forwardX * 16;
+      const tipY = y + forwardY * 16;
+      const baseX = x - forwardX * 12;
+      const baseY = y - forwardY * 12;
+      this.carrierRoute.fillTriangle(tipX, tipY, baseX + sideX * 8, baseY + sideY * 8, baseX - sideX * 8, baseY - sideY * 8);
+    }
+  }
+
+  private clearCarrierCashoutRoute() {
+    this.carrierRoute?.clear();
+    this.carrierRoute?.setData("visible", false);
+  }
+
+  private carrierCashoutRouteDebug() {
+    if (!this.carrierRoute?.getData("visible")) return null;
+    return {
+      visible: true,
+      targetLabel: String(this.carrierRoute.getData("targetLabel") ?? ""),
+      chevronCount: Number(this.carrierRoute.getData("chevronCount") ?? 0),
+      distanceMeters: Number(this.carrierRoute.getData("distanceMeters") ?? 0)
+    };
   }
 
   private relicListLabel(relics: CarriedRelic[]): string {
