@@ -137,9 +137,24 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   const escapeZoneBadge = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().escapeZoneBadge);
   expect(escapeZoneBadge).toEqual({ visible: true, label: "Cashout +5" });
   await page.keyboard.press("KeyG");
-  await expect(page.getByLabel(/optional relic/i).getByText(/greed route/i)).toBeVisible();
   await expect(objectiveBanner.getByText(/greed route armed/i)).toBeVisible();
   await expect(objectiveBanner.getByText(/steal argent crown before escape/i)).toBeVisible();
+  await expect(page.locator(".arcade-shell")).toHaveClass(/route-pulse-active/);
+  const routePulse = page.getByLabel(/route pulse/i);
+  await expect(routePulse.getByText(/greed route locked/i)).toBeVisible();
+  await expect(routePulse.getByText(/cashout \+8 if you survive/i)).toBeVisible();
+  await expect(routePulse.getByText(/argent crown marker live/i)).toBeVisible();
+  const routePulseState = await page.evaluate(() => {
+    const pulse = document.querySelector(`[aria-label="Route pulse"]`);
+    const objective = document.querySelector(`[aria-label="Current objective"]`);
+    return {
+      pointerEvents: pulse ? getComputedStyle(pulse).pointerEvents : null,
+      objectiveCut: objective ? objective.scrollHeight > objective.clientHeight + 2 : true,
+      present: Boolean(pulse)
+    };
+  });
+  expect(routePulseState).toEqual({ pointerEvents: "none", objectiveCut: false, present: true });
+  await expect(page.getByLabel(/optional relic/i).getByText(/greed route/i)).toBeVisible();
   await expect(routeChoice.getByText(/greed armed/i)).toBeVisible();
   await expect(routeChoice.getByText(/projected cashout \+8 · \d+m to relic/i)).toBeVisible();
   await expect(currentObjective.getByText(/greed route: steal argent crown \+3/i)).toBeVisible();

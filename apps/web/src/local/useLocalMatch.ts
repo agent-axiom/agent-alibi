@@ -261,6 +261,7 @@ function makeInitialArcadeHud(state: GameState): ArcadeHudState {
     escapePayout: null,
     extractionCue: null,
     routeChoice: null,
+    routePulse: null,
     radarBlips: [],
     greedStatus: null,
     targetDistanceLabel: "Target plotting",

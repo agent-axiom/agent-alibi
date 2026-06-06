@@ -13,6 +13,7 @@ import {
   type ArcadeRivalBark,
   type ArcadeRivalIntercept,
   type ArcadeRouteChoice,
+  type ArcadeRoutePulse,
   type ArcadeScorePopup,
   type ArcadeThreatCue
 } from "./arcade-types";
@@ -32,7 +33,7 @@ const EXIT_RADIUS = 74;
 const INTERCEPT_RADIUS = 64;
 const DASH_COOLDOWN_MS = 1150;
 const AI_GRACE_MS = 10_500;
-const AI_WAKE_HOLD_MS = 10_000;
+const AI_WAKE_HOLD_MS = 14_000;
 const LOOT_CHAIN_WINDOW_MS = 12_000;
 
 const TEAM_COLORS: Record<TeamId, number> = {
@@ -164,6 +165,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private objectiveBannerUntilMs = 0;
   private rivalBark: ArcadeRivalBark | null = null;
   private rivalBarkUntilMs = 0;
+  private routePulse: ArcadeRoutePulse | null = null;
+  private routePulseUntilMs = 0;
   private finished = false;
   private aiReleased = false;
   private aiWakeHoldMs = 0;
@@ -454,6 +457,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.objectiveBannerUntilMs = 0;
     this.rivalBark = null;
     this.rivalBarkUntilMs = 0;
+    this.routePulse = null;
+    this.routePulseUntilMs = 0;
     this.finished = false;
     this.aiReleased = false;
     this.aiWakeHoldMs = 0;
@@ -1018,6 +1023,12 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.emitHudIfNeeded(true);
   }
 
+  private flashRoutePulse(pulse: ArcadeRoutePulse) {
+    this.routePulse = pulse;
+    this.routePulseUntilMs = this.elapsedMs + 2_000;
+    this.emitHudIfNeeded(true);
+  }
+
   private releaseRivals({ announce, holdMs }: { announce: boolean; holdMs: number }) {
     if (this.aiReleased) return;
     this.aiReleased = true;
@@ -1278,6 +1289,9 @@ export class ArcadeHeistScene extends Phaser.Scene {
     if (this.rivalBark && this.elapsedMs >= this.rivalBarkUntilMs) {
       this.rivalBark = null;
     }
+    if (this.routePulse && this.elapsedMs >= this.routePulseUntilMs) {
+      this.routePulse = null;
+    }
     const targetArtifact = this.primaryTargetArtifact();
     const targetArtifactLabel = targetArtifact ? this.artifactTargetLabel(targetArtifact) : null;
     const nearArtifact = this.nearPlayerArtifact();
@@ -1344,6 +1358,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       escapePayout,
       extractionCue: this.extractionCue(escapePayout),
       routeChoice: this.routeChoice(escapePayout, targetArtifact),
+      routePulse: this.routePulse,
       radarBlips: this.buildRadarBlips(objectiveTarget),
       greedStatus,
       targetDistanceLabel:
@@ -1718,6 +1733,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.routeMode = this.routeMode === "greed" ? "escape" : "greed";
     this.updateTargetMarker();
     const targetArtifact = this.primaryTargetArtifact();
+    const escapePayout = this.escapePayout(true);
     this.flashObjectiveBanner(
       this.routeMode === "greed" && targetArtifact
         ? {
@@ -1725,7 +1741,23 @@ export class ArcadeHeistScene extends Phaser.Scene {
             title: "Greed route armed",
             detail: `Steal ${targetArtifact.name} before escape`
           }
-        : this.buildEscapeBanner(false)
+        : this.buildEscapeBanner(false),
+      2_400
+    );
+    this.flashRoutePulse(
+      this.routeMode === "greed" && targetArtifact && escapePayout
+        ? {
+            mode: "greed",
+            title: "Greed route locked",
+            detail: `Cashout +${escapePayout.cashout + targetArtifact.value} if you survive`,
+            action: `${targetArtifact.name} marker live`
+          }
+        : {
+            mode: "escape",
+            title: "Cashout route locked",
+            detail: `Bank +${escapePayout?.cashout ?? this.lootValue} at Atrium Lift`,
+            action: "Atrium Lift marker live"
+          }
     );
     this.emitHudIfNeeded(true);
   }
