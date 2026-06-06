@@ -10,6 +10,10 @@ describe("buildObjectiveDirectionLabel", () => {
     expect(buildObjectiveDirectionLabel({ kind: "exit", dx: -80, dy: 60, distanceMeters: 14 })).toBe("Exit SW 14m");
   });
 
+  it("labels extraction direction with the cashout value when it is known", () => {
+    expect(buildObjectiveDirectionLabel({ kind: "exit", cashoutValue: 5, dx: -80, dy: 60, distanceMeters: 14 })).toBe("Cashout +5 SW 14m");
+  });
+
   it("keeps the label stable at point-blank range", () => {
     expect(buildObjectiveDirectionLabel({ kind: "target", dx: 0, dy: 0, distanceMeters: 0 })).toBe("Target here 0m");
   });
