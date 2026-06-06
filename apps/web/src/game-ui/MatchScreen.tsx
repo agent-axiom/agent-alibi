@@ -39,6 +39,8 @@ export function MatchScreen({ match }: MatchScreenProps) {
     const routeChoice = hud?.routeChoice ?? null;
     const cashoutStepLabel = hud?.escapePayout ? `Cashout +${hud.escapePayout.cashout}` : "Escape";
     const carriedLoot = hud && hud.lootValue > 0 && hud.escapePayout ? { loot: hud.lootValue, cashout: hud.escapePayout.cashout } : null;
+    const blueRaceLabel = carriedLoot ? `Blue carrying +${carriedLoot.loot}` : `Blue ${blueLoot}`;
+    const raceStatusLabel = carriedLoot ? `Bank +${carriedLoot.cashout} at lift` : (hud?.raceStatus ?? "Loot race is tied");
     return (
       <main className={`arcade-shell ${hud?.phase ?? "stealth"}`}>
         <Suspense
@@ -191,11 +193,11 @@ export function MatchScreen({ match }: MatchScreenProps) {
             <div className={`arcade-race ${raceTone}`} aria-label="Heist race">
               <span>Heist Race</span>
               <div>
-                <strong>Blue {blueLoot}</strong>
+                <strong>{blueRaceLabel}</strong>
                 <i />
                 <strong>Red {redLoot}</strong>
               </div>
-              <small>{hud?.raceStatus ?? "Loot race is tied"}</small>
+              <small>{raceStatusLabel}</small>
             </div>
             {hud?.lastRivalSteal ? (
               <div className="arcade-rival-loot" aria-label="Rival loot alert">
