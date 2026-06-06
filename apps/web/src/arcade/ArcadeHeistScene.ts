@@ -841,7 +841,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.emitHudIfNeeded(true);
   }
 
-  private flashObjectiveBanner(banner: ArcadeObjectiveBanner, durationMs = 2_400) {
+  private flashObjectiveBanner(banner: ArcadeObjectiveBanner, durationMs = 1_550) {
     this.objectiveBanner = banner;
     this.objectiveBannerUntilMs = this.elapsedMs + durationMs;
     this.emitHudIfNeeded(true);

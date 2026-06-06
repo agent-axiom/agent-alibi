@@ -1461,7 +1461,7 @@ p {
   text-transform: uppercase;
   transform: translate(-50%, -50%);
   pointer-events: none;
-  animation: arcade-objective-banner-hit 2.4s ease both;
+  animation: arcade-objective-banner-hit 1.55s ease both;
 }
 
 .arcade-objective-banner span,

@@ -161,6 +161,19 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(page.getByRole("button", { name: /rematch/i })).toBeVisible();
 });
 
+test("start objective banner clears before it blocks the arena", async ({ page }) => {
+  await startSoloArcade(page);
+
+  const objectiveBanner = page.getByLabel(/objective banner/i);
+  await expect(objectiveBanner.getByText(/steal moon pearl/i)).toBeVisible();
+  await page.waitForTimeout(1_900);
+  const bannerOpacity = await page.evaluate(() => {
+    const banner = document.querySelector('[aria-label="Objective banner"]');
+    return banner ? Number(getComputedStyle(banner).opacity) : 0;
+  });
+  expect(bannerOpacity).toBeLessThanOrEqual(0.05);
+});
+
 test("close rivals burn the player's alibi if contact is not broken", async ({ page }) => {
   await startSoloArcade(page);
   await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_STATE__ === "function");
