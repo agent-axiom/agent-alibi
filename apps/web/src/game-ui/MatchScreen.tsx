@@ -130,6 +130,12 @@ export function MatchScreen({ match }: MatchScreenProps) {
             <div className={`arcade-rival-scan ${hud?.rivalPressureLevel ?? "standby"}`} aria-label="Nearest rival">
               {hud?.rivalDistanceLabel ?? "Nearest rival scanning"}
             </div>
+            <div className={`arcade-scan-meter ${hud?.rivalScanStatus.tone ?? "idle"}`} aria-label="Rival scan meter">
+              <span>{hud?.rivalScanStatus.label ?? "Scan clear"}</span>
+              <i>
+                <b style={{ width: `${hud?.rivalScanStatus.progress ?? 0}%` }} />
+              </i>
+            </div>
             <div className="arcade-pace" aria-label="Run pace">
               {hud?.paceStatus ?? "Pace unknown"}
             </div>

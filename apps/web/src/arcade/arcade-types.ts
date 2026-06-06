@@ -1,6 +1,7 @@
 import type { GameState } from "@agent-alibi/shared";
 import type { ArcadeMissionResult } from "./arcade-rules";
 import type { ActiveActionHint, ArcadeLoopStep, RivalPressureLevel } from "./guidance";
+import type { RivalScanStatus } from "./rival-scan";
 
 export const ARCADE_MISSION_DURATION_MS = 150_000;
 
@@ -26,6 +27,7 @@ export type ArcadeHudState = {
   rivalStatus: string;
   rivalDistanceLabel: string | null;
   rivalPressureLevel: RivalPressureLevel;
+  rivalScanStatus: RivalScanStatus;
   alibiPulseStatus: string;
   paceStatus: string;
   spotlight: string | null;

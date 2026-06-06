@@ -89,6 +89,7 @@ test("close rivals burn the player's alibi if contact is not broken", async ({ p
   await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.forceRivalPressure(8));
   await expect(page.getByText(/rival on you: .+ 8m/i)).toBeVisible();
   await expect(page.getByText(/dash or break line/i)).toBeVisible();
+  await expect(page.getByLabel(/rival scan meter/i).getByText(/scan charg/i)).toBeVisible();
 
   const alarmBeforeScan = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().alarmRaw);
   for (let tick = 0; tick < 5; tick += 1) {
@@ -109,11 +110,13 @@ test("alibi pulse jams a close rival scan", async ({ page }) => {
   await expect(page.getByText(/alibi pulse ready/i)).toBeVisible();
   await expect(page.getByText(/press e \/ space to jam rival scan/i)).toBeVisible();
   await expect(page.getByLabel(/active action/i).getByText(/jam scan/i)).toBeVisible();
+  await expect(page.getByLabel(/rival scan meter/i).getByText(/scan charg/i)).toBeVisible();
 
   const beforePulse = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());
   await page.keyboard.press("KeyE");
   await expect(page.getByText(/alibi pulse: scanner jammed/i)).toBeVisible();
   await expect(page.getByText(/jammed .+ scan/i)).toBeVisible();
+  await expect(page.getByLabel(/rival scan meter/i).getByText(/scan jammed/i)).toBeVisible();
   const afterPulse = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());
   expect(afterPulse?.alibiPulseCooldownMs).toBeGreaterThan(0);
   expect(afterPulse?.rivalScanChargeMs).toBe(0);

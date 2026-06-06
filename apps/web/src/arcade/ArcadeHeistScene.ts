@@ -5,7 +5,7 @@ import { rateArcadeRun } from "./arcade-rules";
 import { ARCADE_MISSION_DURATION_MS, type ArcadeHudPhase, type ArcadeHudState, type ArcadeMissionConfig } from "./arcade-types";
 import { buildActiveActionHint, buildArcadeGuidance, buildRivalPressure, type RivalPressure } from "./guidance";
 import { nextMovementImpulse, selectMovementVector, type MovementImpulse, type MovementVector } from "./movement";
-import { updateRivalScan as advanceRivalScan, type RivalScanState } from "./rival-scan";
+import { buildRivalScanStatus, updateRivalScan as advanceRivalScan, type RivalScanState } from "./rival-scan";
 
 const WORLD_WIDTH = 1680;
 const WORLD_HEIGHT = 1040;
@@ -806,6 +806,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       rivalStatus: this.rivalStatus(),
       rivalDistanceLabel: rivalPressure.label,
       rivalPressureLevel: rivalPressure.level,
+      rivalScanStatus: buildRivalScanStatus(this.rivalScanState, rivalPressure.level),
       alibiPulseStatus: buildAlibiPulseStatus({
         rivalPressureLevel: rivalPressure.level,
         cooldownMs: this.alibiPulseCooldownMs

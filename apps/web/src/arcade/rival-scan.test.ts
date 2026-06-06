@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { updateRivalScan } from "./rival-scan";
+import { buildRivalScanStatus, updateRivalScan } from "./rival-scan";
 
 describe("updateRivalScan", () => {
   it("charges without raising alarm before the danger threshold", () => {
@@ -25,5 +25,21 @@ describe("updateRivalScan", () => {
 
     expect(result.state.chargeMs).toBeLessThan(600);
     expect(result.alarmDelta).toBe(0);
+  });
+
+  it("shows a readable charging status before the scan burns the alibi", () => {
+    const status = buildRivalScanStatus({ chargeMs: 450, cooldownMs: 0 }, "danger");
+
+    expect(status.label).toBe("Scan charge 50%");
+    expect(status.tone).toBe("charging");
+    expect(status.progress).toBe(50);
+  });
+
+  it("shows a jammed status while scan cooldown protects the player", () => {
+    const status = buildRivalScanStatus({ chargeMs: 0, cooldownMs: 900 }, "danger");
+
+    expect(status.label).toBe("Scan jammed");
+    expect(status.tone).toBe("jammed");
+    expect(status.progress).toBe(0);
   });
 });

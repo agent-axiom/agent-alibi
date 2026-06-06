@@ -255,6 +255,11 @@ function makeInitialArcadeHud(state: GameState): ArcadeHudState {
     rivalStatus: "Rivals enter in 5s",
     rivalDistanceLabel: "Nearest rival scanning",
     rivalPressureLevel: "standby",
+    rivalScanStatus: {
+      label: "Scan clear",
+      tone: "idle",
+      progress: 0
+    },
     alibiPulseStatus: "Alibi ready",
     paceStatus: "S-Rank pace",
     spotlight: null,
