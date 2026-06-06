@@ -91,7 +91,7 @@ type RivalCarrierRun = {
   directionLabel: string;
 };
 
-type ImpactKind = "steal" | "intercept" | "alibi" | "escape" | "lockdown";
+type ImpactKind = "steal" | "intercept" | "alibi" | "escape" | "lockdown" | "cashout";
 type CameraKickKind = ImpactKind | "dash";
 
 type MotionTrailPoint = {
@@ -876,6 +876,12 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.aiLootValue += cashedValue;
     this.lastRivalSteal = `Red cashed out +${cashedValue}: ${rival.name} escaped with ${this.relicListLabel(cashed)}`;
     this.flashSpotlight(`Red cashout +${cashedValue}`);
+    this.flashScorePopup({
+      tone: "rival",
+      label: `Red +${cashedValue} Cashout`,
+      detail: `${rival.name} reached Atrium Lift`
+    });
+    this.impactPulse("cashout");
     this.flashRivalBark({
       tone: "taunt",
       agentName: rival.name,
@@ -928,7 +934,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
       intercept: { duration: 170, intensity: 0.0062, color: [255, 79, 123] },
       alibi: { duration: 150, intensity: 0.0048, color: [76, 244, 240] },
       escape: { duration: 190, intensity: 0.0055, color: [126, 255, 223] },
-      lockdown: { duration: 220, intensity: 0.007, color: [255, 79, 123] }
+      lockdown: { duration: 220, intensity: 0.007, color: [255, 79, 123] },
+      cashout: { duration: 190, intensity: 0.0065, color: [255, 79, 123] }
     } satisfies Record<CameraKickKind, { duration: number; intensity: number; color: [number, number, number] | null }>;
     const kick = settings[kind];
     camera.shake(kick.duration, kick.intensity, true);

@@ -422,7 +422,10 @@ test("rival carriers only score after cashout", async ({ page }) => {
   const afterCashout = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());
   expect(afterCashout?.aiLootValue).toBe(3);
   expect(afterCashout?.rivalIntercept).toBeNull();
+  expect(afterCashout?.lastImpact?.kind).toBe("cashout");
   await expect(page.getByLabel(/rival loot alert/i).getByText(/red cashed out \+3/i)).toBeVisible();
+  await expect(page.getByLabel(/score popup/i).getByText(/red \+3 cashout/i)).toBeVisible();
+  await expect(page.getByLabel(/score popup/i).getByText(/rook reached atrium lift/i)).toBeVisible();
   await expect(page.getByLabel(/heist race/i).getByText(/red 3/i)).toBeVisible();
 });
 
