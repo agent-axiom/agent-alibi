@@ -234,6 +234,26 @@ test("opening seconds focus the player on the contract before expanding the full
   await expect(page.getByLabel(/current objective/i).getByText(/escape with/i)).toBeVisible();
 });
 
+test("rival agents stay visually staged until the breach starts", async ({ page }) => {
+  await startSoloArcade(page);
+  await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_STATE__ === "function");
+
+  const staged = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());
+  expect(staged?.rivalsReleased).toBe(false);
+  expect(staged?.rivals?.length).toBeGreaterThanOrEqual(3);
+  expect(staged?.rivals?.map((rival) => rival.visualLabel)).toEqual(["STANDBY", "STANDBY", "STANDBY"]);
+  expect(staged?.rivals?.every((rival) => rival.alpha < 0.7)).toBe(true);
+
+  await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget());
+  await page.keyboard.press("KeyE");
+  await expect(page.getByLabel(/mission radio/i).getByText(/rival agents entered the vault/i)).toBeVisible();
+
+  const breached = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());
+  expect(breached?.rivalsReleased).toBe(true);
+  expect(breached?.rivals?.map((rival) => rival.visualLabel)).toEqual(["ROOK", "GREMLIN", "ANCHOR"]);
+  expect(breached?.rivals?.every((rival) => rival.alpha > 0.95)).toBe(true);
+});
+
 test("arcade sound can be toggled during a run", async ({ page }) => {
   await startSoloArcade(page);
 
