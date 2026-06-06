@@ -79,6 +79,15 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await page.keyboard.press("KeyE");
   await expect(objectiveBanner.getByText(/escape with 3 loot/i)).toBeVisible();
   await expect(objectiveBanner.getByText(/cashout 5 or risk greed route/i)).toBeVisible();
+  const stealCallouts = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().arenaCallouts);
+  expect(stealCallouts).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        kind: "steal",
+        label: "+3 Moon Pearl"
+      })
+    ])
+  );
   await expect(objectiveCompass.getByText(/cashout/i)).toBeVisible();
   await expect(objectiveCompass.getByText(/\+5 at atrium lift/i)).toBeVisible();
   await expect(objectiveCompass.getByText(/follow cyan ring/i)).toBeVisible();
@@ -570,6 +579,15 @@ test("rival steals trigger a clear red loot alert", async ({ page }) => {
   await page.keyboard.press("KeyE");
   await expect(page.getByText("Intercepted Rook", { exact: true })).toBeVisible();
   await expect(page.getByLabel(/score popup/i).getByText(/recovered \+3/i)).toBeVisible();
+  const interceptCallouts = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().arenaCallouts);
+  expect(interceptCallouts).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        kind: "intercept",
+        label: "Recovered +3"
+      })
+    ])
+  );
   await expect(rivalComms.getByText(/that was almost elegant/i)).toBeVisible();
   const afterIntercept = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());
   expect(afterIntercept?.lootValue).toBeGreaterThan(0);
@@ -608,6 +626,15 @@ test("rival carriers only score after cashout", async ({ page }) => {
   await expect(page.getByLabel(/rival loot alert/i).getByText(/red cashed out \+3/i)).toBeVisible();
   await expect(page.getByLabel(/score popup/i).getByText(/red \+3 cashout/i)).toBeVisible();
   await expect(page.getByLabel(/score popup/i).getByText(/rook reached atrium lift/i)).toBeVisible();
+  const cashoutCallouts = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().arenaCallouts);
+  expect(cashoutCallouts).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        kind: "cashout",
+        label: "Red cashout +3"
+      })
+    ])
+  );
   await expect(page.getByLabel(/heist race/i).getByText(/red 3/i)).toBeVisible();
   const missionBeat = page.getByLabel(/mission beat/i);
   await expect(missionBeat.getByText(/score pressure/i)).toBeVisible();
