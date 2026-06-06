@@ -158,6 +158,7 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(caseHighlights.getByText(/stole moon pearl \+ argent crown/i)).toBeVisible();
   await expect(caseHighlights.getByText(/escaped with 6 loot/i)).toBeVisible();
   await expect(caseHighlights.getByText(/clean exit bonus \+3/i)).toBeVisible();
+  await expect(page.getByLabel(/rematch hook/i).getByText(/run it back and make the case file louder/i)).toBeVisible();
   await expect(page.getByText(/relics stolen: moon pearl, argent crown/i)).toBeVisible();
   await page.getByRole("button", { name: /copy result/i }).click();
   await expect(page.getByText(/copied/i)).toBeVisible();
