@@ -36,7 +36,8 @@ describe("buildMissionBeat", () => {
         agentName: "Rook",
         relicName: "Moon Pearl",
         value: 3,
-        distanceMeters: 42
+        distanceMeters: 42,
+        directionLabel: "Carrier NE 42m"
       },
       alibiPulseReady: true,
       nearestRivalName: "Rook"

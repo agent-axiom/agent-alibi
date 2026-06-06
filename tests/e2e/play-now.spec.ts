@@ -169,6 +169,10 @@ test("rival steals trigger a clear red loot alert", async ({ page }) => {
   await expect(missionBeat.getByText(/carrier run/i)).toBeVisible();
   await expect(missionBeat.getByText(/rook has moon pearl/i)).toBeVisible();
   await expect(missionBeat.getByText(/chase the gold-red carrier blip/i)).toBeVisible();
+  const threatVector = page.getByLabel(/threat vector/i);
+  await expect(threatVector.getByText(/carrier (?:n|ne|e|se|s|sw|w|nw|here) \d+m/i)).toBeVisible();
+  await expect(threatVector.getByText(/rook with moon pearl \+3/i)).toBeVisible();
+  await expect(threatVector.getByText(/close gap and press e/i)).toBeVisible();
   const rivalIntercept = page.getByLabel(/rival intercept/i);
   await expect(rivalIntercept.getByText(/rook carrying/i)).toBeVisible();
   await expect(rivalIntercept.getByText(/moon pearl \+3/i)).toBeVisible();
@@ -227,6 +231,10 @@ test("alibi pulse jams a close rival scan", async ({ page }) => {
   await expect(page.getByText(/alibi pulse ready/i)).toBeVisible();
   await expect(page.getByText(/press e \/ space to jam rival scan/i)).toBeVisible();
   await expect(page.getByLabel(/active action/i).getByText(/jam scan/i)).toBeVisible();
+  const threatVector = page.getByLabel(/threat vector/i);
+  await expect(threatVector.getByText(/scan lock/i)).toBeVisible();
+  await expect(threatVector.getByText(/scanner is charging your alarm/i)).toBeVisible();
+  await expect(threatVector.getByText(/press e \/ space to jam/i)).toBeVisible();
   await expect(page.getByLabel(/rival scan meter/i).getByText(/scan charg/i)).toBeVisible();
 
   const beforePulse = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());

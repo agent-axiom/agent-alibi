@@ -148,6 +148,13 @@ export function MatchScreen({ match }: MatchScreenProps) {
               <small>{hud.missionBeat.action}</small>
             </div>
           ) : null}
+          {hud?.threatCue ? (
+            <div className={`arcade-threat-cue ${hud.threatCue.tone}`} aria-label="Threat vector">
+              <strong>{hud.threatCue.label}</strong>
+              <span>{hud.threatCue.detail}</span>
+              <small>{hud.threatCue.action}</small>
+            </div>
+          ) : null}
           <div className="arcade-steps" aria-label="Mission loop">
             <span className={hud?.loopStep === "steal" ? "active" : ""}>
               <b>1</b> Steal
