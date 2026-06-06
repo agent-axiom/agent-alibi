@@ -431,6 +431,19 @@ test("rival carriers only score after cashout", async ({ page }) => {
   await expect(page.getByLabel(/heist race/i).getByText(/red 3/i)).toBeVisible();
 });
 
+test("rival carrier near cashout triggers an imminent warning", async ({ page }) => {
+  await startSoloArcade(page);
+  await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_STATE__ === "function");
+  await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.forceRivalSteal?.());
+  await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.forceRivalNearCashout?.());
+
+  const carrierRun = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().rivalIntercept);
+  expect(carrierRun?.urgency).toBe("critical");
+  expect(carrierRun?.cashoutSeconds).toBeLessThanOrEqual(4);
+  const rivalIntercept = page.getByLabel(/rival intercept/i);
+  await expect(rivalIntercept.getByText(/cashout imminent/i)).toBeVisible();
+});
+
 test("unfinished carrier runs become pending loot in the final case file", async ({ page }) => {
   await startSoloArcade(page);
   await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_STATE__ === "function");

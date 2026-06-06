@@ -46,6 +46,7 @@ export type ArcadeRivalIntercept = {
   distanceMeters: number;
   directionLabel: string;
   cashoutSeconds: number;
+  urgency: "chase" | "critical";
 };
 
 export type ArcadeLootChainWindow = {

@@ -38,7 +38,8 @@ describe("buildMissionBeat", () => {
         value: 3,
         distanceMeters: 42,
         directionLabel: "Carrier NE 42m",
-        cashoutSeconds: 9
+        cashoutSeconds: 9,
+        urgency: "chase"
       },
       alibiPulseReady: true,
       nearestRivalName: "Rook"

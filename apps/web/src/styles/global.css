@@ -2172,6 +2172,27 @@ p {
   color: #ffd8e2;
 }
 
+.arcade-rival-intercept.critical {
+  border-color: rgba(255, 79, 123, 0.95);
+  background: linear-gradient(135deg, rgba(255, 79, 123, 0.34), rgba(255, 213, 106, 0.16));
+  box-shadow: 0 0 34px rgba(255, 79, 123, 0.36);
+  animation: arcade-critical-pulse 0.72s ease-in-out infinite alternate;
+}
+
+.arcade-rival-intercept.critical small {
+  color: #fff7d6;
+}
+
+@keyframes arcade-critical-pulse {
+  from {
+    transform: translateY(0);
+  }
+
+  to {
+    transform: translateY(-1px);
+  }
+}
+
 .arcade-clean-bonus {
   grid-column: span 2;
   width: auto;
