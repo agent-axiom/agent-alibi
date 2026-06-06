@@ -70,7 +70,7 @@ export type ArcadeThreatCue = {
 };
 
 export type ArcadeScorePopup = {
-  tone: "loot" | "bonus" | "recover";
+  tone: "loot" | "bonus" | "recover" | "rival";
   label: string;
   detail: string;
 };
