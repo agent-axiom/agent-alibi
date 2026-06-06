@@ -99,6 +99,14 @@ type RivalCarrierRun = {
 
 type ImpactKind = "steal" | "intercept" | "alibi" | "escape" | "lockdown" | "cashout";
 type CameraKickKind = ImpactKind | "dash";
+type ArenaCalloutKind = ImpactKind | "rival-steal";
+
+type RuntimeArenaCallout = {
+  id: number;
+  kind: ArenaCalloutKind;
+  label: string;
+  container: Phaser.GameObjects.Container;
+};
 
 type MotionTrailPoint = {
   x: number;
@@ -196,6 +204,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private lastImpact: { kind: ImpactKind; count: number; atMs: number } | null = null;
   private cameraKickCount = 0;
   private lastCameraKick: { kind: CameraKickKind; count: number; atMs: number } | null = null;
+  private arenaCalloutCount = 0;
+  private arenaCallouts: RuntimeArenaCallout[] = [];
 
   constructor() {
     super("arcade-heist");
@@ -326,7 +336,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
       rivalIntercept: this.rivalIntercept(),
       impulse: this.keyboardImpulse ?? null,
       lastImpact: this.lastImpact,
-      lastCameraKick: this.lastCameraKick
+      lastCameraKick: this.lastCameraKick,
+      arenaCallouts: this.arenaCalloutsDebug()
     };
   }
 
@@ -486,6 +497,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.lastImpact = null;
     this.cameraKickCount = 0;
     this.lastCameraKick = null;
+    this.arenaCalloutCount = 0;
+    this.arenaCallouts = [];
     this.playerName = config.state.players.find((player) => player.kind === "human")?.name ?? "Agent You";
 
     this.tweens.killAll();
@@ -938,6 +951,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
         label: `+${artifact.value} ${artifact.name}`,
         detail: this.artifactsStolen > 1 ? `Loot chain x${this.artifactsStolen}` : "Relic secured"
       });
+      this.flashArenaCallout("steal", `+${artifact.value} ${artifact.name}`, artifact.x, artifact.y, 0xffd56a);
       this.flashObjectiveBanner(this.buildEscapeBanner(this.artifactsStolen === 1));
       this.impactPulse("steal");
       this.collectArtifactVisual(artifact, 0xffd56a);
@@ -959,6 +973,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       agentName: actorLabel,
       line: `${artifact.name} is mine. Catch the carrier if you can.`
     });
+    this.flashArenaCallout("rival-steal", `${actorLabel} stole +${artifact.value}`, artifact.x, artifact.y, TEAM_COLORS[actor.teamId]);
     this.feedLine(`${actorLabel} stole ${artifact.name}.`);
     this.collectArtifactVisual(artifact, TEAM_COLORS[actor.teamId]);
     this.updateCarrierBadges();
@@ -985,6 +1000,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       label: `Red +${cashedValue} Cashout`,
       detail: `${rival.name} reached Atrium Lift`
     });
+    this.flashArenaCallout("cashout", `Red cashout +${cashedValue}`, target?.x ?? rival.x, target?.y ?? rival.y, TEAM_COLORS.red);
     this.impactPulse("cashout");
     this.flashRivalBark({
       tone: "taunt",
@@ -1027,6 +1043,48 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.routePulse = pulse;
     this.routePulseUntilMs = this.elapsedMs + 2_000;
     this.emitHudIfNeeded(true);
+  }
+
+  private flashArenaCallout(kind: ArenaCalloutKind, label: string, x: number, y: number, color: number) {
+    this.arenaCalloutCount += 1;
+    const id = this.arenaCalloutCount;
+    const calloutX = Phaser.Math.Clamp(x, 112, WORLD_WIDTH - 112);
+    const calloutY = Phaser.Math.Clamp(y - 78, 96, WORLD_HEIGHT - 96);
+    const text = this.add
+      .text(0, 0, label.toUpperCase(), {
+        color: "#f8fdff",
+        fontFamily: "Inter, Arial, sans-serif",
+        fontSize: "18px",
+        fontStyle: "900",
+        stroke: "#050811",
+        strokeThickness: 5
+      })
+      .setOrigin(0.5);
+    const plate = this.add
+      .rectangle(0, 0, Math.max(132, text.width + 32), 38, 0x050811, 0.82)
+      .setStrokeStyle(3, color, 0.84);
+    const glow = this.add.rectangle(0, 0, Math.max(148, text.width + 52), 54, color, 0.12);
+    const container = this.add.container(calloutX, calloutY, [glow, plate, text]).setDepth(34);
+    container.setScale(0.92);
+    this.arenaCallouts.push({ id, kind, label, container });
+
+    while (this.arenaCallouts.length > 5) {
+      const stale = this.arenaCallouts.shift();
+      stale?.container.destroy(true);
+    }
+
+    this.tweens.add({
+      targets: container,
+      y: calloutY - 44,
+      alpha: 0,
+      scale: 1.08,
+      duration: 2_200,
+      ease: "Cubic.easeOut",
+      onComplete: () => {
+        container.destroy(true);
+        this.arenaCallouts = this.arenaCallouts.filter((callout) => callout.id !== id);
+      }
+    });
   }
 
   private releaseRivals({ announce, holdMs }: { announce: boolean; holdMs: number }) {
@@ -1144,6 +1202,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       label: `Recovered +${recoveredValue}`,
       detail: this.relicListLabel(recovered)
     });
+    this.flashArenaCallout("intercept", `Recovered +${recoveredValue}`, rival.x, rival.y, 0xffd56a);
     this.impactPulse("intercept");
     this.flashRivalBark({
       tone: "panic",
@@ -1171,6 +1230,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.shoveRivalAway(rival);
     this.addAlibiPulseVisual();
     this.flashSpotlight("Alibi pulse: scanner jammed");
+    this.flashArenaCallout("alibi", "Scan jammed", this.player.x, this.player.y, 0x7effdf);
     this.impactPulse("alibi");
     this.feedLine(`You jammed ${rival.name}'s scan. Break for the exit.`);
     return true;
@@ -2071,6 +2131,16 @@ export class ArcadeHeistScene extends Phaser.Scene {
       pointCount: this.motionTrailPoints.length,
       activeMs: Math.max(0, Math.round(this.motionTrailActiveUntilMs - this.elapsedMs))
     };
+  }
+
+  private arenaCalloutsDebug() {
+    return this.arenaCallouts.map((callout) => ({
+      kind: callout.kind,
+      label: callout.label,
+      x: Math.round(callout.container.x),
+      y: Math.round(callout.container.y),
+      alpha: Number(callout.container.alpha.toFixed(2))
+    }));
   }
 
   private arenaLabelsDebug() {
