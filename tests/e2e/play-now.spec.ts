@@ -44,13 +44,16 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   expect(escapeTarget?.kind).toBe("escape");
   expect(escapeTarget?.label).toMatch(/atrium lift/i);
   await page.keyboard.press("KeyG");
-  await expect(page.getByText(/greed route/i)).toBeVisible();
+  await expect(page.getByLabel(/optional relic/i).getByText(/greed route/i)).toBeVisible();
   const greedTarget = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().target);
   expect(greedTarget?.kind).toBe("artifact");
-  await page.keyboard.press("KeyG");
-  await expect(page.getByText(/optional relic/i)).toBeVisible();
-  const escapeTargetAgain = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().target);
-  expect(escapeTargetAgain?.kind).toBe("escape");
+  await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget());
+  await expect(page.getByText(/press e \/ space to steal/i)).toBeVisible();
+  await page.keyboard.press("KeyE");
+  await expect(page.getByText(/loot chain x2/i)).toBeVisible();
+  const afterGreedSteal = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());
+  expect(afterGreedSteal?.lootValue).toBeGreaterThan(afterSteal ?? 0);
+  expect(afterGreedSteal?.target?.kind).toBe("escape");
 
   await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget());
   await expect(page.getByText(/press e \/ space to escape/i)).toBeVisible();

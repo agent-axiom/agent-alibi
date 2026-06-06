@@ -574,7 +574,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       this.alarm = Math.min(5, this.alarm + (artifact.size === "major" ? 0.34 : 0.18));
       this.feedLine(`You stole ${artifact.name}. Escape route unlocked.`);
       this.routeMode = "escape";
-      this.flashSpotlight(`${artifact.name} secured`);
+      this.flashSpotlight(this.artifactsStolen > 1 ? `Loot chain x${this.artifactsStolen}` : `${artifact.name} secured`);
       this.collectArtifactVisual(artifact, 0xffd56a);
       this.updateTargetMarker();
       return;
@@ -684,6 +684,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       this.spotlight = null;
     }
     const targetArtifact = this.primaryTargetArtifact();
+    const nearArtifact = this.nearPlayerArtifact();
     const objectiveTarget = this.currentObjectiveTarget();
     const targetDistanceMeters =
       this.player && objectiveTarget
@@ -695,11 +696,12 @@ export class ArcadeHeistScene extends Phaser.Scene {
       artifactsStolen: this.artifactsStolen,
       totalArtifacts: this.artifacts.length,
       targetArtifactName: targetArtifact?.name ?? null,
-      nearArtifactName: this.nearPlayerArtifact()?.name ?? null,
+      nearArtifactName: nearArtifact?.name ?? null,
       nearExit: this.isNearExit(),
       canEscape,
       timeLeftMs: this.timeLeftMs()
     });
+    const greedPromptActive = this.routeMode === "greed" && Boolean(targetArtifact);
 
     const hud: ArcadeHudState = {
       phase: this.phase(),
@@ -711,8 +713,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
       totalArtifacts: this.artifacts.length,
       canEscape,
       dashReady: this.dashCooldownMs <= 0,
-      objective: guidance.objective,
-      prompt: guidance.prompt,
+      objective: greedPromptActive ? `Greed route: steal ${targetArtifact!.name}` : guidance.objective,
+      prompt: greedPromptActive && nearArtifact ? "Press E / Space to steal" : guidance.prompt,
       loopStep: guidance.loopStep,
       raceStatus: guidance.raceStatus,
       greedStatus: this.greedStatus(guidance.greedStatus),
