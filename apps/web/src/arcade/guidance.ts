@@ -61,6 +61,8 @@ export type ObjectiveCompassInput = {
   directionLabel: string | null;
   distanceMeters: number | null;
   cashoutValue?: number | null;
+  rivalLead?: number | null;
+  swingValue?: number | null;
   timeLeftMs: number;
 };
 
@@ -102,6 +104,17 @@ export function buildObjectiveCompass(input: ObjectiveCompassInput): ObjectiveCo
       target: hasCashout ? `+${cashoutValue} at Atrium Lift` : "Atrium Lift",
       route: compactRouteLabel(input.directionLabel),
       detail: input.distanceMeters !== null && input.distanceMeters <= 6 ? "Press E / Space" : "Follow cyan ring"
+    };
+  }
+
+  const rivalLead = input.rivalLead ?? 0;
+  if (rivalLead > 0) {
+    return {
+      tone: "danger",
+      verb: "COMEBACK",
+      target: input.targetLabel ?? "Marked relic",
+      route: compactRouteLabel(input.directionLabel),
+      detail: buildComebackCompassDetail(input.swingValue ?? 0, rivalLead)
     };
   }
 
@@ -262,4 +275,10 @@ function compactRouteLabel(label: string | null): string {
     .replace(/^Carrier\s+/i, "")
     .replace(/^Nearest rival\s+/i, "")
     .replace(/^Cashout\s+\+\d+\s+/i, "");
+}
+
+function buildComebackCompassDetail(swingValue: number, rivalLead: number): string {
+  if (swingValue > rivalLead) return "Steal + cashout beats Red";
+  if (swingValue === rivalLead) return "Steal + cashout ties Red";
+  return "Steal to cut Red lead";
 }

@@ -1342,6 +1342,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
       directionLabel: alibiPulseReady ? this.rivalDirectionLabel(nearestRival, rivalPressure) : targetDirectionLabel,
       distanceMeters: alibiPulseReady ? (nearestRival?.distanceMeters ?? null) : targetDistanceMeters,
       cashoutValue: escapePayout?.cashout ?? null,
+      rivalLead: objectiveTarget?.kind === "artifact" ? Math.max(0, this.aiLootValue - this.lootValue) : null,
+      swingValue: objectiveTarget?.kind === "artifact" && targetArtifact ? this.lootValue + targetArtifact.value + 2 : null,
       timeLeftMs: this.timeLeftMs()
     });
 
