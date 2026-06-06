@@ -1,6 +1,6 @@
 import type { GameState } from "@agent-alibi/shared";
 import type { ArcadeMissionResult } from "./arcade-rules";
-import type { ArcadeLoopStep } from "./guidance";
+import type { ArcadeLoopStep, RivalPressureLevel } from "./guidance";
 
 export const ARCADE_MISSION_DURATION_MS = 150_000;
 
@@ -24,6 +24,7 @@ export type ArcadeHudState = {
   targetDistanceLabel: string | null;
   rivalStatus: string;
   rivalDistanceLabel: string | null;
+  rivalPressureLevel: RivalPressureLevel;
   paceStatus: string;
   spotlight: string | null;
   feed: string[];

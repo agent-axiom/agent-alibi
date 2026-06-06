@@ -111,7 +111,7 @@ export function MatchScreen({ match }: MatchScreenProps) {
             <div className="arcade-rivals" aria-label="Rival crew status">
               {hud?.rivalStatus ?? "Rivals scanning"}
             </div>
-            <div className="arcade-rival-scan" aria-label="Nearest rival">
+            <div className={`arcade-rival-scan ${hud?.rivalPressureLevel ?? "standby"}`} aria-label="Nearest rival">
               {hud?.rivalDistanceLabel ?? "Nearest rival scanning"}
             </div>
             <div className="arcade-pace" aria-label="Run pace">

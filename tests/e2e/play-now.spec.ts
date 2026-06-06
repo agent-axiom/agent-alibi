@@ -24,6 +24,9 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await page.waitForTimeout(1_600);
   const graceState = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());
   expect(graceState?.aiLootValue).toBe(0);
+  await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.forceRivalPressure(8));
+  await expect(page.getByText(/rival on you: .+ 8m/i)).toBeVisible();
+  await expect(page.getByText(/dash or break line/i)).toBeVisible();
 
   const beforeMove = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().player);
   await page.keyboard.down("ArrowRight");

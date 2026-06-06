@@ -11,6 +11,7 @@ declare global {
     __AGENT_ALIBI_ARCADE_STATE__?: () => ReturnType<ArcadeHeistScene["getDebugState"]>;
     __AGENT_ALIBI_ARCADE_DEBUG__?: {
       teleportToTarget: () => void;
+      forceRivalPressure: (distanceMeters?: number) => void;
     };
   }
 }
@@ -51,11 +52,14 @@ export function ArcadeHeistStage({ state, runId, onHudUpdate, onFinish }: Arcade
       },
       scene
     });
-    window.__AGENT_ALIBI_FINISH_ARCADE__ = () => scene.finishForDebug();
-    window.__AGENT_ALIBI_ARCADE_STATE__ = () => scene.getDebugState();
-    window.__AGENT_ALIBI_ARCADE_DEBUG__ = {
-      teleportToTarget: () => scene.teleportToTargetForDebug()
-    };
+    if (import.meta.env.DEV) {
+      window.__AGENT_ALIBI_FINISH_ARCADE__ = () => scene.finishForDebug();
+      window.__AGENT_ALIBI_ARCADE_STATE__ = () => scene.getDebugState();
+      window.__AGENT_ALIBI_ARCADE_DEBUG__ = {
+        teleportToTarget: () => scene.teleportToTargetForDebug(),
+        forceRivalPressure: (distanceMeters?: number) => scene.forceRivalPressureForDebug(distanceMeters)
+      };
+    }
     hostRef.current.focus({ preventScroll: true });
 
     return () => {

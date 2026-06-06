@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildArcadeGuidance } from "./guidance";
+import { buildArcadeGuidance, buildRivalPressure } from "./guidance";
 
 describe("buildArcadeGuidance", () => {
   it("starts with a concrete theft objective instead of a vague instruction", () => {
@@ -71,5 +71,41 @@ describe("buildArcadeGuidance", () => {
     });
 
     expect(guidance.raceStatus).toBe("AI crew is ahead by 3");
+  });
+
+  it("keeps rival scan calm before rivals are released", () => {
+    const pressure = buildRivalPressure({
+      aiReleased: false,
+      nearestRivalName: "Vesper",
+      distanceMeters: 9
+    });
+
+    expect(pressure.level).toBe("standby");
+    expect(pressure.label).toBe("Nearest rival 9m");
+    expect(pressure.radioLine).toBeNull();
+  });
+
+  it("escalates rival scan when an active rival gets close", () => {
+    const pressure = buildRivalPressure({
+      aiReleased: true,
+      nearestRivalName: "Vesper",
+      distanceMeters: 18
+    });
+
+    expect(pressure.level).toBe("closing");
+    expect(pressure.label).toBe("Rival close: Vesper 18m");
+    expect(pressure.radioLine).toBe("Rival closing: Vesper is 18m out.");
+  });
+
+  it("marks immediate rival contact as danger", () => {
+    const pressure = buildRivalPressure({
+      aiReleased: true,
+      nearestRivalName: "Gremlin",
+      distanceMeters: 8
+    });
+
+    expect(pressure.level).toBe("danger");
+    expect(pressure.label).toBe("Rival on you: Gremlin 8m");
+    expect(pressure.radioLine).toBe("Rival on you: Gremlin. Dash or break line.");
   });
 });

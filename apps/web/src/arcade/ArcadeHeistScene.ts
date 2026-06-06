@@ -2,7 +2,7 @@ import Phaser from "phaser";
 import type { ArtifactState, GameState, PlayerState, Room, TeamId } from "@agent-alibi/shared";
 import { rateArcadeRun } from "./arcade-rules";
 import { ARCADE_MISSION_DURATION_MS, type ArcadeHudPhase, type ArcadeHudState, type ArcadeMissionConfig } from "./arcade-types";
-import { buildArcadeGuidance } from "./guidance";
+import { buildArcadeGuidance, buildRivalPressure, type RivalPressure } from "./guidance";
 import { nextMovementImpulse, selectMovementVector, type MovementImpulse, type MovementVector } from "./movement";
 
 const WORLD_WIDTH = 1680;
@@ -104,6 +104,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private spotlightUntilMs = 0;
   private finished = false;
   private aiReleased = false;
+  private lastRivalPressureLevel: RivalPressure["level"] = "standby";
   private playerName = "Agent You";
   private routeMode: RouteMode = "escape";
   private escapeZone?: Phaser.GameObjects.Container;
@@ -200,6 +201,17 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.emitHudIfNeeded(true);
   }
 
+  forceRivalPressureForDebug(distanceMeters = 8) {
+    const rival = this.aiAgents[0];
+    if (!this.player || !rival) return;
+    const distancePx = Math.max(1, distanceMeters) * 8;
+    const direction = this.player.x + distancePx < WORLD_WIDTH - 82 ? 1 : -1;
+    this.moveAgent(rival, this.player.x + direction * distancePx - rival.x, this.player.y - rival.y);
+    this.aiReleased = true;
+    this.updateRivalPressureFeed();
+    this.emitHudIfNeeded(true);
+  }
+
   override update(_time: number, delta: number) {
     if (!this.state || !this.player || this.finished) return;
 
@@ -208,6 +220,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
 
     this.updatePlayer(delta);
     this.updateAi(delta);
+    this.updateRivalPressureFeed();
     this.updateTargetMarker();
     this.updateAlarm(delta);
     this.emitHudIfNeeded(false);
@@ -240,6 +253,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.spotlightUntilMs = 0;
     this.finished = false;
     this.aiReleased = false;
+    this.lastRivalPressureLevel = "standby";
     this.routeMode = "escape";
     this.targetMarker = undefined;
     this.targetBeam = undefined;
@@ -698,6 +712,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
         ? Math.max(0, Math.round(Phaser.Math.Distance.Between(this.player.x, this.player.y, objectiveTarget.x, objectiveTarget.y) / 8))
         : null;
     const nearestRival = this.nearestRivalScan();
+    const rivalPressure = this.rivalPressure(nearestRival);
     const guidance = buildArcadeGuidance({
       lootValue: this.lootValue,
       aiLootValue: this.aiLootValue,
@@ -731,12 +746,24 @@ export class ArcadeHeistScene extends Phaser.Scene {
           ? `${objectiveTarget.kind === "escape" ? "Exit" : "Target"} ${targetDistanceMeters}m`
           : null,
       rivalStatus: this.rivalStatus(),
-      rivalDistanceLabel: nearestRival ? `Nearest rival ${nearestRival.distanceMeters}m` : null,
+      rivalDistanceLabel: rivalPressure.label,
+      rivalPressureLevel: rivalPressure.level,
       paceStatus: this.paceStatus(),
       spotlight: this.spotlight,
       feed: this.feed.slice(-5)
     };
     this.config.onHudUpdate(hud);
+  }
+
+  private updateRivalPressureFeed() {
+    const pressure = this.rivalPressure();
+    if (pressure.level === "clear" || pressure.level === "standby") {
+      this.lastRivalPressureLevel = pressure.level;
+      return;
+    }
+    if (this.lastRivalPressureLevel === pressure.level || !pressure.radioLine) return;
+    this.lastRivalPressureLevel = pressure.level;
+    this.feedLine(pressure.radioLine);
   }
 
   private nearestRivalScan(): RivalScan | null {
@@ -748,6 +775,14 @@ export class ArcadeHeistScene extends Phaser.Scene {
       }))
       .sort((left, right) => left.distanceMeters - right.distanceMeters)[0];
     return nearest ?? null;
+  }
+
+  private rivalPressure(scan = this.nearestRivalScan()): RivalPressure {
+    return buildRivalPressure({
+      aiReleased: this.aiReleased,
+      nearestRivalName: scan?.name ?? null,
+      distanceMeters: scan?.distanceMeters ?? null
+    });
   }
 
   private greedStatus(baseStatus: string | null): string | null {

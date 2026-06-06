@@ -1,4 +1,5 @@
 export type ArcadeLoopStep = "steal" | "escape" | "survive";
+export type RivalPressureLevel = "standby" | "clear" | "closing" | "danger";
 
 export type ArcadeGuidanceInput = {
   lootValue: number;
@@ -18,6 +19,18 @@ export type ArcadeGuidance = {
   loopStep: ArcadeLoopStep;
   raceStatus: string;
   greedStatus: string | null;
+};
+
+export type RivalPressureInput = {
+  aiReleased: boolean;
+  nearestRivalName: string | null;
+  distanceMeters: number | null;
+};
+
+export type RivalPressure = {
+  level: RivalPressureLevel;
+  label: string | null;
+  radioLine: string | null;
 };
 
 export function buildArcadeGuidance(input: ArcadeGuidanceInput): ArcadeGuidance {
@@ -58,4 +71,45 @@ function buildRaceStatus(lootValue: number, aiLootValue: number): string {
   if (delta > 0) return `You lead by ${delta}`;
   if (delta < 0) return `AI crew is ahead by ${Math.abs(delta)}`;
   return "Loot race is tied";
+}
+
+export function buildRivalPressure(input: RivalPressureInput): RivalPressure {
+  if (input.distanceMeters === null) {
+    return {
+      level: "standby",
+      label: null,
+      radioLine: null
+    };
+  }
+
+  const rivalName = input.nearestRivalName ?? "Rival";
+  if (!input.aiReleased) {
+    return {
+      level: "standby",
+      label: `Nearest rival ${input.distanceMeters}m`,
+      radioLine: null
+    };
+  }
+
+  if (input.distanceMeters <= 12) {
+    return {
+      level: "danger",
+      label: `Rival on you: ${rivalName} ${input.distanceMeters}m`,
+      radioLine: `Rival on you: ${rivalName}. Dash or break line.`
+    };
+  }
+
+  if (input.distanceMeters <= 24) {
+    return {
+      level: "closing",
+      label: `Rival close: ${rivalName} ${input.distanceMeters}m`,
+      radioLine: `Rival closing: ${rivalName} is ${input.distanceMeters}m out.`
+    };
+  }
+
+  return {
+    level: "clear",
+    label: `Nearest rival ${input.distanceMeters}m`,
+    radioLine: null
+  };
 }
