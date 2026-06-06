@@ -43,6 +43,13 @@ export function FinalCaseFile({ summary, onRematch, onHome }: FinalCaseFileProps
               <small>{summary.greedRoute === "successful" ? "Greed route successful" : "Main route only"}</small>
             </div>
           ) : null}
+          {summary.stolenRelicNames && summary.stolenRelicNames.length > 0 ? (
+            <div className="final-score final-relics">
+              <span>Relics Stolen</span>
+              <strong>{summary.stolenRelicNames.length}</strong>
+              <small>{summary.stolenRelicNames.join(" + ")}</small>
+            </div>
+          ) : null}
           {summary.alibiPulsesUsed && summary.alibiPulsesUsed > 0 ? (
             <div className="final-score final-alibi">
               <span>Alibi Pulses</span>

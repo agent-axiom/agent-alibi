@@ -636,6 +636,16 @@ p {
   box-shadow: 0 8px 0 rgba(57, 229, 192, 0.34);
 }
 
+.final-relics {
+  border-color: #ffd56a;
+  background: #fff7d8;
+  box-shadow: 0 8px 0 rgba(246, 189, 96, 0.34);
+}
+
+.final-relics small {
+  overflow-wrap: anywhere;
+}
+
 .final-alibi {
   border-color: #4cf4f0;
   background: #e8feff;

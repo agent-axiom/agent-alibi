@@ -7,6 +7,7 @@ export type ArcadeMissionResult = {
   playerName: string;
   lootValue: number;
   artifactsStolen: number;
+  stolenRelicNames?: string[];
   aiLootValue: number;
   alarm: number;
   elapsedMs: number;
@@ -25,6 +26,7 @@ export function buildArcadeMatchSummary(result: ArcadeMissionResult): MatchSumma
   const { runRating, styleBonus } = rateArcadeRun(result);
   const lootChain = Math.max(1, result.artifactsStolen);
   const greedRoute = lootChain > 1 ? "successful" : "skipped";
+  const stolenRelicNames = result.stolenRelicNames ?? [];
   const alibiPulsesUsed = result.alibiPulsesUsed ?? 0;
   const scanBurns = result.scanBurns ?? 0;
   const blueScore: TeamScore = {
@@ -55,6 +57,7 @@ export function buildArcadeMatchSummary(result: ArcadeMissionResult): MatchSumma
     styleBonus,
     lootChain,
     greedRoute,
+    stolenRelicNames,
     alibiPulsesUsed,
     scanBurns,
     caseFile: buildCaseFile(result, title, blueScore, redScore, runRating, styleBonus)
@@ -120,6 +123,7 @@ function buildCaseFile(
     styleBonus > 0 ? `Clean exit bonus: +${styleBonus}` : "Clean exit bonus: +0",
     `Loot Chain: x${Math.max(1, result.artifactsStolen)}`,
     `Greed Route: ${result.artifactsStolen > 1 ? "successful" : "skipped"}`,
+    `Relics Stolen: ${result.stolenRelicNames?.length ? result.stolenRelicNames.join(", ") : "none"}`,
     `Alibi Pulses: ${result.alibiPulsesUsed ?? 0}`,
     `Scan Burns: ${result.scanBurns ?? 0}`,
     `Alarm: ${result.alarm}/5`,

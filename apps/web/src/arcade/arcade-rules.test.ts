@@ -69,6 +69,22 @@ describe("buildArcadeMatchSummary", () => {
     expect(summary.caseFile).toContain("Greed Route: successful");
   });
 
+  it("lists stolen relic names in the shareable case file", () => {
+    const summary = buildArcadeMatchSummary({
+      outcome: "escaped",
+      playerName: "Agent You",
+      lootValue: 6,
+      artifactsStolen: 2,
+      aiLootValue: 0,
+      alarm: 2,
+      elapsedMs: 50_000,
+      stolenRelicNames: ["Moon Pearl", "Argent Crown"]
+    });
+
+    expect(summary.stolenRelicNames).toEqual(["Moon Pearl", "Argent Crown"]);
+    expect(summary.caseFile).toContain("Relics Stolen: Moon Pearl, Argent Crown");
+  });
+
   it("records alibi pulse saves and scan burns in the shareable case file", () => {
     const summary = buildArcadeMatchSummary({
       outcome: "escaped",

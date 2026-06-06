@@ -78,6 +78,10 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(finalScores.getByText(/clean exit bonus/i)).toBeVisible();
   await expect(finalScores.getByText(/loot chain/i)).toBeVisible();
   await expect(finalScores.getByText(/x2/i)).toBeVisible();
+  await expect(finalScores.getByText(/relics stolen/i)).toBeVisible();
+  await expect(finalScores.getByText(/moon pearl/i)).toBeVisible();
+  await expect(finalScores.getByText(/argent crown/i)).toBeVisible();
+  await expect(page.getByText(/relics stolen: moon pearl, argent crown/i)).toBeVisible();
   await page.getByRole("button", { name: /copy result/i }).click();
   await expect(page.getByText(/copied/i)).toBeVisible();
   await expect(page.getByRole("button", { name: /rematch/i })).toBeVisible();
