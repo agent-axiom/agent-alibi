@@ -1626,6 +1626,15 @@ export class ArcadeHeistScene extends Phaser.Scene {
       };
     }
 
+    if (this.aiReleased && this.aiWakeHoldMs > 0) {
+      return {
+        tone: "warning",
+        label: "Rivals waking",
+        detail: `${Math.max(1, Math.ceil(this.aiWakeHoldMs / 1000))}s head start before scans`,
+        action: "Choose cashout or greed now"
+      };
+    }
+
     if (alibiPulseReady && nearestRival) {
       return {
         tone: "warning",
