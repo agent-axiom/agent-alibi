@@ -49,6 +49,8 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   const initialTarget = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());
   expect(initialTarget?.target?.kind).toBe("artifact");
   expect(initialTarget?.hasTargetBeam).toBe(true);
+  expect(initialTarget?.routeGuide?.kind).toBe("artifact");
+  expect(initialTarget?.routeGuide?.chevronCount).toBeGreaterThan(1);
   expect(initialTarget?.nearestRival?.distanceMeters).toBeGreaterThan(0);
   await page.waitForTimeout(1_600);
   const graceState = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());
@@ -100,6 +102,9 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   const escapeTarget = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().target);
   expect(escapeTarget?.kind).toBe("escape");
   expect(escapeTarget?.label).toMatch(/atrium lift/i);
+  const escapeGuide = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().routeGuide);
+  expect(escapeGuide?.kind).toBe("escape");
+  expect(escapeGuide?.chevronCount).toBeGreaterThan(0);
   await page.keyboard.press("KeyG");
   await expect(page.getByLabel(/optional relic/i).getByText(/greed route/i)).toBeVisible();
   await expect(objectiveBanner.getByText(/greed route armed/i)).toBeVisible();

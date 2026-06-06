@@ -238,6 +238,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
   getDebugState() {
     const target = this.currentObjectiveTarget();
     const nearestRival = this.nearestRivalScan();
+    const routeGuide = this.routeGuideDebug(target);
     return {
       player: this.player ? { x: this.player.x, y: this.player.y } : null,
       camera: {
@@ -261,6 +262,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
         : null,
       target,
       hasTargetBeam: Boolean(this.targetBeam),
+      routeGuide,
       routeMode: this.routeMode,
       nearestRival,
       lastRivalSteal: this.lastRivalSteal,
@@ -1465,11 +1467,54 @@ export class ArcadeHeistScene extends Phaser.Scene {
     }
 
     const color = target.kind === "escape" ? 0x7effdf : target.kind === "carrier" ? 0xff4f7b : 0xffd56a;
+    const distance = Phaser.Math.Distance.Between(this.player.x, this.player.y, target.x, target.y);
     this.targetBeam.clear();
-    this.targetBeam.lineStyle(3, color, 0.32);
+    this.targetBeam.lineStyle(8, color, 0.1);
     this.targetBeam.strokeLineShape(new Phaser.Geom.Line(this.player.x, this.player.y, target.x, target.y));
+    this.targetBeam.lineStyle(3, color, 0.45);
+    this.targetBeam.strokeLineShape(new Phaser.Geom.Line(this.player.x, this.player.y, target.x, target.y));
+    this.drawRouteChevrons(target, color, distance);
     this.targetBeam.fillStyle(color, 0.14);
     this.targetBeam.fillCircle(target.x, target.y, target.kind === "escape" ? 68 : target.kind === "carrier" ? 58 : 50);
+  }
+
+  private routeGuideDebug(target: ArcadeObjectiveTarget | undefined) {
+    if (!this.player || !target) return null;
+    const distance = Phaser.Math.Distance.Between(this.player.x, this.player.y, target.x, target.y);
+    return {
+      kind: target.kind,
+      distanceMeters: Math.max(0, Math.round(distance / 8)),
+      chevronCount: this.routeChevronCount(distance)
+    };
+  }
+
+  private routeChevronCount(distance: number) {
+    if (distance < 72) return 0;
+    return Phaser.Math.Clamp(Math.floor(distance / 92), 1, 7);
+  }
+
+  private drawRouteChevrons(target: ArcadeObjectiveTarget, color: number, distance: number) {
+    if (!this.player) return;
+    const chevronCount = this.routeChevronCount(distance);
+    if (chevronCount <= 0) return;
+
+    const angle = Phaser.Math.Angle.Between(this.player.x, this.player.y, target.x, target.y);
+    const forwardX = Math.cos(angle);
+    const forwardY = Math.sin(angle);
+    const sideX = Math.cos(angle + Math.PI / 2);
+    const sideY = Math.sin(angle + Math.PI / 2);
+    this.targetBeam?.fillStyle(color, target.kind === "carrier" ? 0.72 : 0.6);
+
+    for (let index = 1; index <= chevronCount; index += 1) {
+      const progress = index / (chevronCount + 1);
+      const x = Phaser.Math.Linear(this.player.x, target.x, progress);
+      const y = Phaser.Math.Linear(this.player.y, target.y, progress);
+      const tipX = x + forwardX * 18;
+      const tipY = y + forwardY * 18;
+      const baseX = x - forwardX * 13;
+      const baseY = y - forwardY * 13;
+      this.targetBeam?.fillTriangle(tipX, tipY, baseX + sideX * 9, baseY + sideY * 9, baseX - sideX * 9, baseY - sideY * 9);
+    }
   }
 
   private finish(outcome: "escaped" | "sealed" | "caught") {
