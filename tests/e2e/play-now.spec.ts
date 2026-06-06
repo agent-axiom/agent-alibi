@@ -82,7 +82,7 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(missionBeat.getByText(/loot secured/i)).toBeVisible();
   await expect(missionBeat.getByText(/cashout worth 5/i)).toBeVisible();
   await expect(missionBeat.getByText(/reach atrium lift or press g/i)).toBeVisible();
-  await expect(page.getByText(/2 escape/i)).toBeVisible();
+  await expect(page.getByText(/2 cashout \+5/i)).toBeVisible();
   await expect(page.getByText(/exit (?:n|ne|e|se|s|sw|w|nw|here) \d+m/i)).toBeVisible();
   const lootChainWindow = page.getByLabel(/loot chain window/i);
   await expect(lootChainWindow.getByText(/loot chain x1/i)).toBeVisible();

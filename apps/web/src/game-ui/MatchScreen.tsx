@@ -41,6 +41,7 @@ export function MatchScreen({ match }: MatchScreenProps) {
       .replace(/^Greed route:\s*/i, "")
       .replace(/\s*·\s*press G$/i, "");
     const routeChoiceMode = hud?.greedStatus?.toLowerCase().startsWith("greed route") ? "greed" : "escape";
+    const cashoutStepLabel = hud?.escapePayout ? `Cashout +${hud.escapePayout.cashout}` : "Escape";
     return (
       <main className={`arcade-shell ${hud?.phase ?? "stealth"}`}>
         <Suspense
@@ -183,7 +184,7 @@ export function MatchScreen({ match }: MatchScreenProps) {
               <b>1</b> Steal
             </span>
             <span className={hud?.loopStep === "escape" ? "active" : ""}>
-              <b>2</b> Escape
+              <b>2</b> {cashoutStepLabel}
             </span>
             <span>
               <b>3</b> Case File
