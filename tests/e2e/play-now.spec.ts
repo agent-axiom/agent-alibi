@@ -20,6 +20,20 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(openingContract.getByText(/steal moon pearl \+3/i)).toBeVisible();
   await expect(openingContract.getByText(/cashout at atrium lift/i)).toBeVisible();
   await expect(openingContract.getByText(/red crew breaches after first score/i)).toBeVisible();
+  const openingLayout = await page.evaluate(() => {
+    const contract = document.querySelector(`[aria-label="Opening contract"]`)?.getBoundingClientRect();
+    const objective = document.querySelector(`[aria-label="Current objective"]`)?.getBoundingClientRect();
+    const objectiveElement = document.querySelector(`[aria-label="Current objective"]`);
+    return {
+      contract: contract ? { width: Math.round(contract.width), height: Math.round(contract.height) } : null,
+      objective: objective ? { width: Math.round(objective.width), height: Math.round(objective.height) } : null,
+      objectiveCut: objectiveElement ? objectiveElement.scrollHeight > objectiveElement.clientHeight + 2 : true
+    };
+  });
+  expect(openingLayout.contract?.width).toBeLessThanOrEqual(270);
+  expect(openingLayout.contract?.height).toBeLessThanOrEqual(205);
+  expect(openingLayout.objective?.height).toBeLessThanOrEqual(218);
+  expect(openingLayout.objectiveCut).toBe(false);
   await expect(page.getByText(/moon vault run/i)).toBeVisible();
   await expect(page.getByText(/timer/i)).toBeVisible();
   await expect(page.getByText(/steal the moon pearl/i)).toBeVisible();
@@ -30,8 +44,8 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(missionBeat.getByText(/move with wasd \/ arrows/i)).toBeVisible();
   await expect(currentObjective.getByText(/steal the moon pearl \+3/i)).toBeVisible();
   await expect(page.getByLabel(/mission loop/i)).toBeHidden();
-  await expect(page.getByText(/target (?:n|ne|e|se|s|sw|w|nw|here) \d+m/i)).toBeVisible();
-  await expect(page.getByText(/rivals wake after first score or \d+s/i)).toBeVisible();
+  await expect(page.getByText(/target (?:n|ne|e|se|s|sw|w|nw|here) \d+m/i)).toBeHidden();
+  await expect(page.getByText(/rivals wake after first score or \d+s/i)).toBeHidden();
   await expect(page.getByLabel(/live agents/i)).toBeHidden();
   await expect(page.getByLabel(/mission radio/i)).toBeHidden();
   await expect(miniRadar).toBeHidden();
@@ -47,9 +61,7 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(objectiveCompass.getByText(/(?:n|ne|e|se|s|sw|w|nw) \d+m/i)).toBeVisible();
   await expect(objectiveCompass.getByText(/follow gold beam/i)).toBeVisible();
   const heistRace = page.getByLabel(/heist race/i);
-  await expect(heistRace.getByText(/blue 0/i)).toBeVisible();
-  await expect(heistRace.getByText(/red 0/i)).toBeVisible();
-  await expect(heistRace.getByText(/loot race is tied/i)).toBeVisible();
+  await expect(heistRace).toBeHidden();
 
   await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_STATE__ === "function");
   const initialTarget = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());
@@ -58,6 +70,11 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   expect(initialTarget?.hasTargetBeam).toBe(true);
   expect(initialTarget?.routeGuide?.kind).toBe("artifact");
   expect(initialTarget?.routeGuide?.chevronCount).toBeGreaterThan(1);
+  expect(initialTarget?.routeGuide?.laneLabel).toBe("STEAL ROUTE");
+  expect(initialTarget?.routeGuide?.pulseCount).toBeGreaterThan(0);
+  expect(initialTarget?.routeGuide?.signalVisible).toBe(true);
+  expect(initialTarget?.cameraLookahead?.targetKind).toBe("artifact");
+  expect(initialTarget?.cameraLookahead?.magnitude).toBeGreaterThan(15);
   expect(initialTarget?.nearestRival?.distanceMeters).toBeGreaterThan(0);
   expect(initialTarget?.arenaLabels?.roomCount).toBeGreaterThanOrEqual(8);
   expect(initialTarget?.arenaLabels?.zoneBeacons).toEqual(expect.arrayContaining(["HIGH VALUE", "EXTRACT", "RIVAL ENTRY"]));
@@ -151,6 +168,11 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   const escapeGuide = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().routeGuide);
   expect(escapeGuide?.kind).toBe("escape");
   expect(escapeGuide?.chevronCount).toBeGreaterThan(0);
+  expect(escapeGuide?.laneLabel).toBe("BANK +5");
+  expect(escapeGuide?.signalVisible).toBe(true);
+  const escapeLookahead = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().cameraLookahead);
+  expect(escapeLookahead?.targetKind).toBe("escape");
+  expect(escapeLookahead?.magnitude).toBeGreaterThan(15);
   const escapeZoneBadge = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().escapeZoneBadge);
   expect(escapeZoneBadge).toEqual({ visible: true, label: "Cashout +5" });
   await page.keyboard.press("KeyG");
@@ -559,6 +581,10 @@ test("rival steals trigger a clear red loot alert", async ({ page }) => {
   expect(carrierCashoutRoute?.visible).toBe(true);
   expect(carrierCashoutRoute?.targetLabel).toBe("Atrium Lift");
   expect(carrierCashoutRoute?.chevronCount).toBeGreaterThan(0);
+  const carrierRouteGuide = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().routeGuide);
+  expect(carrierRouteGuide?.laneLabel).toBe("INTERCEPT ROUTE");
+  expect(carrierRouteGuide?.pulseCount).toBeGreaterThan(0);
+  expect(carrierRouteGuide?.signalVisible).toBe(true);
   const carrierBadges = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().carrierBadges);
   expect(carrierBadges).toContainEqual({ agentName: "Rook", label: "+3", visible: true });
   const rivalIntercept = page.getByLabel(/rival intercept/i);
