@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import type { ArtifactState, GameState, PlayerState, Room, TeamId } from "@agent-alibi/shared";
+import { rateArcadeRun } from "./arcade-rules";
 import { ARCADE_MISSION_DURATION_MS, type ArcadeHudPhase, type ArcadeHudState, type ArcadeMissionConfig } from "./arcade-types";
 import { buildArcadeGuidance } from "./guidance";
 import { nextMovementImpulse, selectMovementVector, type MovementImpulse, type MovementVector } from "./movement";
@@ -707,10 +708,20 @@ export class ArcadeHeistScene extends Phaser.Scene {
           ? `${objectiveTarget.kind === "escape" ? "Exit" : "Target"} ${targetDistanceMeters}m`
           : null,
       rivalStatus: this.rivalStatus(),
+      paceStatus: this.paceStatus(),
       spotlight: this.spotlight,
       feed: this.feed.slice(-5)
     };
     this.config.onHudUpdate(hud);
+  }
+
+  private paceStatus(): string {
+    const { runRating, styleBonus } = rateArcadeRun({
+      outcome: "escaped",
+      alarm: Math.ceil(this.alarm),
+      elapsedMs: this.elapsedMs
+    });
+    return styleBonus > 0 ? `${runRating} pace` : "Bonus window closed";
   }
 
   private rivalStatus(): string {

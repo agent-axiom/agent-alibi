@@ -29,6 +29,13 @@ export function FinalCaseFile({ summary, onRematch, onHome }: FinalCaseFileProps
             <span>Winner</span>
             <strong>{winner}</strong>
           </div>
+          {summary.runRating ? (
+            <div className="final-score final-rating">
+              <span>Run Rating</span>
+              <strong>{summary.runRating}</strong>
+              <small>{summary.styleBonus ? `Clean exit bonus +${summary.styleBonus}` : "No clean bonus"}</small>
+            </div>
+          ) : null}
           <div className="final-score">
             <span>Blue Crew</span>
             <strong>{blueScore?.total ?? 0}</strong>

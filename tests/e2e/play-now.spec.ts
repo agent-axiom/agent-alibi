@@ -11,6 +11,7 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(page.getByText(/1 steal/i)).toBeVisible();
   await expect(page.getByText(/target \d+m/i)).toBeVisible();
   await expect(page.getByText(/rivals enter in \d+s/i)).toBeVisible();
+  await expect(page.getByText(/s-rank pace/i)).toBeVisible();
   await expect(page.getByText(/rival agents enter in 5 seconds/i)).toBeVisible();
 
   await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_STATE__ === "function");
@@ -46,7 +47,10 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await page.keyboard.press("KeyE");
 
   await expect(page.getByText(/agent alibi case file/i)).toBeVisible();
-  await expect(page.getByLabel(/final scores/i)).toBeVisible();
+  const finalScores = page.getByLabel(/final scores/i);
+  await expect(finalScores).toBeVisible();
+  await expect(finalScores.getByText(/s-rank/i)).toBeVisible();
+  await expect(finalScores.getByText(/clean exit bonus/i)).toBeVisible();
   await page.getByRole("button", { name: /copy result/i }).click();
   await expect(page.getByText(/copied/i)).toBeVisible();
   await expect(page.getByRole("button", { name: /rematch/i })).toBeVisible();

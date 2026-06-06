@@ -12,15 +12,21 @@ export type ArcadeMissionResult = {
   elapsedMs: number;
 };
 
+export type ArcadeRunRating = {
+  runRating: string;
+  styleBonus: number;
+};
+
 export function buildArcadeMatchSummary(result: ArcadeMissionResult): MatchSummary {
   const escaped = result.outcome === "escaped";
   const bluePenalty = escaped ? 0 : -3;
+  const { runRating, styleBonus } = rateArcadeRun(result);
   const blueScore: TeamScore = {
     teamId: "blue",
     loot: result.lootValue,
     escape: escaped ? 2 : 0,
     penalties: bluePenalty,
-    total: result.lootValue + (escaped ? 2 : 0) + bluePenalty
+    total: result.lootValue + (escaped ? 2 : 0) + bluePenalty + styleBonus
   };
   const redScore: TeamScore = {
     teamId: "red",
@@ -39,8 +45,34 @@ export function buildArcadeMatchSummary(result: ArcadeMissionResult): MatchSumma
     biggestBetrayal: result.aiLootValue > result.lootValue ? "AI rivals stripped the vault while the crew improvised." : undefined,
     mostSuspiciousPlayerId: result.alarm >= 4 ? "p-human" : undefined,
     title,
-    caseFile: buildCaseFile(result, title, blueScore, redScore)
+    runRating,
+    styleBonus,
+    caseFile: buildCaseFile(result, title, blueScore, redScore, runRating, styleBonus)
   };
+}
+
+export function rateArcadeRun(result: Pick<ArcadeMissionResult, "outcome" | "alarm" | "elapsedMs">): ArcadeRunRating {
+  const styleBonus = styleBonusForResult(result);
+  return {
+    runRating: runRatingForResult(result, styleBonus),
+    styleBonus
+  };
+}
+
+function styleBonusForResult(result: Pick<ArcadeMissionResult, "outcome" | "alarm" | "elapsedMs">): number {
+  if (result.outcome !== "escaped") return 0;
+  if (result.alarm <= 2 && result.elapsedMs <= 60_000) return 3;
+  if (result.alarm <= 3 && result.elapsedMs <= 75_000) return 2;
+  if (result.alarm <= 3 && result.elapsedMs <= 90_000) return 1;
+  return 0;
+}
+
+function runRatingForResult(result: Pick<ArcadeMissionResult, "outcome">, styleBonus: number): string {
+  if (result.outcome !== "escaped") return "C-Rank";
+  if (styleBonus >= 3) return "S-Rank";
+  if (styleBonus === 2) return "A-Rank";
+  if (styleBonus === 1) return "B-Rank";
+  return "C-Rank";
 }
 
 function titleForResult(result: ArcadeMissionResult, winnerTeamId: MatchSummary["winnerTeamId"]): string {
@@ -51,7 +83,14 @@ function titleForResult(result: ArcadeMissionResult, winnerTeamId: MatchSummary[
   return "Neon Disaster";
 }
 
-function buildCaseFile(result: ArcadeMissionResult, title: string, blueScore: TeamScore, redScore: TeamScore): string {
+function buildCaseFile(
+  result: ArcadeMissionResult,
+  title: string,
+  blueScore: TeamScore,
+  redScore: TeamScore,
+  runRating: string,
+  styleBonus: number
+): string {
   const elapsedSeconds = Math.round(result.elapsedMs / 1000);
   const outcomeLine =
     result.outcome === "escaped"
@@ -67,6 +106,8 @@ function buildCaseFile(result: ArcadeMissionResult, title: string, blueScore: Te
     `Winner: ${blueScore.total === redScore.total ? "Tie" : blueScore.total > redScore.total ? "Blue Crew" : "Red Crew"}`,
     `Blue Crew: ${blueScore.total} (${blueScore.loot} loot, ${blueScore.escape} escape, ${blueScore.penalties} penalty)`,
     `Red Crew: ${redScore.total} (${redScore.loot} rival loot)`,
+    `Run Rating: ${runRating}`,
+    styleBonus > 0 ? `Clean exit bonus: +${styleBonus}` : "Clean exit bonus: +0",
     `Alarm: ${result.alarm}/5`,
     `Time inside: ${elapsedSeconds}s`,
     "",

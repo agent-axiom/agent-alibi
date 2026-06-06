@@ -101,5 +101,7 @@ export type MatchSummary = {
   biggestBetrayal?: string;
   mostSuspiciousPlayerId?: string;
   title: string;
+  runRating?: string;
+  styleBonus?: number;
   caseFile: string;
 };

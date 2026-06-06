@@ -35,4 +35,22 @@ describe("buildArcadeMatchSummary", () => {
     expect(summary.teamScores.find((score) => score.teamId === "blue")?.penalties).toBe(-3);
     expect(summary.caseFile).toContain("Vault sealed");
   });
+
+  it("adds a clean exit bonus for fast low-alarm escapes", () => {
+    const summary = buildArcadeMatchSummary({
+      outcome: "escaped",
+      playerName: "Agent You",
+      lootValue: 3,
+      artifactsStolen: 1,
+      aiLootValue: 0,
+      alarm: 2,
+      elapsedMs: 42_000
+    });
+
+    expect(summary.runRating).toBe("S-Rank");
+    expect(summary.styleBonus).toBe(3);
+    expect(summary.teamScores.find((score) => score.teamId === "blue")?.total).toBe(8);
+    expect(summary.caseFile).toContain("Run Rating: S-Rank");
+    expect(summary.caseFile).toContain("Clean exit bonus: +3");
+  });
 });

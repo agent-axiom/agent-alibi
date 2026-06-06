@@ -111,6 +111,9 @@ export function MatchScreen({ match }: MatchScreenProps) {
             <div className="arcade-rivals" aria-label="Rival crew status">
               {hud?.rivalStatus ?? "Rivals scanning"}
             </div>
+            <div className="arcade-pace" aria-label="Run pace">
+              {hud?.paceStatus ?? "Pace unknown"}
+            </div>
           </div>
           <small>
             {hud?.raceStatus ?? "Loot race is tied"} · WASD / arrows move · click to run · Shift dash · E / Space interact

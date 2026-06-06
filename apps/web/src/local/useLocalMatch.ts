@@ -247,6 +247,7 @@ function makeInitialArcadeHud(state: GameState): ArcadeHudState {
     raceStatus: "Loot race is tied",
     targetDistanceLabel: "Target plotting",
     rivalStatus: "Rivals enter in 5s",
+    paceStatus: "S-Rank pace",
     spotlight: null,
     feed: ["Moon Vault breach started.", "Rival agents enter in 5 seconds.", "Move fast. Steal clean. Escape before lockdown."]
   };

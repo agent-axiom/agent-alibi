@@ -22,6 +22,7 @@ export type ArcadeHudState = {
   raceStatus: string;
   targetDistanceLabel: string | null;
   rivalStatus: string;
+  paceStatus: string;
   spotlight: string | null;
   feed: string[];
 };
