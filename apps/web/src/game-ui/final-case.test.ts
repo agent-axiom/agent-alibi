@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { MatchSummary } from "@agent-alibi/shared";
-import { buildRematchHook } from "./FinalCaseFile";
+import { buildCaseShareText, buildRematchHook } from "./FinalCaseFile";
 
 function summary(overrides: Partial<MatchSummary> = {}): MatchSummary {
   return {
@@ -34,5 +34,24 @@ describe("buildRematchHook", () => {
 
   it("turns a non-perfect blue win into an S-Rank chase prompt", () => {
     expect(buildRematchHook(summary({ runRating: "A-Rank", styleBonus: 2 }))).toBe("Next run: chase S-Rank with a faster, lower-alarm cashout.");
+  });
+});
+
+describe("buildCaseShareText", () => {
+  it("copies the case file with highlights and a next-run hook", () => {
+    const text = buildCaseShareText(
+      summary({
+        highlightLines: ["Stole Moon Pearl + Argent Crown", "Escaped with 6 loot"],
+        lootChain: 2,
+        runRating: "S-Rank"
+      })
+    );
+
+    expect(text).toContain("AGENT ALIBI CASE FILE");
+    expect(text).toContain("CASE HIGHLIGHTS");
+    expect(text).toContain("01. Stole Moon Pearl + Argent Crown");
+    expect(text).toContain("02. Escaped with 6 loot");
+    expect(text).toContain("NEXT RUN");
+    expect(text).toContain("Next run: run it back and make the case file louder.");
   });
 });
