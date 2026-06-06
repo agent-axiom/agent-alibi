@@ -143,6 +143,7 @@ function buildHighlightLines(
     lines.push(`Blocked rival cashout on ${pendingRivalRelicNames.join(" + ")}`);
   }
   if (result.outcome === "escaped") {
+    lines.push(`Cashed out +${cashoutBankedValue(result)} at lift`);
     lines.push(`Escaped with ${result.lootValue} loot`);
   } else if (result.outcome === "sealed") {
     lines.push("Vault sealed before extraction");
@@ -157,6 +158,10 @@ function buildHighlightLines(
 
 function isSpecialCaseTitle(title: string): boolean {
   return title === "Carrier Denied" || title === "Lift Denied";
+}
+
+function cashoutBankedValue(result: Pick<ArcadeMissionResult, "outcome" | "lootValue">): number {
+  return result.outcome === "escaped" ? result.lootValue + 2 : 0;
 }
 
 function buildCaseFile(
@@ -181,6 +186,7 @@ function buildCaseFile(
     `Title: ${title}`,
     `Winner: ${blueScore.total === redScore.total ? "Tie" : blueScore.total > redScore.total ? "Blue Crew" : "Red Crew"}`,
     `Blue Crew: ${blueScore.total} (${blueScore.loot} loot, ${blueScore.escape} escape, ${blueScore.penalties} penalty)`,
+    `Cashout Banked: +${cashoutBankedValue(result)}`,
     `Red Crew: ${redScore.total} (${redScore.loot} rival loot)`,
     `Run Rating: ${runRating}`,
     styleBonus > 0 ? `Clean exit bonus: +${styleBonus}` : "Clean exit bonus: +0",
