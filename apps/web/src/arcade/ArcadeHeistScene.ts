@@ -242,6 +242,12 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private actionRingInner?: Phaser.GameObjects.Arc;
   private actionRingLabel?: Phaser.GameObjects.Text;
   private actionRingCue?: Phaser.GameObjects.Text;
+  private greedRouteHint?: Phaser.GameObjects.Container;
+  private greedRouteHintOuter?: Phaser.GameObjects.Arc;
+  private greedRouteHintBadge?: Phaser.GameObjects.Rectangle;
+  private greedRouteHintCue?: Phaser.GameObjects.Text;
+  private greedRouteHintLabel?: Phaser.GameObjects.Text;
+  private greedRouteHintTarget?: Phaser.GameObjects.Text;
   private interactionPrompt?: Phaser.GameObjects.Container;
   private interactionPromptPlate?: Phaser.GameObjects.Rectangle;
   private interactionPromptKey?: Phaser.GameObjects.Text;
@@ -401,6 +407,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       target,
       targetMarker: this.targetMarkerDebug(),
       actionRing: this.actionRingDebug(),
+      greedRouteHint: this.greedRouteHintDebug(),
       interactionPrompt: this.interactionPromptDebug(),
       hasTargetBeam: Boolean(this.targetBeam),
       routeGuide,
@@ -444,6 +451,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.moveAgent(this.player, target.x - this.player.x, target.y + offsetY - this.player.y);
     this.pointerTarget = undefined;
     this.updateTargetMarker();
+    this.updateGreedRouteHint();
     this.updateInteractionPrompt();
     this.updateCameraLookahead(16);
     this.emitHudIfNeeded(true);
@@ -549,6 +557,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.updateRivalPressureFeed();
     this.updateRivalScan(delta);
     this.updateTargetMarker();
+    this.updateGreedRouteHint();
     this.updateInteractionPrompt();
     this.updateCameraLookahead(delta);
     this.updateThreatHalo();
@@ -619,6 +628,12 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.actionRingInner = undefined;
     this.actionRingLabel = undefined;
     this.actionRingCue = undefined;
+    this.greedRouteHint = undefined;
+    this.greedRouteHintOuter = undefined;
+    this.greedRouteHintBadge = undefined;
+    this.greedRouteHintCue = undefined;
+    this.greedRouteHintLabel = undefined;
+    this.greedRouteHintTarget = undefined;
     this.interactionPrompt = undefined;
     this.interactionPromptPlate = undefined;
     this.interactionPromptKey = undefined;
@@ -680,6 +695,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.createActors(config.state);
     this.resizeCamera();
     this.updateTargetMarker();
+    this.updateGreedRouteHint();
     this.updateCameraLookahead(16);
     this.updateThreatHalo();
     this.updateCarrierCashoutRoute();
@@ -1198,6 +1214,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
         this.releaseRivals({ announce: true, holdMs: AI_WAKE_HOLD_MS });
       }
       this.updateTargetMarker();
+      this.updateGreedRouteHint();
       this.updateThreatHalo();
       return;
     }
@@ -2096,12 +2113,14 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private toggleRouteMode() {
     if (!this.canGreedRoute()) {
       this.routeMode = "escape";
+      this.updateGreedRouteHint();
       this.flashObjectiveBanner(this.buildEscapeBanner(false));
       this.emitHudIfNeeded(true);
       return;
     }
     this.routeMode = this.routeMode === "greed" ? "escape" : "greed";
     this.updateTargetMarker();
+    this.updateGreedRouteHint();
     const targetArtifact = this.primaryTargetArtifact();
     const escapePayout = this.escapePayout(true);
     this.flashObjectiveBanner(
@@ -2666,6 +2685,18 @@ export class ArcadeHeistScene extends Phaser.Scene {
     };
   }
 
+  private greedRouteHintDebug() {
+    if (!this.greedRouteHint?.getData("visible")) return null;
+    return {
+      visible: true,
+      label: String(this.greedRouteHint.getData("label") ?? ""),
+      cue: String(this.greedRouteHint.getData("cue") ?? ""),
+      target: String(this.greedRouteHint.getData("target") ?? ""),
+      x: Math.round(this.greedRouteHint.x),
+      y: Math.round(this.greedRouteHint.y)
+    };
+  }
+
   private interactionPromptDebug() {
     if (!this.interactionPrompt?.getData("visible")) return null;
     return {
@@ -2934,6 +2965,117 @@ export class ArcadeHeistScene extends Phaser.Scene {
     if (target.kind === "escape") return this.isNearExit() && (this.lootValue > 0 || this.timeLeftMs() <= 30_000);
     if (target.kind === "carrier") return this.nearRivalCarrier()?.id === target.id;
     return this.nearPlayerArtifact()?.id === target.id;
+  }
+
+  private updateGreedRouteHint() {
+    const artifact = this.greedRouteHintArtifact();
+    if (!artifact) {
+      this.destroyGreedRouteHint();
+      return;
+    }
+
+    const hintKey = `${artifact.id}:${artifact.value}`;
+    if (
+      !this.greedRouteHint ||
+      !this.greedRouteHintOuter ||
+      !this.greedRouteHintBadge ||
+      !this.greedRouteHintCue ||
+      !this.greedRouteHintLabel ||
+      !this.greedRouteHintTarget ||
+      this.greedRouteHint.getData("hintKey") !== hintKey
+    ) {
+      this.destroyGreedRouteHint();
+      this.createGreedRouteHint(artifact);
+    }
+
+    if (
+      !this.greedRouteHint ||
+      !this.greedRouteHintOuter ||
+      !this.greedRouteHintBadge ||
+      !this.greedRouteHintCue ||
+      !this.greedRouteHintLabel ||
+      !this.greedRouteHintTarget
+    ) {
+      return;
+    }
+
+    const label = `Risk +${artifact.value}`;
+    this.greedRouteHint.setPosition(artifact.x, artifact.y);
+    this.greedRouteHintLabel.setText(label);
+    this.greedRouteHintTarget.setText(artifact.name.toUpperCase());
+    this.greedRouteHint.setAlpha(0.94);
+    this.greedRouteHint.setData("visible", true);
+    this.greedRouteHint.setData("hintKey", hintKey);
+    this.greedRouteHint.setData("label", label);
+    this.greedRouteHint.setData("cue", "PRESS G");
+    this.greedRouteHint.setData("target", artifact.name);
+  }
+
+  private createGreedRouteHint(artifact: RuntimeArtifact) {
+    const outer = this.add.circle(0, 0, PICKUP_RADIUS + 32, 0xbda9ff, 0.05).setStrokeStyle(3, 0xbda9ff, 0.58);
+    const badge = this.add.rectangle(0, -58, 82, 28, 0x050811, 0.9).setStrokeStyle(2, 0xffd56a, 0.82);
+    const cue = this.add
+      .text(0, -58, "PRESS G", {
+        color: "#ffd56a",
+        fontFamily: "Inter, Arial, sans-serif",
+        fontSize: "11px",
+        fontStyle: "900",
+        stroke: "#050811",
+        strokeThickness: 4
+      })
+      .setOrigin(0.5);
+    const label = this.add
+      .text(0, PICKUP_RADIUS + 48, `Risk +${artifact.value}`, {
+        color: "#eee8ff",
+        fontFamily: "Inter, Arial, sans-serif",
+        fontSize: "12px",
+        fontStyle: "900",
+        stroke: "#050811",
+        strokeThickness: 5
+      })
+      .setOrigin(0.5);
+    const target = this.add
+      .text(0, PICKUP_RADIUS + 64, artifact.name.toUpperCase(), {
+        color: "#d9f7ff",
+        fontFamily: "Inter, Arial, sans-serif",
+        fontSize: "10px",
+        fontStyle: "900",
+        stroke: "#050811",
+        strokeThickness: 4
+      })
+      .setOrigin(0.5);
+
+    this.greedRouteHintOuter = outer;
+    this.greedRouteHintBadge = badge;
+    this.greedRouteHintCue = cue;
+    this.greedRouteHintLabel = label;
+    this.greedRouteHintTarget = target;
+    this.greedRouteHint = this.add.container(artifact.x, artifact.y, [outer, badge, cue, label, target]).setDepth(14);
+    this.greedRouteHint.setData("hintKey", `${artifact.id}:${artifact.value}`);
+    this.tweens.add({
+      targets: [outer, badge],
+      scale: { from: 0.96, to: 1.07 },
+      duration: 760,
+      yoyo: true,
+      repeat: -1,
+      ease: "Sine.easeInOut"
+    });
+  }
+
+  private destroyGreedRouteHint() {
+    this.greedRouteHint?.destroy(true);
+    this.greedRouteHint = undefined;
+    this.greedRouteHintOuter = undefined;
+    this.greedRouteHintBadge = undefined;
+    this.greedRouteHintCue = undefined;
+    this.greedRouteHintLabel = undefined;
+    this.greedRouteHintTarget = undefined;
+  }
+
+  private greedRouteHintArtifact(): RuntimeArtifact | undefined {
+    if (this.routeMode !== "escape" || !this.canGreedRoute()) return undefined;
+    if (this.nearestRivalCarrierRun()) return undefined;
+    return this.primaryTargetArtifact();
   }
 
   private updateTargetBeam(target: ArcadeObjectiveTarget) {
