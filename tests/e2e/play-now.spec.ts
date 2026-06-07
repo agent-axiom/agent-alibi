@@ -309,6 +309,8 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(finalScores.getByText(/blue by \d+/i)).toBeVisible();
   await expect(finalScores.getByText(/s-rank/i)).toBeVisible();
   await expect(finalScores.getByText(/clean exit bonus/i)).toBeVisible();
+  await expect(finalScores.getByText(/afterburner exit/i)).toBeVisible();
+  await expect(finalScores.getByText(/\+1/i)).toBeVisible();
   await expect(finalScores.getByText(/loot chain/i)).toBeVisible();
   await expect(finalScores.getByText(/x2/i)).toBeVisible();
   await expect(finalScores.getByText(/relics stolen/i)).toBeVisible();
@@ -325,8 +327,10 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(caseHighlights.getByText(/stole moon pearl \+ argent crown/i)).toBeVisible();
   await expect(caseHighlights.getByText(/cashed out \+8 at lift/i)).toBeVisible();
   await expect(caseHighlights.getByText(/escaped with 6 loot/i)).toBeVisible();
+  await expect(caseHighlights.getByText(/afterburner exit \+1/i)).toBeVisible();
   await expect(caseHighlights.getByText(/clean exit bonus \+3/i)).toBeVisible();
   await expect(page.getByText(/cashout banked: \+8/i)).toBeVisible();
+  await expect(page.getByText(/afterburner exit bonus: \+1/i)).toBeVisible();
   await expect(page.getByLabel(/rematch hook/i).getByText(/run it back and make the case file louder/i)).toBeVisible();
   await expect(page.getByText(/relics stolen: moon pearl, argent crown/i)).toBeVisible();
   const nextRunContracts = page.getByLabel(/next run contracts/i);

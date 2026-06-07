@@ -43,7 +43,7 @@ const SECURITY_SWEEP_HIT_ALARM_DELTA = 0.46;
 const SECURITY_SWEEP_HIT_COOLDOWN_MS = 1_350;
 const MOVEMENT_COACH_MAX_MS = 6_500;
 const MOVEMENT_COACH_DISMISS_DISTANCE = 32;
-const LOOT_SPEED_SURGE_MS = 2_200;
+const LOOT_SPEED_SURGE_MS = 6_000;
 const LOOT_SPEED_SURGE_MULTIPLIER = 2.05;
 const LOOT_SPEED_SURGE_CAMERA_ZOOM = 1.08;
 
@@ -3482,6 +3482,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
 
   private finish(outcome: "escaped" | "sealed" | "caught") {
     if (!this.config || this.finished) return;
+    const afterburnerExit = outcome === "escaped" && this.lootValue > 0 && this.lootSpeedSurgeActive();
     this.finished = true;
     if (outcome === "escaped") {
       this.impactPulse("escape");
@@ -3507,7 +3508,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
       alibiPulsesUsed: this.alibiPulsesUsed,
       scanBurns: this.scanBurns,
       carrierIntercepts: this.carrierIntercepts,
-      interceptedRelicNames: this.interceptedRelicNames
+      interceptedRelicNames: this.interceptedRelicNames,
+      afterburnerExit
     });
   }
 
