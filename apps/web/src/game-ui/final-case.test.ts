@@ -94,6 +94,21 @@ describe("buildCaseShareText", () => {
     expect(text).toContain("PLAY");
     expect(text).toContain("https://agent-axiom.github.io/agent-alibi/");
   });
+
+  it("leads copied carrier-intercept results with the denied Red loot", () => {
+    const text = buildCaseShareText(
+      summary({
+        carrierIntercepts: 1,
+        interceptedRelicNames: ["Moon Pearl"],
+        highlightLines: ["Case title: Carrier Denied", "Recovered Moon Pearl from rivals"]
+      })
+    );
+
+    expect(text).toContain("CASE HIGHLIGHTS");
+    expect(text).toContain("01. Red denied: Moon Pearl");
+    expect(text).toContain("02. Case title: Carrier Denied");
+    expect(text).toContain("03. Recovered Moon Pearl from rivals");
+  });
 });
 
 describe("buildCaseStamp", () => {
