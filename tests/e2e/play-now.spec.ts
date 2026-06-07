@@ -625,6 +625,7 @@ test("rival agents stay visually staged until the breach starts", async ({ page 
   expect(staged?.rivals?.map((rival) => rival.visualLabel)).toEqual(["STANDBY", "STANDBY", "STANDBY"]);
   expect(staged?.rivals?.every((rival) => rival.alpha < 0.7)).toBe(true);
   expect(staged?.rivalIntentRoutes).toEqual({ visible: false, routeCount: 0, targetLabels: [] });
+  expect(staged?.rivalAmbushVector).toEqual({ visible: false, label: "", routeKind: null, threatCount: 0, laneWidth: 0, pulseCount: 0 });
 
   await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget());
   await page.keyboard.press("KeyE");
@@ -637,6 +638,19 @@ test("rival agents stay visually staged until the breach starts", async ({ page 
   expect(breached?.rivalIntentRoutes?.visible).toBe(true);
   expect(breached?.rivalIntentRoutes?.routeCount).toBeGreaterThanOrEqual(3);
   expect(breached?.rivalIntentRoutes?.targetLabels).toEqual(expect.arrayContaining([expect.stringMatching(/rook -> /i)]));
+  expect(breached?.rivalAmbushVector).toEqual(
+    expect.objectContaining({
+      visible: true,
+      label: "RIVAL AMBUSH",
+      routeKind: "escape",
+      threatCount: expect.any(Number),
+      laneWidth: expect.any(Number),
+      pulseCount: expect.any(Number)
+    })
+  );
+  expect(breached?.rivalAmbushVector?.threatCount).toBeGreaterThanOrEqual(3);
+  expect(breached?.rivalAmbushVector?.laneWidth).toBeGreaterThan(breached?.routeGuide?.laneWidth ?? 0);
+  expect(breached?.rivalAmbushVector?.pulseCount).toBeGreaterThan(0);
 });
 
 test("first score triggers a visible rival breach cut-in", async ({ page }) => {
