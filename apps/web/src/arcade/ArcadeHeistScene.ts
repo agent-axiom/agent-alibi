@@ -253,6 +253,12 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private motionTrailPoints: MotionTrailPoint[] = [];
   private motionTrailBurstCount = 0;
   private motionTrailActiveUntilMs = 0;
+  private dashShockwave?: Phaser.GameObjects.Graphics;
+  private dashShockwaveBurstCount = 0;
+  private dashShockwaveX = 0;
+  private dashShockwaveY = 0;
+  private dashShockwaveStartedAtMs = 0;
+  private dashShockwaveActiveUntilMs = 0;
   private impactCount = 0;
   private lastImpact: { kind: ImpactKind; count: number; atMs: number } | null = null;
   private cameraKickCount = 0;
@@ -383,6 +389,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       carrierBadges: this.carrierBadgesDebug(),
       escapeZoneBadge: this.escapeZoneBadgeDebug(),
       motionTrail: this.motionTrailDebug(),
+      dashShockwave: this.dashShockwaveDebug(),
       arenaLabels: this.arenaLabelsDebug(),
       routeMode: this.routeMode,
       nearestRival,
@@ -509,6 +516,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
 
     this.updatePlayer(delta);
     this.updateMotionTrail(delta);
+    this.updateDashShockwave();
     this.updateAi(delta);
     this.updateCarrierBadges();
     this.updateRivalPressureFeed();
@@ -607,6 +615,12 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.motionTrailPoints = [];
     this.motionTrailBurstCount = 0;
     this.motionTrailActiveUntilMs = 0;
+    this.dashShockwave = undefined;
+    this.dashShockwaveBurstCount = 0;
+    this.dashShockwaveX = 0;
+    this.dashShockwaveY = 0;
+    this.dashShockwaveStartedAtMs = 0;
+    this.dashShockwaveActiveUntilMs = 0;
     this.impactCount = 0;
     this.lastImpact = null;
     this.cameraKickCount = 0;
@@ -915,6 +929,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
         speed = DASH_SPEED;
         this.dashCooldownMs = DASH_COOLDOWN_MS;
         this.addTrail(this.player.x, this.player.y, vector);
+        this.addDashShockwave(this.player.x, this.player.y);
         this.cameraKick("dash");
       }
       this.moveAgent(this.player, vector.x * speed * (delta / 1000), vector.y * speed * (delta / 1000));
@@ -2508,6 +2523,16 @@ export class ArcadeHeistScene extends Phaser.Scene {
     };
   }
 
+  private dashShockwaveDebug() {
+    const ageMs = Math.max(0, this.elapsedMs - this.dashShockwaveStartedAtMs);
+    return {
+      active: this.dashShockwaveActive(),
+      burstCount: this.dashShockwaveBurstCount,
+      radius: Math.round(this.dashShockwaveRadius(ageMs)),
+      activeMs: Math.max(0, Math.round(this.dashShockwaveActiveUntilMs - this.elapsedMs))
+    };
+  }
+
   private arenaCalloutsDebug() {
     return this.arenaCallouts.map((callout) => ({
       kind: callout.kind,
@@ -2886,6 +2911,45 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.renderMotionTrail();
   }
 
+  private addDashShockwave(x: number, y: number) {
+    if (!this.dashShockwave) {
+      this.dashShockwave = this.add.graphics().setDepth(10);
+    }
+    this.dashShockwaveBurstCount += 1;
+    this.dashShockwaveX = x;
+    this.dashShockwaveY = y;
+    this.dashShockwaveStartedAtMs = this.elapsedMs;
+    this.dashShockwaveActiveUntilMs = this.elapsedMs + 360;
+    this.renderDashShockwave();
+  }
+
+  private updateDashShockwave() {
+    if (!this.dashShockwave) return;
+    if (!this.dashShockwaveActive()) {
+      this.dashShockwave.clear();
+      return;
+    }
+    this.renderDashShockwave();
+  }
+
+  private renderDashShockwave() {
+    if (!this.dashShockwave) return;
+    const ageMs = Math.max(0, this.elapsedMs - this.dashShockwaveStartedAtMs);
+    const progress = Phaser.Math.Clamp(ageMs / 360, 0, 1);
+    const radius = this.dashShockwaveRadius(ageMs);
+    const alpha = (1 - progress) * 0.62;
+    this.dashShockwave.clear();
+    this.dashShockwave.lineStyle(5, 0x7effdf, alpha);
+    this.dashShockwave.strokeCircle(this.dashShockwaveX, this.dashShockwaveY, radius);
+    this.dashShockwave.lineStyle(2, 0xffd56a, alpha * 0.85);
+    this.dashShockwave.strokeCircle(this.dashShockwaveX, this.dashShockwaveY, radius * 0.68);
+  }
+
+  private dashShockwaveRadius(ageMs: number) {
+    const progress = Phaser.Math.Clamp(ageMs / 360, 0, 1);
+    return 24 + progress * 96;
+  }
+
   private renderMotionTrail() {
     if (!this.motionTrail) return;
     this.motionTrail.clear();
@@ -2909,6 +2973,10 @@ export class ArcadeHeistScene extends Phaser.Scene {
 
   private motionTrailActive() {
     return this.motionTrailPoints.length > 0 || this.elapsedMs < this.motionTrailActiveUntilMs;
+  }
+
+  private dashShockwaveActive() {
+    return this.elapsedMs < this.dashShockwaveActiveUntilMs;
   }
 
   private resizeCamera = () => {
