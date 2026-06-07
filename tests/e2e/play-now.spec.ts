@@ -1001,7 +1001,7 @@ test("rival steals trigger a clear red loot alert", async ({ page }) => {
   const carrierCard = finalScores.locator(".final-intercepts");
   await expect(carrierCard.getByText(/carrier intercepts/i)).toBeVisible();
   await expect(carrierCard.getByText(/x1/i)).toBeVisible();
-  await expect(carrierCard.getByText(/moon pearl/i)).toBeVisible();
+  await expect(carrierCard.getByText(/red denied: moon pearl/i)).toBeVisible();
   const relicsCard = finalScores.locator(".final-relics");
   await expect(relicsCard.getByText(/relics stolen/i)).toBeVisible();
   await expect(relicsCard.getByText(/moon pearl/i)).toBeVisible();
