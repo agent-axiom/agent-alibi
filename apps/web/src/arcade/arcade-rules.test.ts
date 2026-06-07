@@ -172,7 +172,8 @@ describe("buildArcadeMatchSummary", () => {
       alarm: 2,
       elapsedMs: 55_000,
       carrierIntercepts: 1,
-      interceptedRelicNames: ["Moon Pearl"]
+      interceptedRelicNames: ["Moon Pearl"],
+      interceptedLootValue: 3
     });
 
     expect(summary.carrierIntercepts).toBe(1);
@@ -181,6 +182,7 @@ describe("buildArcadeMatchSummary", () => {
     expect(summary.highlightLines).toContain("Case title: Carrier Denied");
     expect(summary.caseFile).toContain("Carrier Intercepts: 1");
     expect(summary.caseFile).toContain("Recovered From Rivals: Moon Pearl");
+    expect(summary.caseFile).toContain("Denial Swing: +3 recovered / +3 denied");
   });
 
   it("separates pending carrier loot from cashed-out rival relics", () => {
