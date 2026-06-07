@@ -65,6 +65,7 @@ export function MatchScreen({ match, soundEnabled = false, onToggleSound }: Matc
           }
         : null;
     const afterburnerActive = Boolean(hud?.lootSpeedSurge);
+    const rivalPressureActive = Boolean(redLoot > 0 || hud?.rivalIntercept || hud?.lastRivalSteal);
     const cashoutCurrent = Boolean(hud?.canEscape) || countdownPulseActive;
     const heatCurrent = threatCueActive && !cashoutCurrent;
     const contractCurrent = !stealComplete ? "steal" : cashoutCurrent ? "cashout" : heatCurrent ? "heat" : "steal";
@@ -97,7 +98,7 @@ export function MatchScreen({ match, soundEnabled = false, onToggleSound }: Matc
           });
     return (
       <main
-        className={`arcade-shell ${hud?.phase ?? "stealth"} ${hudDensity === "opening" ? "compact-opening" : ""} ${breachAlert ? "breach-alert" : ""} ${routePulse ? "route-pulse-active" : ""} ${scanLockActive ? "scan-lock-active" : ""} ${threatCueActive ? "threat-cue-active" : ""} ${denseThreatActive ? "dense-threat-active" : ""} ${countdownPulseActive ? "countdown-pulse-active" : ""} ${afterburnerActive ? "afterburner-active" : ""}`}
+        className={`arcade-shell ${hud?.phase ?? "stealth"} ${hudDensity === "opening" ? "compact-opening" : ""} ${breachAlert ? "breach-alert" : ""} ${routePulse ? "route-pulse-active" : ""} ${scanLockActive ? "scan-lock-active" : ""} ${threatCueActive ? "threat-cue-active" : ""} ${denseThreatActive ? "dense-threat-active" : ""} ${countdownPulseActive ? "countdown-pulse-active" : ""} ${afterburnerActive ? "afterburner-active" : ""} ${rivalPressureActive ? "rival-pressure-active" : ""}`}
       >
         <Suspense
           fallback={
