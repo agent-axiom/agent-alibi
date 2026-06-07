@@ -55,6 +55,9 @@ export function FinalCaseFile({ summary, soundEnabled = false, onToggleSound, on
   const nextRunContracts = buildNextRunContracts(summary);
   const scoreMargin = buildScoreMarginLabel(summary.teamScores);
   const caseStamp = buildCaseStamp(summary);
+  const interceptedRelicLine = summary.interceptedRelicNames?.length
+    ? `Red denied: ${summary.interceptedRelicNames.join(" + ")}`
+    : "Red denied: recovered loot";
   const afterburnerFinish = Boolean(summary.afterburnerExitBonus && summary.afterburnerExitBonus > 0);
 
   useEffect(() => {
@@ -152,7 +155,7 @@ export function FinalCaseFile({ summary, soundEnabled = false, onToggleSound, on
             <div className="final-score final-intercepts">
               <span>Carrier Intercepts</span>
               <strong>x{summary.carrierIntercepts}</strong>
-              <small>{summary.interceptedRelicNames?.length ? summary.interceptedRelicNames.join(" + ") : "Recovered loot"}</small>
+              <small>{interceptedRelicLine}</small>
             </div>
           ) : null}
           {summary.scanBurns && summary.scanBurns > 0 ? (
