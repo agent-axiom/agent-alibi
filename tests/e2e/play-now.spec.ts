@@ -902,7 +902,7 @@ test("rival steals trigger a clear red loot alert", async ({ page }) => {
 
   const rivalLootAlert = page.getByLabel(/rival loot alert/i);
   await expect(page.locator(".arcade-shell")).toHaveClass(/rival-pressure-active/);
-  await expect(rivalLootAlert.getByText(/red \+\d/i)).toBeVisible();
+  await expect(rivalLootAlert.getByText(/pending \+\d/i)).toBeVisible();
   await expect(rivalLootAlert.getByText(/stole/i)).toBeVisible();
   const rivalComms = page.getByLabel(/rival comms/i);
   await expect(rivalComms.getByText(/rook/i)).toBeVisible();

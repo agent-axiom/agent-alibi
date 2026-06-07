@@ -1261,7 +1261,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     actor.carriedRelics.push({ name: artifact.name, value: artifact.value });
     actor.targetRoomId = "atrium";
     this.alarm = Math.min(5, this.alarm + 0.12);
-    this.lastRivalSteal = `Red +${artifact.value}: ${actorLabel} stole ${artifact.name}`;
+    this.lastRivalSteal = `Pending +${artifact.value}: ${actorLabel} stole ${artifact.name}`;
     this.flashRivalBark({
       tone: "taunt",
       agentName: actorLabel,
