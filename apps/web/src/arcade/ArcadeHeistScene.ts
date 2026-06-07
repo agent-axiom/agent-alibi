@@ -166,6 +166,15 @@ type ExtractionSequenceDebug = {
   y: number;
 };
 
+type RivalAmbushVectorDebug = {
+  visible: boolean;
+  label: string;
+  routeKind: ArcadeObjectiveTarget["kind"] | null;
+  threatCount: number;
+  laneWidth: number;
+  pulseCount: number;
+};
+
 type RuntimeArenaCallout = {
   id: number;
   kind: ArenaCalloutKind;
@@ -483,6 +492,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       interactionPrompt: this.interactionPromptDebug(),
       hasTargetBeam: Boolean(this.targetBeam),
       routeGuide,
+      rivalAmbushVector: this.rivalAmbushVectorDebug(),
       routeSignal: this.routeSignalDebug(),
       threatHalo: this.threatHaloDebug(),
       carrierCashoutRoute: this.carrierCashoutRouteDebug(),
@@ -3389,7 +3399,9 @@ export class ArcadeHeistScene extends Phaser.Scene {
     const distance = Phaser.Math.Distance.Between(this.player.x, this.player.y, target.x, target.y);
     const lane = this.routeLaneSpec(target, distance);
     this.targetBeam.clear();
+    this.clearRivalAmbushVectorData();
     this.drawVaultRushRail(target, color, distance);
+    this.drawRivalAmbushVector(target, distance);
     this.drawRouteLane(target, color, lane);
     this.targetBeam.lineStyle(8, color, 0.1);
     this.targetBeam.strokeLineShape(new Phaser.Geom.Line(this.player.x, this.player.y, target.x, target.y));
@@ -3466,6 +3478,87 @@ export class ArcadeHeistScene extends Phaser.Scene {
     };
   }
 
+  private drawRivalAmbushVector(target: ArcadeObjectiveTarget, distance: number) {
+    if (!this.player || !this.targetBeam || target.kind !== "escape" || this.lootValue <= 0 || !this.aiReleased || this.extractionSequenceActive()) {
+      return;
+    }
+
+    const threatCount = this.aiAgents.length;
+    if (threatCount <= 0) return;
+
+    const angle = Phaser.Math.Angle.Between(this.player.x, this.player.y, target.x, target.y);
+    const normalX = Math.cos(angle + Math.PI / 2);
+    const normalY = Math.sin(angle + Math.PI / 2);
+    const forwardX = Math.cos(angle);
+    const forwardY = Math.sin(angle);
+    const laneWidth = this.vaultRushActive() ? 88 : 72;
+    const pulseCount = Phaser.Math.Clamp(Math.floor(distance / 130) + threatCount, 3, 10);
+    const gateProgress = 0.42 + Math.sin(this.elapsedMs / 420) * 0.035;
+    const gateX = Phaser.Math.Linear(this.player.x, target.x, gateProgress);
+    const gateY = Phaser.Math.Linear(this.player.y, target.y, gateProgress);
+    const gateHalf = Math.max(42, laneWidth * 0.78);
+    const dangerColor = TEAM_COLORS.red;
+
+    this.targetBeam.lineStyle(laneWidth, dangerColor, 0.038);
+    this.targetBeam.lineBetween(this.player.x, this.player.y, target.x, target.y);
+    this.targetBeam.lineStyle(4, dangerColor, 0.58);
+    this.targetBeam.lineBetween(gateX - normalX * gateHalf, gateY - normalY * gateHalf, gateX + normalX * gateHalf, gateY + normalY * gateHalf);
+    this.targetBeam.lineStyle(2, 0xffd56a, 0.5);
+    this.targetBeam.lineBetween(gateX - normalX * gateHalf * 0.72, gateY - normalY * gateHalf * 0.72, gateX + normalX * gateHalf * 0.72, gateY + normalY * gateHalf * 0.72);
+
+    this.targetBeam.fillStyle(dangerColor, 0.18);
+    this.targetBeam.fillTriangle(
+      gateX + forwardX * 26,
+      gateY + forwardY * 26,
+      gateX - forwardX * 18 + normalX * gateHalf,
+      gateY - forwardY * 18 + normalY * gateHalf,
+      gateX - forwardX * 18 - normalX * gateHalf,
+      gateY - forwardY * 18 - normalY * gateHalf
+    );
+
+    const phase = (this.elapsedMs / 500) % 1;
+    for (let index = 0; index < pulseCount; index += 1) {
+      const progress = 0.14 + (((index + phase) / pulseCount) % 1) * 0.72;
+      const x = Phaser.Math.Linear(this.player.x, target.x, progress);
+      const y = Phaser.Math.Linear(this.player.y, target.y, progress);
+      this.targetBeam.fillStyle(index % 2 === 0 ? dangerColor : 0xffd56a, 0.56);
+      this.targetBeam.fillCircle(x, y, 5.8);
+      this.targetBeam.fillStyle(dangerColor, 0.28);
+      this.targetBeam.fillCircle(x + normalX * laneWidth * 0.42, y + normalY * laneWidth * 0.42, 2.8);
+      this.targetBeam.fillCircle(x - normalX * laneWidth * 0.42, y - normalY * laneWidth * 0.42, 2.8);
+    }
+
+    this.targetBeam.setData("ambushVisible", true);
+    this.targetBeam.setData("ambushLabel", "RIVAL AMBUSH");
+    this.targetBeam.setData("ambushRouteKind", target.kind);
+    this.targetBeam.setData("ambushThreatCount", threatCount);
+    this.targetBeam.setData("ambushLaneWidth", laneWidth);
+    this.targetBeam.setData("ambushPulseCount", pulseCount);
+  }
+
+  private clearRivalAmbushVectorData() {
+    this.targetBeam?.setData("ambushVisible", false);
+    this.targetBeam?.setData("ambushLabel", "");
+    this.targetBeam?.setData("ambushRouteKind", null);
+    this.targetBeam?.setData("ambushThreatCount", 0);
+    this.targetBeam?.setData("ambushLaneWidth", 0);
+    this.targetBeam?.setData("ambushPulseCount", 0);
+  }
+
+  private rivalAmbushVectorDebug(): RivalAmbushVectorDebug {
+    if (!this.targetBeam?.getData("ambushVisible")) {
+      return { visible: false, label: "", routeKind: null, threatCount: 0, laneWidth: 0, pulseCount: 0 };
+    }
+
+    return {
+      visible: true,
+      label: String(this.targetBeam.getData("ambushLabel") ?? ""),
+      routeKind: (this.targetBeam.getData("ambushRouteKind") as ArcadeObjectiveTarget["kind"] | null | undefined) ?? null,
+      threatCount: Number(this.targetBeam.getData("ambushThreatCount") ?? 0),
+      laneWidth: Number(this.targetBeam.getData("ambushLaneWidth") ?? 0),
+      pulseCount: Number(this.targetBeam.getData("ambushPulseCount") ?? 0)
+    };
+  }
   private drawVaultRushRail(target: ArcadeObjectiveTarget, color: number, distance: number) {
     if (!this.player || !this.targetBeam || !this.vaultRushActive()) return;
 
