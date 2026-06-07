@@ -1773,6 +1773,12 @@ p {
   font-weight: 900;
 }
 
+.arcade-cashout-surge .arcade-cashout-afterburner {
+  color: #7efcff;
+  font-size: 0.7rem;
+  text-shadow: 0 0 18px rgba(126, 252, 255, 0.42);
+}
+
 .arcade-scan-lock-pulse {
   position: absolute;
   top: clamp(214px, 31vh, 312px);
@@ -1898,10 +1904,10 @@ p {
 }
 
 .arcade-shell.route-pulse-active .arcade-mission-meta {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
-.arcade-shell.route-pulse-active .arcade-mission-meta > :not(.arcade-race):not(.arcade-route-choice):not(.arcade-escape-payout) {
+.arcade-shell.route-pulse-active .arcade-mission-meta > :not(.arcade-race):not(.arcade-route-choice):not(.arcade-escape-payout):not(.arcade-greed) {
   display: none;
 }
 

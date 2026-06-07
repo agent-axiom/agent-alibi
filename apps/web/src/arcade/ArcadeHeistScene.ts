@@ -42,7 +42,7 @@ const SECURITY_SWEEP_BEAM_WIDTH = 34;
 const SECURITY_SWEEP_HIT_ALARM_DELTA = 0.46;
 const SECURITY_SWEEP_HIT_COOLDOWN_MS = 1_350;
 const MOVEMENT_COACH_MAX_MS = 6_500;
-const MOVEMENT_COACH_DISMISS_DISTANCE = 48;
+const MOVEMENT_COACH_DISMISS_DISTANCE = 32;
 const LOOT_SPEED_SURGE_MS = 2_200;
 const LOOT_SPEED_SURGE_MULTIPLIER = 2.05;
 
@@ -1323,6 +1323,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.addTrail(this.player.x, this.player.y, direction);
     this.addDashShockwave(this.player.x, this.player.y);
     this.flashArenaCallout("steal", "AFTERBURNER", this.player.x, this.player.y - 54, 0x7effdf);
+    this.emitHudIfNeeded(true);
   }
 
   private lootSpeedSurgeActive() {
@@ -1341,6 +1342,16 @@ export class ArcadeHeistScene extends Phaser.Scene {
       multiplier: LOOT_SPEED_SURGE_MULTIPLIER,
       source: this.lootSpeedSurgeSource,
       activeMs: Math.max(0, Math.round(this.lootSpeedSurgeUntilMs - this.elapsedMs))
+    };
+  }
+
+  private lootSpeedSurgeHud() {
+    if (!this.lootSpeedSurgeActive()) return null;
+    return {
+      label: "Afterburner" as const,
+      multiplier: LOOT_SPEED_SURGE_MULTIPLIER,
+      secondsLeft: Math.max(1, Math.ceil((this.lootSpeedSurgeUntilMs - this.elapsedMs) / 1000)),
+      source: this.lootSpeedSurgeSource
     };
   }
 
@@ -1802,6 +1813,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       paceStatus: this.paceStatus(),
       cleanBonusWindow: this.cleanBonusWindow(),
       lootChainWindow: this.lootChainWindow(),
+      lootSpeedSurge: this.lootSpeedSurgeHud(),
       missionBeat: buildMissionBeat({
         targetArtifactName: targetArtifact?.name ?? null,
         targetArtifactValue: targetArtifact?.value ?? null,

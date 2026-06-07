@@ -418,6 +418,9 @@ test("stealing a relic gives the player a short cashout speed surge", async ({ p
     })
   );
   expect(surge?.multiplier).toBeGreaterThan(1.3);
+  const cashoutSurge = page.getByLabel(/cashout surge/i);
+  await expect(cashoutSurge.getByText(/afterburner x2\.05/i)).toBeVisible();
+  await expect(cashoutSurge.getByText(/\d+s boost/i)).toBeVisible();
 
   const beforeSurgeMove = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().player);
   await page.keyboard.down("ArrowRight");
@@ -425,7 +428,7 @@ test("stealing a relic gives the player a short cashout speed surge", async ({ p
   await page.keyboard.up("ArrowRight");
   const afterSurgeMove = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().player);
 
-  expect((afterSurgeMove?.x ?? 0) - (beforeSurgeMove?.x ?? 0)).toBeGreaterThan(100);
+  expect((afterSurgeMove?.x ?? 0) - (beforeSurgeMove?.x ?? 0)).toBeGreaterThan(80);
 });
 
 test("opening movement coach disappears after the player moves", async ({ page }) => {

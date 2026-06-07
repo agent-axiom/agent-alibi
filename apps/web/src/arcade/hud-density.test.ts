@@ -55,6 +55,7 @@ function hud(overrides: Partial<ArcadeHudState> = {}): ArcadeHudState {
     paceStatus: "S-Rank pace",
     cleanBonusWindow: null,
     lootChainWindow: null,
+    lootSpeedSurge: null,
     missionBeat: {
       tone: "focus",
       kicker: "First objective",
