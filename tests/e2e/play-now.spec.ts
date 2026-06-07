@@ -334,6 +334,19 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(extractionCue.getByText(/extract now/i)).toBeVisible();
   await expect(extractionCue.getByText(/press e \/ space to cashout \+8/i)).toBeVisible();
   await page.keyboard.press("KeyE");
+  const extractionSequence = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().extractionSequence);
+  expect(extractionSequence).toEqual(
+    expect.objectContaining({
+      active: true,
+      label: "EXTRACTION LIVE",
+      outcome: "escaped",
+      cashoutValue: 8,
+      ringCount: expect.any(Number),
+      beamVisible: true
+    })
+  );
+  expect(extractionSequence?.ringCount).toBeGreaterThanOrEqual(4);
+  await expect(page.locator(".final-shell")).toHaveCount(0);
   await expect(scorePopup.getByText(/\+2 escape bonus/i)).toBeVisible();
   await expect(scorePopup.getByText(/afterburner \+1/i)).toBeVisible();
 
