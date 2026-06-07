@@ -125,6 +125,17 @@ type ImpactKind = "steal" | "intercept" | "alibi" | "escape" | "lockdown" | "cas
 type CameraKickKind = ImpactKind | "dash";
 type ArenaCalloutKind = ImpactKind | "rival-steal";
 
+type ImpactBurstDebug = {
+  active: boolean;
+  kind: ImpactKind | null;
+  ringCount: number;
+  sparkCount: number;
+  ageMs: number;
+  x: number;
+  y: number;
+  radius: number;
+};
+
 type RuntimeArenaCallout = {
   id: number;
   kind: ArenaCalloutKind;
@@ -301,6 +312,15 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private dashShockwaveY = 0;
   private dashShockwaveStartedAtMs = 0;
   private dashShockwaveActiveUntilMs = 0;
+  private impactBurst?: Phaser.GameObjects.Graphics;
+  private impactBurstKind: ImpactKind | null = null;
+  private impactBurstRingCount = 0;
+  private impactBurstSparkCount = 0;
+  private impactBurstX = 0;
+  private impactBurstY = 0;
+  private impactBurstStartedAtMs = 0;
+  private impactBurstActiveUntilMs = 0;
+  private impactBurstSeed = 0;
   private impactCount = 0;
   private lastImpact: { kind: ImpactKind; count: number; atMs: number } | null = null;
   private cameraKickCount = 0;
@@ -437,6 +457,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       lootSpeedSurge: this.lootSpeedSurgeDebug(),
       motionTrail: this.motionTrailDebug(),
       dashShockwave: this.dashShockwaveDebug(),
+      impactBurst: this.impactBurstDebug(),
       arenaLabels: this.arenaLabelsDebug(),
       routeMode: this.routeMode,
       nearestRival,
@@ -572,6 +593,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.updateMovementCoach();
     this.updateMotionTrail(delta);
     this.updateDashShockwave();
+    this.updateImpactBurst();
     this.updateAi(delta);
     this.updateCarrierBadges();
     this.updateRivalPressureFeed();
@@ -704,6 +726,15 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.dashShockwaveY = 0;
     this.dashShockwaveStartedAtMs = 0;
     this.dashShockwaveActiveUntilMs = 0;
+    this.impactBurst = undefined;
+    this.impactBurstKind = null;
+    this.impactBurstRingCount = 0;
+    this.impactBurstSparkCount = 0;
+    this.impactBurstX = 0;
+    this.impactBurstY = 0;
+    this.impactBurstStartedAtMs = 0;
+    this.impactBurstActiveUntilMs = 0;
+    this.impactBurstSeed = 0;
     this.impactCount = 0;
     this.lastImpact = null;
     this.cameraKickCount = 0;
@@ -1248,7 +1279,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       });
       this.flashArenaCallout("steal", `+${artifact.value} ${artifact.name}`, artifact.x, artifact.y, 0xffd56a);
       this.flashObjectiveBanner(this.buildEscapeBanner(this.artifactsStolen === 1));
-      this.impactPulse("steal");
+      this.impactPulse("steal", artifact.x, artifact.y);
       this.triggerLootSpeedSurge(artifact.name);
       this.collectArtifactVisual(artifact, 0xffd56a);
       this.updateEscapePayoutBadge();
@@ -1298,7 +1329,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       detail: `${rival.name} reached Atrium Lift`
     });
     this.flashArenaCallout("cashout", `Red cashout +${cashedValue}`, target?.x ?? rival.x, target?.y ?? rival.y, TEAM_COLORS.red);
-    this.impactPulse("cashout");
+    this.impactPulse("cashout", target?.x ?? rival.x, target?.y ?? rival.y);
     this.flashRivalBark({
       tone: "taunt",
       agentName: rival.name,
@@ -1482,9 +1513,10 @@ export class ArcadeHeistScene extends Phaser.Scene {
     }
   }
 
-  private impactPulse(kind: ImpactKind) {
+  private impactPulse(kind: ImpactKind, x?: number, y?: number) {
     this.impactCount += 1;
     this.lastImpact = { kind, count: this.impactCount, atMs: Math.round(this.elapsedMs) };
+    this.addImpactBurst(kind, x, y);
     this.cameraKick(kind);
   }
 
@@ -3579,6 +3611,105 @@ export class ArcadeHeistScene extends Phaser.Scene {
     }
 
     this.renderMotionTrail();
+  }
+
+  private addImpactBurst(kind: ImpactKind, x?: number, y?: number) {
+    if (!this.impactBurst) {
+      this.impactBurst = this.add.graphics().setDepth(15);
+    }
+
+    const spec = this.impactBurstSpec(kind);
+    this.impactBurstKind = kind;
+    this.impactBurstRingCount = spec.ringCount;
+    this.impactBurstSparkCount = spec.sparkCount;
+    this.impactBurstX = x ?? this.player?.x ?? WORLD_WIDTH / 2;
+    this.impactBurstY = y ?? this.player?.y ?? WORLD_HEIGHT / 2;
+    this.impactBurstStartedAtMs = this.elapsedMs;
+    this.impactBurstActiveUntilMs = this.elapsedMs + spec.durationMs;
+    this.impactBurstSeed = this.impactCount;
+    this.renderImpactBurst();
+  }
+
+  private updateImpactBurst() {
+    if (!this.impactBurst) return;
+    if (!this.impactBurstActive()) {
+      this.impactBurst.clear();
+      return;
+    }
+
+    this.renderImpactBurst();
+  }
+
+  private renderImpactBurst() {
+    if (!this.impactBurst || !this.impactBurstKind) return;
+
+    const spec = this.impactBurstSpec(this.impactBurstKind);
+    const ageMs = Math.max(0, this.elapsedMs - this.impactBurstStartedAtMs);
+    const progress = Phaser.Math.Clamp(ageMs / spec.durationMs, 0, 1);
+    const eased = Phaser.Math.Easing.Cubic.Out(progress);
+    const radius = this.impactBurstRadius(ageMs);
+
+    this.impactBurst.clear();
+
+    for (let index = 0; index < spec.ringCount; index += 1) {
+      const ringProgress = Phaser.Math.Clamp(eased - index * 0.08, 0, 1);
+      const ringRadius = 18 + ringProgress * (radius + index * 18);
+      const alpha = Math.max(0, (1 - progress) * (0.72 - index * 0.11));
+      this.impactBurst.lineStyle(Math.max(1, spec.lineWidth - index), index % 2 === 0 ? spec.color : spec.accent, alpha);
+      this.impactBurst.strokeCircle(this.impactBurstX, this.impactBurstY, ringRadius);
+    }
+
+    for (let index = 0; index < spec.sparkCount; index += 1) {
+      const angle = (index / spec.sparkCount) * Math.PI * 2 + this.impactBurstSeed * 0.41;
+      const sparkProgress = Phaser.Math.Clamp(eased * 1.16 - (index % 4) * 0.055, 0, 1);
+      const sparkDistance = 18 + sparkProgress * (spec.maxRadius * (0.58 + (index % 5) * 0.055));
+      const sparkX = this.impactBurstX + Math.cos(angle) * sparkDistance;
+      const sparkY = this.impactBurstY + Math.sin(angle) * sparkDistance;
+      const sparkAlpha = Math.max(0, (1 - progress) * (0.74 - (index % 3) * 0.08));
+      const sparkRadius = Math.max(2, 6 - progress * 4 + (index % 2));
+      this.impactBurst.fillStyle(index % 3 === 0 ? spec.accent : spec.color, sparkAlpha);
+      this.impactBurst.fillCircle(sparkX, sparkY, sparkRadius);
+    }
+  }
+
+  private impactBurstDebug(): ImpactBurstDebug {
+    const ageMs = Math.max(0, Math.round(this.elapsedMs - this.impactBurstStartedAtMs));
+    return {
+      active: this.impactBurstActive(),
+      kind: this.impactBurstKind,
+      ringCount: this.impactBurstRingCount,
+      sparkCount: this.impactBurstSparkCount,
+      ageMs,
+      x: Math.round(this.impactBurstX),
+      y: Math.round(this.impactBurstY),
+      radius: Math.round(this.impactBurstRadius(ageMs))
+    };
+  }
+
+  private impactBurstActive() {
+    return Boolean(this.impactBurstKind) && this.elapsedMs < this.impactBurstActiveUntilMs;
+  }
+
+  private impactBurstRadius(ageMs: number) {
+    if (!this.impactBurstKind) return 0;
+    const spec = this.impactBurstSpec(this.impactBurstKind);
+    const progress = Phaser.Math.Clamp(ageMs / spec.durationMs, 0, 1);
+    return 20 + Phaser.Math.Easing.Cubic.Out(progress) * spec.maxRadius;
+  }
+
+  private impactBurstSpec(kind: ImpactKind) {
+    const specs: Record<ImpactKind, { color: number; accent: number; durationMs: number; ringCount: number; sparkCount: number; maxRadius: number; lineWidth: number }> = {
+      steal: { color: 0xffd56a, accent: 0xffffff, durationMs: 560, ringCount: 3, sparkCount: 10, maxRadius: 118, lineWidth: 5 },
+      intercept: { color: 0xff4f7b, accent: 0xffd56a, durationMs: 680, ringCount: 4, sparkCount: 14, maxRadius: 142, lineWidth: 6 },
+      alibi: { color: 0x4cf4f0, accent: 0xffffff, durationMs: 600, ringCount: 4, sparkCount: 12, maxRadius: 126, lineWidth: 5 },
+      escape: { color: 0x7effdf, accent: 0xffffff, durationMs: 660, ringCount: 4, sparkCount: 12, maxRadius: 138, lineWidth: 5 },
+      lockdown: { color: 0xff4f7b, accent: 0xffd56a, durationMs: 780, ringCount: 5, sparkCount: 16, maxRadius: 170, lineWidth: 7 },
+      cashout: { color: 0xff4f7b, accent: 0xffd56a, durationMs: 660, ringCount: 4, sparkCount: 14, maxRadius: 146, lineWidth: 6 },
+      laser: { color: 0xffd56a, accent: 0xff4f7b, durationMs: 520, ringCount: 3, sparkCount: 10, maxRadius: 112, lineWidth: 5 },
+      dodge: { color: 0x7effdf, accent: 0xffffff, durationMs: 500, ringCount: 3, sparkCount: 10, maxRadius: 106, lineWidth: 4 }
+    };
+
+    return specs[kind];
   }
 
   private addDashShockwave(x: number, y: number) {

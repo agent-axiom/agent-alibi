@@ -169,6 +169,16 @@ test("solo match starts and reaches final case file", async ({ page }) => {
     })
   );
   await page.keyboard.press("KeyE");
+  const stealBurst = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().impactBurst);
+  expect(stealBurst).toEqual(
+    expect.objectContaining({
+      active: true,
+      kind: "steal",
+      ringCount: 3,
+      sparkCount: expect.any(Number)
+    })
+  );
+  expect(stealBurst?.sparkCount).toBeGreaterThanOrEqual(8);
   await expect(objectiveBanner.getByText(/escape with 3 loot/i)).toBeVisible();
   await expect(objectiveBanner.getByText(/cashout 5 or risk greed route/i)).toBeVisible();
   const stealCallouts = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().arenaCallouts);
@@ -1009,6 +1019,16 @@ test("rival steals trigger a clear red loot alert", async ({ page }) => {
   await page.waitForTimeout(160);
   const recoveryCamera = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().camera);
   expect(recoveryCamera?.zoom).toBeGreaterThan((beforeRecoveryCamera?.zoom ?? 0) + 0.02);
+  const interceptBurst = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().impactBurst);
+  expect(interceptBurst).toEqual(
+    expect.objectContaining({
+      active: true,
+      kind: "intercept",
+      ringCount: 4,
+      sparkCount: expect.any(Number)
+    })
+  );
+  expect(interceptBurst?.sparkCount).toBeGreaterThanOrEqual(10);
   const interceptCallouts = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().arenaCallouts);
   expect(interceptCallouts).toEqual(
     expect.arrayContaining([
