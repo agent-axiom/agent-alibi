@@ -997,6 +997,7 @@ test("rival steals trigger a clear red loot alert", async ({ page }) => {
   expect(afterIntercept?.lastImpact?.kind).toBe("intercept");
 
   await page.evaluate(() => window.__AGENT_ALIBI_FINISH_ARCADE__?.());
+  await expect(page.getByLabel(/share case stamp/i).getByText(/red denied: moon pearl/i)).toBeVisible();
   const finalScores = page.getByLabel(/final scores/i);
   const carrierCard = finalScores.locator(".final-intercepts");
   await expect(carrierCard.getByText(/carrier intercepts/i)).toBeVisible();

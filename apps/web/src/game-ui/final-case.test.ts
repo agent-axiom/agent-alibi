@@ -125,6 +125,19 @@ describe("buildCaseStamp", () => {
       ).quote
     ).toBe("Afterburner cashout +1 · Stole Moon Pearl + Argent Crown");
   });
+
+  it("leads carrier-intercept share stamps with the denied Red loot", () => {
+    expect(
+      buildCaseStamp(
+        summary({
+          title: "Carrier Denied",
+          carrierIntercepts: 1,
+          interceptedRelicNames: ["Moon Pearl"],
+          highlightLines: ["Case title: Carrier Denied", "Recovered Moon Pearl from rivals"]
+        })
+      ).quote
+    ).toBe("Red denied: Moon Pearl");
+  });
 });
 
 describe("buildLocalBestCaseStatus", () => {
