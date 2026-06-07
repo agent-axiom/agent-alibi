@@ -91,6 +91,8 @@ describe("buildCaseShareText", () => {
     expect(text).toContain("02. Escaped with 6 loot");
     expect(text).toContain("NEXT RUN");
     expect(text).toContain("Next run: run it back and make the case file louder.");
+    expect(text).toContain("PLAY");
+    expect(text).toContain("https://agent-axiom.github.io/agent-alibi/");
   });
 });
 
