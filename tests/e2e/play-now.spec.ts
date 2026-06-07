@@ -334,7 +334,7 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(caseHighlights.getByText(/clean exit bonus \+3/i)).toBeVisible();
   await expect(page.getByText(/cashout banked: \+8/i)).toBeVisible();
   await expect(page.getByText(/afterburner exit bonus: \+1/i)).toBeVisible();
-  await expect(page.getByLabel(/rematch hook/i).getByText(/run it back and make the case file louder/i)).toBeVisible();
+  await expect(page.getByLabel(/rematch hook/i).getByText(/hit afterburner again and cashout before the boost dies/i)).toBeVisible();
   await expect(page.getByText(/relics stolen: moon pearl, argent crown/i)).toBeVisible();
   const nextRunContracts = page.getByLabel(/next run contracts/i);
   await expect(nextRunContracts.getByText(/speedrun/i)).toBeVisible();
