@@ -242,6 +242,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private scanBurns = 0;
   private carrierIntercepts = 0;
   private interceptedRelicNames: string[] = [];
+  private interceptedLootValue = 0;
   private lastRivalSteal: string | null = null;
   private playerName = "Agent You";
   private routeMode: RouteMode = "escape";
@@ -646,6 +647,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.scanBurns = 0;
     this.carrierIntercepts = 0;
     this.interceptedRelicNames = [];
+    this.interceptedLootValue = 0;
     this.lastRivalSteal = null;
     this.routeMode = "escape";
     this.targetMarker = undefined;
@@ -1556,6 +1558,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.stolenRelicNames.push(...recoveredNames);
     this.carrierIntercepts += 1;
     this.interceptedRelicNames.push(...recoveredNames);
+    this.interceptedLootValue += recoveredValue;
     this.lastLootChainAtMs = this.elapsedMs;
     for (const relicName of recoveredNames) {
       const index = this.rivalRelicNames.indexOf(relicName);
@@ -3510,6 +3513,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       scanBurns: this.scanBurns,
       carrierIntercepts: this.carrierIntercepts,
       interceptedRelicNames: this.interceptedRelicNames,
+      interceptedLootValue: this.interceptedLootValue,
       afterburnerExit
     });
   }

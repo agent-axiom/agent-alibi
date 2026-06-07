@@ -1033,6 +1033,7 @@ test("rival steals trigger a clear red loot alert", async ({ page }) => {
   await expect(relicsCard.getByText(/moon pearl/i)).toBeVisible();
   await expect(page.getByText(/carrier intercepts: 1/i)).toBeVisible();
   await expect(page.getByText(/recovered from rivals: moon pearl/i)).toBeVisible();
+  await expect(page.getByText(/denial swing: \+3 recovered \/ \+3 denied/i)).toBeVisible();
   await expect(page.getByText(/relics stolen: moon pearl/i)).toBeVisible();
 });
 

@@ -17,6 +17,7 @@ export type ArcadeMissionResult = {
   scanBurns?: number;
   carrierIntercepts?: number;
   interceptedRelicNames?: string[];
+  interceptedLootValue?: number;
   afterburnerExit?: boolean;
 };
 
@@ -188,6 +189,10 @@ function buildCaseFile(
   afterburnerExitBonus: number
 ): string {
   const elapsedSeconds = Math.round(result.elapsedMs / 1000);
+  const denialSwingLine =
+    (result.interceptedLootValue ?? 0) > 0
+      ? "Denial Swing: +" + result.interceptedLootValue + " recovered / +" + result.interceptedLootValue + " denied"
+      : null;
   const outcomeLine =
     result.outcome === "escaped"
       ? result.lootValue > 0
@@ -221,6 +226,7 @@ function buildCaseFile(
     `Scan Burns: ${result.scanBurns ?? 0}`,
     `Carrier Intercepts: ${result.carrierIntercepts ?? 0}`,
     `Recovered From Rivals: ${result.interceptedRelicNames?.length ? result.interceptedRelicNames.join(", ") : "none"}`,
+    ...(denialSwingLine ? [denialSwingLine] : []),
     `Alarm: ${result.alarm}/5`,
     `Time inside: ${elapsedSeconds}s`,
     "",
