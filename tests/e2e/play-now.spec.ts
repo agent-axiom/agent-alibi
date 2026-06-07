@@ -626,6 +626,7 @@ test("rival agents stay visually staged until the breach starts", async ({ page 
   expect(staged?.rivals?.every((rival) => rival.alpha < 0.7)).toBe(true);
   expect(staged?.rivalIntentRoutes).toEqual({ visible: false, routeCount: 0, targetLabels: [] });
   expect(staged?.rivalAmbushVector).toEqual({ visible: false, label: "", routeKind: null, threatCount: 0, laneWidth: 0, pulseCount: 0 });
+  expect(staged?.rivalHunter).toEqual({ visible: false, agentName: "", status: "standby", targetLabel: "", distanceMeters: 0 });
 
   await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget());
   await page.keyboard.press("KeyE");
@@ -638,6 +639,18 @@ test("rival agents stay visually staged until the breach starts", async ({ page 
   expect(breached?.rivalIntentRoutes?.visible).toBe(true);
   expect(breached?.rivalIntentRoutes?.routeCount).toBeGreaterThanOrEqual(3);
   expect(breached?.rivalIntentRoutes?.targetLabels).toEqual(expect.arrayContaining([expect.stringMatching(/rook -> /i)]));
+  expect(breached?.rivalIntentRoutes?.targetLabels).toEqual(expect.arrayContaining([expect.stringMatching(/rook -> you/i)]));
+  expect(breached?.rivalHunter).toEqual(
+    expect.objectContaining({
+      visible: true,
+      agentName: "Rook",
+      status: "waking",
+      targetLabel: "YOU",
+      distanceMeters: expect.any(Number)
+    })
+  );
+  expect(breached?.rivalHunter?.distanceMeters).toBeGreaterThan(0);
+
   expect(breached?.rivalAmbushVector).toEqual(
     expect.objectContaining({
       visible: true,
@@ -670,6 +683,14 @@ test("rival agents stay visually staged until the breach starts", async ({ page 
     })
   );
   expect(nearMiss?.lastImpact?.kind).toBe("dodge");
+
+  await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.forceRivalsActive?.());
+  const hunterStart = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().rivalHunter);
+  await page.waitForTimeout(700);
+  const hunterChase = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().rivalHunter);
+  expect(hunterStart?.status).toBe("hunting");
+  expect(hunterChase?.status).toBe("hunting");
+  expect(hunterChase?.distanceMeters).toBeLessThan(hunterStart?.distanceMeters ?? 0);
 });
 
 test("first score triggers a visible rival breach cut-in", async ({ page }) => {

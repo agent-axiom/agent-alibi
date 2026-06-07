@@ -30,6 +30,7 @@ const WORLD_HEIGHT = 1040;
 const PLAYER_SPEED = 285;
 const DASH_SPEED = 620;
 const AI_SPEED = 150;
+const AI_HUNTER_SPEED = 190;
 const PICKUP_RADIUS = 42;
 const EXIT_RADIUS = 74;
 const INTERCEPT_RADIUS = 64;
@@ -177,6 +178,16 @@ type RivalAmbushVectorDebug = {
   pulseCount: number;
 };
 
+type RivalHunterStatus = "standby" | "waking" | "hunting";
+
+type RivalHunterDebug = {
+  visible: boolean;
+  agentName: string;
+  status: RivalHunterStatus;
+  targetLabel: string;
+  distanceMeters: number;
+};
+
 type AmbushNearMissDebug = {
   active: boolean;
   count: number;
@@ -294,6 +305,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private aiReleased = false;
   private aiWakeHoldMs = 0;
   private aiActionHoldMs = 0;
+  private rivalHunterId: string | null = null;
   private lastRivalPressureLevel: RivalPressure["level"] = "standby";
   private rivalScanState: RivalScanState = { chargeMs: 0, cooldownMs: 0 };
   private alibiPulseCooldownMs = 0;
@@ -506,6 +518,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       hasTargetBeam: Boolean(this.targetBeam),
       routeGuide,
       rivalAmbushVector: this.rivalAmbushVectorDebug(),
+      rivalHunter: this.rivalHunterDebug(),
       ambushNearMiss: this.ambushNearMissDebug(),
       routeSignal: this.routeSignalDebug(),
       threatHalo: this.threatHaloDebug(),
@@ -556,6 +569,29 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.updateInteractionPrompt();
     this.updateCameraLookahead(16);
     this.updateCameraZoom(16);
+    this.emitHudIfNeeded(true);
+  }
+
+  forceRivalsActiveForDebug() {
+    this.releaseRivals({ announce: false, holdMs: 0 });
+    this.aiWakeHoldMs = 0;
+    this.aiActionHoldMs = 0;
+    this.assignRivalHunter();
+    this.heldDirections.clear();
+    this.shiftHeld = false;
+    this.keyboardImpulse = undefined;
+    this.pointerTarget = undefined;
+
+    const hunter = this.rivalHunter();
+    if (this.player && hunter) {
+      const distancePx = 26 * 8;
+      const direction = this.player.x + distancePx < WORLD_WIDTH - 82 ? 1 : -1;
+      this.moveAgent(hunter, this.player.x + direction * distancePx - hunter.x, this.player.y - hunter.y);
+    }
+
+    this.updateRivalIntentRoutes();
+    this.updateRivalPressureFeed();
+    this.updateThreatHalo();
     this.emitHudIfNeeded(true);
   }
 
@@ -726,6 +762,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.aiReleased = false;
     this.aiWakeHoldMs = 0;
     this.aiActionHoldMs = 0;
+    this.rivalHunterId = null;
     this.lastRivalPressureLevel = "standby";
     this.rivalScanState = { chargeMs: 0, cooldownMs: 0 };
     this.alibiPulseCooldownMs = 0;
@@ -1261,6 +1298,9 @@ export class ArcadeHeistScene extends Phaser.Scene {
           agent.targetRoomId = this.pickAiTarget(agent);
           continue;
         }
+        if (this.isRivalHunter(agent) && agent.carriedRelics.length === 0 && this.lootValue > 0) {
+          continue;
+        }
         this.aiStealNearby(agent);
         if (agent.carriedRelics.length === 0) {
           agent.targetRoomId = this.pickAiTarget(agent);
@@ -1268,7 +1308,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
         continue;
       }
       vector.normalize();
-      this.moveAgent(agent, vector.x * AI_SPEED * (delta / 1000), vector.y * AI_SPEED * (delta / 1000));
+      const speed = this.isRivalHunter(agent) && agent.carriedRelics.length === 0 && this.lootValue > 0 ? AI_HUNTER_SPEED : AI_SPEED;
+      this.moveAgent(agent, vector.x * speed * (delta / 1000), vector.y * speed * (delta / 1000));
       agent.ship.rotation = Phaser.Math.Angle.Between(0, 0, vector.x, vector.y) + Math.PI / 2;
     }
   }
@@ -1277,7 +1318,46 @@ export class ArcadeHeistScene extends Phaser.Scene {
     if (agent.carriedRelics.length > 0) {
       return this.escapeZone ?? this.rooms.get("atrium");
     }
+
+    const hunterTarget = this.rivalHunterTargetPoint(agent);
+    if (hunterTarget) return hunterTarget;
+
     return this.rooms.get(agent.targetRoomId) ?? this.rooms.get("inner-vault");
+  }
+
+  private assignRivalHunter() {
+    if (this.rivalHunterId || this.aiAgents.length === 0) return;
+    const preferredHunter = this.aiAgents.find((agent) => agent.name === "Rook") ?? this.aiAgents[0];
+    this.rivalHunterId = preferredHunter?.id ?? null;
+  }
+
+  private rivalHunter(): RuntimeAgent | undefined {
+    if (!this.rivalHunterId) return undefined;
+    return this.aiAgents.find((agent) => agent.id === this.rivalHunterId);
+  }
+
+  private isRivalHunter(agent: RuntimeAgent): boolean {
+    return agent.id === this.rivalHunterId;
+  }
+
+  private rivalHunterTargetPoint(agent: RuntimeAgent): { x: number; y: number } | undefined {
+    if (!this.isRivalHunter(agent) || !this.player || this.lootValue <= 0 || this.extractionSequenceActive()) return undefined;
+    return { x: this.player.x, y: this.player.y };
+  }
+
+  private rivalHunterDebug(): RivalHunterDebug {
+    const hunter = this.rivalHunter();
+    if (!this.aiReleased || !hunter || !this.player || this.lootValue <= 0) {
+      return { visible: false, agentName: "", status: "standby", targetLabel: "", distanceMeters: 0 };
+    }
+
+    return {
+      visible: true,
+      agentName: hunter.name,
+      status: this.rivalsAreActive() ? "hunting" : "waking",
+      targetLabel: "YOU",
+      distanceMeters: Math.max(0, Math.round(Phaser.Math.Distance.Between(this.player.x, this.player.y, hunter.x, hunter.y) / 8))
+    };
   }
 
   private moveAgent(agent: RuntimeAgent, dx: number, dy: number) {
@@ -1594,10 +1674,13 @@ export class ArcadeHeistScene extends Phaser.Scene {
     if (this.aiReleased) return;
     this.aiReleased = true;
     this.aiWakeHoldMs = holdMs;
+    this.assignRivalHunter();
     this.setRivalStandbyVisuals(false);
     this.updateRivalIntentRoutes();
     if (announce) {
       this.feedLine("Rival agents entered the vault.");
+      const hunterName = this.rivalHunter()?.name ?? "Rook";
+      this.feedLine(`${hunterName} locked onto your heat signature.`);
       this.flashRivalBark({
         tone: "panic",
         agentName: "Red Crew",
@@ -2550,13 +2633,14 @@ export class ArcadeHeistScene extends Phaser.Scene {
       .map((agent) => {
         const target = this.aiTargetPoint(agent);
         const targetRoom = this.rooms.get(agent.targetRoomId);
-        if (!target || !targetRoom) return null;
+        const hunterTarget = Boolean(this.rivalHunterTargetPoint(agent));
+        if (!target || (!targetRoom && !hunterTarget)) return null;
         const distance = Phaser.Math.Distance.Between(agent.x, agent.y, target.x, target.y);
         if (distance < 28) return null;
         return {
           agent,
           target,
-          targetLabel: `${agent.name} -> ${targetRoom.room.name}`,
+          targetLabel: hunterTarget ? `${agent.name} -> You` : `${agent.name} -> ${targetRoom!.room.name}`,
           distance
         };
       })
