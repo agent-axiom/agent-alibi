@@ -217,6 +217,25 @@ describe("buildNextRunContracts", () => {
       }
     ]);
   });
+
+  it("turns an afterburner cashout into a boost encore goal", () => {
+    const contracts = buildNextRunContracts(
+      summary({
+        runRating: "S-Rank",
+        lootChain: 2,
+        greedRoute: "successful",
+        scanBurns: 0,
+        afterburnerExitBonus: 1,
+        stolenRelicNames: ["Moon Pearl", "Argent Crown"]
+      })
+    );
+
+    expect(contracts.at(-1)).toEqual({
+      label: "Boost",
+      title: "Afterburner encore",
+      detail: "Steal, trigger afterburner, and cashout before the boost dies."
+    });
+  });
 });
 
 describe("buildScoreMarginLabel", () => {
