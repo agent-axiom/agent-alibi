@@ -391,6 +391,26 @@ export function buildNextRunContracts(summary: MatchSummary): NextRunContract[] 
     ];
   }
 
+  if (summary.carrierIntercepts && summary.carrierIntercepts > 0) {
+    return [
+      {
+        label: "Denial",
+        title: "Deny the lift again",
+        detail: "Bait Red into carrying loot, then intercept before Atrium Lift."
+      },
+      {
+        label: "Cashout",
+        title: "Bank recovered loot",
+        detail: "Turn the stolen carrier relic into your own clean exit."
+      },
+      {
+        label: "Tempo",
+        title: "Score before bait",
+        detail: "Steal Moon Pearl early so Red has to answer your route."
+      }
+    ];
+  }
+
   if (emptyEscape) {
     return [
       {
