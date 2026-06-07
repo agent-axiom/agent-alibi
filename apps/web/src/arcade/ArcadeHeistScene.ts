@@ -7,6 +7,7 @@ import {
   type ArcadeExtractionCue,
   type ArcadeHudPhase,
   type ArcadeHudState,
+  type ArcadeComboCashoutWindow,
   type ArcadeMissionConfig,
   type ArcadeObjectiveBanner,
   type ArcadeRadarBlip,
@@ -2122,6 +2123,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       cleanBonusWindow: this.cleanBonusWindow(),
       lootChainWindow: this.lootChainWindow(),
       lootSpeedSurge: this.lootSpeedSurgeHud(),
+      comboCashoutWindow: this.comboCashoutWindow(),
       missionBeat: buildMissionBeat({
         targetArtifactName: targetArtifact?.name ?? null,
         targetArtifactValue: targetArtifact?.value ?? null,
@@ -2952,6 +2954,16 @@ export class ArcadeHeistScene extends Phaser.Scene {
       bonus,
       cashoutValue: this.currentCashoutValue(),
       activeMs: Math.max(0, Math.round(this.lockBreakCashoutArmedUntilMs - this.elapsedMs))
+    };
+  }
+
+  private comboCashoutWindow(): ArcadeComboCashoutWindow | null {
+    if (!this.lockBreakCashoutArmed()) return null;
+    return {
+      label: "Breakout Cashout",
+      bonus: LOCK_BREAK_CASHOUT_BONUS,
+      cashoutValue: this.currentCashoutValue(),
+      secondsLeft: Math.max(1, Math.ceil((this.lockBreakCashoutArmedUntilMs - this.elapsedMs) / 1000))
     };
   }
 

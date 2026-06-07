@@ -79,6 +79,13 @@ export type ArcadeLootSpeedSurge = {
   source: string | null;
 };
 
+export type ArcadeComboCashoutWindow = {
+  label: "Breakout Cashout";
+  bonus: number;
+  cashoutValue: number;
+  secondsLeft: number;
+};
+
 export type ArcadeMissionBeat = {
   tone: "focus" | "danger" | "success";
   kicker: string;
@@ -147,6 +154,7 @@ export type ArcadeHudState = {
   cleanBonusWindow: ArcadeCleanBonusWindow | null;
   lootChainWindow: ArcadeLootChainWindow | null;
   lootSpeedSurge: ArcadeLootSpeedSurge | null;
+  comboCashoutWindow: ArcadeComboCashoutWindow | null;
   missionBeat: ArcadeMissionBeat;
   directorCue: DirectorCue;
   threatCue: ArcadeThreatCue | null;

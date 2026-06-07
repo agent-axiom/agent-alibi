@@ -808,6 +808,11 @@ test("breaking Rook lock turns a fast cashout into a combo payoff", async ({ pag
 
   await expect(page.getByLabel(/score popup/i).getByText(/lock broken/i)).toBeVisible();
   await expect(page.getByLabel(/mission radio/i).getByText(/breakout cashout armed/i)).toBeVisible();
+  const breakoutWindow = page.getByLabel(/breakout cashout window/i);
+  await expect(breakoutWindow.getByText(/breakout cashout/i)).toBeVisible();
+  await expect(breakoutWindow.getByText(/\+2 bonus/i)).toBeVisible();
+  await expect(breakoutWindow.getByText(/cashout \+7/i)).toBeVisible();
+  await expect(breakoutWindow.getByText(/\d+s to bank/i)).toBeVisible();
   const armedCombo = await page.evaluate(() => (window.__AGENT_ALIBI_ARCADE_STATE__?.() as any)?.comboCashout);
   expect(armedCombo).toEqual(
     expect.objectContaining({

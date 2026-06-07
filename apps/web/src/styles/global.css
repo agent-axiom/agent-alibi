@@ -1819,6 +1819,56 @@ p {
   box-shadow: 0 24px 58px rgba(0, 0, 0, 0.42), 0 0 34px rgba(255, 213, 106, 0.24), 0 0 58px rgba(126, 252, 255, 0.25);
 }
 
+.arcade-breakout-cashout {
+  position: absolute;
+  top: clamp(202px, 28vh, 268px);
+  left: 50%;
+  z-index: 5;
+  width: min(340px, calc(100vw - 32px));
+  display: grid;
+  gap: 4px;
+  justify-items: center;
+  border: 1px solid rgba(255, 213, 106, 0.78);
+  border-radius: 8px;
+  padding: 10px 15px;
+  background:
+    linear-gradient(135deg, rgba(37, 27, 6, 0.94), rgba(8, 29, 35, 0.92)),
+    radial-gradient(circle at 50% 0%, rgba(255, 213, 106, 0.28), transparent 62%);
+  box-shadow: 0 22px 52px rgba(0, 0, 0, 0.38), 0 0 42px rgba(255, 213, 106, 0.28), 0 0 30px rgba(126, 255, 223, 0.18);
+  color: #fff8e6;
+  pointer-events: none;
+  text-align: center;
+  text-transform: uppercase;
+  transform: translateX(-50%);
+  animation: arcade-breakout-cashout-pop 960ms ease both;
+}
+
+.arcade-breakout-cashout span,
+.arcade-breakout-cashout strong,
+.arcade-breakout-cashout small {
+  display: block;
+  overflow-wrap: anywhere;
+  line-height: 1;
+}
+
+.arcade-breakout-cashout span {
+  color: #7effdf;
+  font-size: 0.72rem;
+  font-weight: 950;
+}
+
+.arcade-breakout-cashout strong {
+  color: #ffffff;
+  font-size: clamp(1rem, 2vw, 1.36rem);
+  font-weight: 950;
+}
+
+.arcade-breakout-cashout small {
+  color: #ffd56a;
+  font-size: 0.7rem;
+  font-weight: 900;
+}
+
 .arcade-scan-lock-pulse {
   position: absolute;
   top: clamp(214px, 31vh, 312px);
@@ -2001,6 +2051,18 @@ p {
   100% {
     opacity: 0;
     transform: translateX(-50%) translateY(-8px) scale(0.98);
+  }
+}
+
+@keyframes arcade-breakout-cashout-pop {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(12px) scale(0.95);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
   }
 }
 

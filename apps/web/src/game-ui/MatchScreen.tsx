@@ -48,6 +48,7 @@ export function MatchScreen({ match, soundEnabled = false, onToggleSound }: Matc
     const raceStatusLabel = carriedLoot ? `Bank +${carriedLoot.cashout} at lift` : (hud?.raceStatus ?? "Loot race is tied");
     const SoundIcon = soundEnabled ? Volume2 : VolumeX;
     const routePulse = hud?.routePulse ?? null;
+    const breakoutCashoutWindow = hud?.comboCashoutWindow ?? null;
     const scanLockActive = hud?.threatCue?.label === "Scan lock" && /jam/i.test(hud.threatCue.action);
     const threatCueActive = Boolean(hud?.threatCue);
     const denseThreatActive = hud?.threatCue?.label === "Laser sweep";
@@ -112,7 +113,7 @@ export function MatchScreen({ match, soundEnabled = false, onToggleSound }: Matc
           });
     return (
       <main
-        className={`arcade-shell ${hud?.phase ?? "stealth"} ${hudDensity === "opening" ? "compact-opening" : ""} ${breachAlert ? "breach-alert" : ""} ${routePulse ? "route-pulse-active" : ""} ${scanLockActive ? "scan-lock-active" : ""} ${threatCueActive ? "threat-cue-active" : ""} ${denseThreatActive ? "dense-threat-active" : ""} ${countdownPulseActive ? "countdown-pulse-active" : ""} ${afterburnerActive ? "afterburner-active" : ""} ${rivalPressureActive ? "rival-pressure-active" : ""}`}
+        className={`arcade-shell ${hud?.phase ?? "stealth"} ${hudDensity === "opening" ? "compact-opening" : ""} ${breachAlert ? "breach-alert" : ""} ${routePulse ? "route-pulse-active" : ""} ${breakoutCashoutWindow ? "breakout-cashout-active" : ""} ${scanLockActive ? "scan-lock-active" : ""} ${threatCueActive ? "threat-cue-active" : ""} ${denseThreatActive ? "dense-threat-active" : ""} ${countdownPulseActive ? "countdown-pulse-active" : ""} ${afterburnerActive ? "afterburner-active" : ""} ${rivalPressureActive ? "rival-pressure-active" : ""}`}
       >
         <Suspense
           fallback={
@@ -144,6 +145,14 @@ export function MatchScreen({ match, soundEnabled = false, onToggleSound }: Matc
               </>
             ) : null}
             <small>{cashoutSurge.seconds}s before scans · cashout or greed</small>
+          </div>
+        ) : null}
+        {breakoutCashoutWindow ? (
+          <div className="arcade-breakout-cashout" aria-label="Breakout cashout window" aria-live="polite">
+            <span>{breakoutCashoutWindow.label}</span>
+            <strong>+{breakoutCashoutWindow.bonus} bonus</strong>
+            <small>Cashout +{breakoutCashoutWindow.cashoutValue}</small>
+            <small>{breakoutCashoutWindow.secondsLeft}s to bank</small>
           </div>
         ) : null}
         {scanLockActive ? (
