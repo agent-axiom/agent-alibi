@@ -406,6 +406,7 @@ test("stealing a relic gives the player a short cashout speed surge", async ({ p
   await startSoloArcade(page);
   await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_STATE__ === "function");
 
+  const beforeSurgeCamera = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().camera);
   await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget());
   await page.keyboard.press("KeyE");
 
@@ -421,6 +422,9 @@ test("stealing a relic gives the player a short cashout speed surge", async ({ p
   const cashoutSurge = page.getByLabel(/cashout surge/i);
   await expect(cashoutSurge.getByText(/afterburner x2\.05/i)).toBeVisible();
   await expect(cashoutSurge.getByText(/\d+s boost/i)).toBeVisible();
+  await page.waitForTimeout(160);
+  const surgeCamera = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().camera);
+  expect(surgeCamera?.zoom).toBeGreaterThan((beforeSurgeCamera?.zoom ?? 0) + 0.02);
 
   const beforeSurgeMove = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().player);
   await page.keyboard.down("ArrowRight");

@@ -45,6 +45,7 @@ const MOVEMENT_COACH_MAX_MS = 6_500;
 const MOVEMENT_COACH_DISMISS_DISTANCE = 32;
 const LOOT_SPEED_SURGE_MS = 2_200;
 const LOOT_SPEED_SURGE_MULTIPLIER = 2.05;
+const LOOT_SPEED_SURGE_CAMERA_ZOOM = 1.08;
 
 const TEAM_COLORS: Record<TeamId, number> = {
   blue: 0x4cf4f0,
@@ -469,6 +470,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.updateMovementCoach();
     this.updateInteractionPrompt();
     this.updateCameraLookahead(16);
+    this.updateCameraZoom(16);
     this.emitHudIfNeeded(true);
   }
 
@@ -576,6 +578,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.updateGreedRouteHint();
     this.updateInteractionPrompt();
     this.updateCameraLookahead(delta);
+    this.updateCameraZoom(delta);
     this.updateThreatHalo();
     this.updateCarrierCashoutRoute();
     this.updateRivalIntentRoutes();
@@ -1194,6 +1197,12 @@ export class ArcadeHeistScene extends Phaser.Scene {
 
     this.cameraLookahead = this.lerpCameraLookahead(target.kind, desiredX, desiredY, distanceMeters, delta);
     this.cameras.main.setFollowOffset(this.cameraLookahead.offsetX, this.cameraLookahead.offsetY);
+  }
+
+  private updateCameraZoom(delta: number) {
+    const targetZoom = this.cameraBaseZoom() * (this.lootSpeedSurgeActive() ? LOOT_SPEED_SURGE_CAMERA_ZOOM : 1);
+    const ease = Phaser.Math.Clamp(delta / 130, 0.08, 0.46);
+    this.cameras.main.setZoom(Phaser.Math.Linear(this.cameras.main.zoom, targetZoom, ease));
   }
 
   private lerpCameraLookahead(
@@ -3623,10 +3632,13 @@ export class ArcadeHeistScene extends Phaser.Scene {
 
   private resizeCamera = () => {
     const camera = this.cameras.main;
-    const zoom = Phaser.Math.Clamp(Math.min(this.scale.width / 1120, this.scale.height / 720), 0.62, 1.08);
-    camera.setZoom(zoom);
+    camera.setZoom(this.cameraBaseZoom());
     camera.setDeadzone(Math.max(140, this.scale.width * 0.28), Math.max(110, this.scale.height * 0.24));
   };
+
+  private cameraBaseZoom() {
+    return Phaser.Math.Clamp(Math.min(this.scale.width / 1120, this.scale.height / 720), 0.62, 1.08);
+  }
 }
 
 function movementDirectionFromKey(key: string): HeldDirection | null {
