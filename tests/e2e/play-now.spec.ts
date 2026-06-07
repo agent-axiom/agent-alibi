@@ -1097,6 +1097,8 @@ test("rival carrier near cashout triggers an imminent warning", async ({ page })
   expect(carrierRun?.cashoutSeconds).toBeLessThanOrEqual(4);
   const rivalIntercept = page.getByLabel(/rival intercept/i);
   await expect(rivalIntercept.getByText(/cashout imminent/i)).toBeVisible();
+  const contractChain = page.getByLabel(/contract chain/i);
+  await expect(contractChain.getByText(/stop rook cashout \+3/i)).toBeVisible();
 });
 
 test("unfinished carrier runs become pending loot in the final case file", async ({ page }) => {
