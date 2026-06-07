@@ -229,6 +229,10 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private escapePayoutBadgeLabel?: Phaser.GameObjects.Text;
   private targetMarker?: Phaser.GameObjects.Container;
   private targetBeam?: Phaser.GameObjects.Graphics;
+  private interactionPrompt?: Phaser.GameObjects.Container;
+  private interactionPromptPlate?: Phaser.GameObjects.Rectangle;
+  private interactionPromptKey?: Phaser.GameObjects.Text;
+  private interactionPromptLabel?: Phaser.GameObjects.Text;
   private routeSignal?: Phaser.GameObjects.Container;
   private routeSignalPlate?: Phaser.GameObjects.Rectangle;
   private routeSignalLabel?: Phaser.GameObjects.Text;
@@ -383,6 +387,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
         : null,
       target,
       targetMarker: this.targetMarkerDebug(),
+      interactionPrompt: this.interactionPromptDebug(),
       hasTargetBeam: Boolean(this.targetBeam),
       routeGuide,
       routeSignal: this.routeSignalDebug(),
@@ -527,6 +532,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.updateRivalPressureFeed();
     this.updateRivalScan(delta);
     this.updateTargetMarker();
+    this.updateInteractionPrompt();
     this.updateCameraLookahead(delta);
     this.updateThreatHalo();
     this.updateCarrierCashoutRoute();
@@ -591,6 +597,10 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.routeMode = "escape";
     this.targetMarker = undefined;
     this.targetBeam = undefined;
+    this.interactionPrompt = undefined;
+    this.interactionPromptPlate = undefined;
+    this.interactionPromptKey = undefined;
+    this.interactionPromptLabel = undefined;
     this.routeSignal = undefined;
     this.routeSignalPlate = undefined;
     this.routeSignalLabel = undefined;
@@ -2618,6 +2628,105 @@ export class ArcadeHeistScene extends Phaser.Scene {
       label: String(this.targetMarker.getData("label") ?? ""),
       visible: true
     };
+  }
+
+  private interactionPromptDebug() {
+    if (!this.interactionPrompt?.getData("visible")) return null;
+    return {
+      visible: true,
+      key: String(this.interactionPrompt.getData("key") ?? ""),
+      label: String(this.interactionPrompt.getData("label") ?? ""),
+      x: Math.round(this.interactionPrompt.x),
+      y: Math.round(this.interactionPrompt.y)
+    };
+  }
+
+  private updateInteractionPrompt() {
+    const prompt = this.currentInteractionPrompt();
+    if (!prompt) {
+      this.interactionPrompt?.setVisible(false);
+      this.interactionPrompt?.setData("visible", false);
+      return;
+    }
+
+    if (!this.interactionPrompt || !this.interactionPromptPlate || !this.interactionPromptKey || !this.interactionPromptLabel) {
+      this.createInteractionPrompt();
+    }
+
+    if (!this.interactionPrompt || !this.interactionPromptPlate || !this.interactionPromptKey || !this.interactionPromptLabel) return;
+
+    const width = Math.max(178, prompt.label.length * 7.8 + 72);
+    this.interactionPromptPlate.setSize(width, 42);
+    this.interactionPromptKey.setText(prompt.key);
+    this.interactionPromptLabel.setText(prompt.label.toUpperCase());
+    this.interactionPrompt.setPosition(prompt.x, prompt.y - 86);
+    this.interactionPrompt.setVisible(true).setAlpha(1);
+    this.interactionPrompt.setData("visible", true);
+    this.interactionPrompt.setData("key", prompt.key);
+    this.interactionPrompt.setData("label", prompt.label);
+  }
+
+  private createInteractionPrompt() {
+    const plate = this.add.rectangle(0, 0, 178, 42, 0x050811, 0.9).setStrokeStyle(2, 0x7effdf, 0.88);
+    const key = this.add
+      .text(-58, 0, "E / Space", {
+        color: "#07101c",
+        fontFamily: "Inter, Arial, sans-serif",
+        fontSize: "12px",
+        fontStyle: "950",
+        backgroundColor: "#7effdf",
+        padding: { x: 7, y: 4 }
+      })
+      .setOrigin(0.5);
+    const label = this.add
+      .text(34, 0, "STEAL", {
+        color: "#f8fdff",
+        fontFamily: "Inter, Arial, sans-serif",
+        fontSize: "12px",
+        fontStyle: "950",
+        stroke: "#050811",
+        strokeThickness: 4
+      })
+      .setOrigin(0.5);
+    this.interactionPromptPlate = plate;
+    this.interactionPromptKey = key;
+    this.interactionPromptLabel = label;
+    this.interactionPrompt = this.add.container(0, 0, [plate, key, label]).setDepth(21).setVisible(false);
+  }
+
+  private currentInteractionPrompt(): { key: string; label: string; x: number; y: number } | null {
+    const carrier = this.nearRivalCarrier();
+    if (carrier) {
+      const relic = carrier.carriedRelics.at(-1);
+      return {
+        key: "E / Space",
+        label: relic ? `Recover ${relic.name} +${relic.value}` : "Intercept carrier",
+        x: carrier.x,
+        y: carrier.y
+      };
+    }
+
+    const artifact = this.nearPlayerArtifact();
+    if (artifact) {
+      return {
+        key: "E / Space",
+        label: `Steal ${artifact.name} +${artifact.value}`,
+        x: artifact.x,
+        y: artifact.y
+      };
+    }
+
+    if (this.isNearExit() && (this.lootValue > 0 || this.timeLeftMs() <= 30_000)) {
+      const target = this.escapeZone ?? this.rooms.get("atrium");
+      return {
+        key: "E / Space",
+        label: this.lootValue > 0 ? `Cashout +${this.lootValue + 2}` : "Escape",
+        x: target?.x ?? this.player?.x ?? WORLD_WIDTH / 2,
+        y: target?.y ?? this.player?.y ?? WORLD_HEIGHT / 2
+      };
+    }
+
+    return null;
   }
 
   private updateTargetMarker() {

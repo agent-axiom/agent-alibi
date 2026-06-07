@@ -1711,11 +1711,16 @@ p {
 }
 
 .arcade-shell.breach-alert .arcade-mission-meta {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
 }
 
-.arcade-shell.breach-alert .arcade-mission-meta > :not(.arcade-race):not(.arcade-carried-loot):not(.arcade-escape-payout) {
+.arcade-shell.breach-alert .arcade-mission-meta > :not(.arcade-race):not(.arcade-carried-loot):not(.arcade-escape-payout):not(.arcade-route-choice) {
   display: none;
+}
+
+.arcade-shell.breach-alert .arcade-route-choice {
+  grid-column: span 2;
+  width: auto;
 }
 
 .arcade-shell.breach-alert .arcade-mission-beat p {
