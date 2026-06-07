@@ -19,6 +19,7 @@ export type ArcadeMissionResult = {
   interceptedRelicNames?: string[];
   interceptedLootValue?: number;
   afterburnerExit?: boolean;
+  lockBreakCashoutBonus?: number;
 };
 
 export type ArcadeRunRating = {
@@ -40,12 +41,13 @@ export function buildArcadeMatchSummary(result: ArcadeMissionResult): MatchSumma
   const carrierIntercepts = result.carrierIntercepts ?? 0;
   const interceptedRelicNames = result.interceptedRelicNames ?? [];
   const afterburnerExitBonus = escaped && result.afterburnerExit ? 1 : 0;
+  const lockBreakCashoutBonus = escaped ? Math.max(0, result.lockBreakCashoutBonus ?? 0) : 0;
   const blueScore: TeamScore = {
     teamId: "blue",
     loot: result.lootValue,
     escape: escaped ? 2 : 0,
     penalties: bluePenalty,
-    total: result.lootValue + (escaped ? 2 : 0) + bluePenalty + styleBonus + afterburnerExitBonus
+    total: result.lootValue + (escaped ? 2 : 0) + bluePenalty + styleBonus + afterburnerExitBonus + lockBreakCashoutBonus
   };
   const redScore: TeamScore = {
     teamId: "red",
@@ -61,6 +63,7 @@ export function buildArcadeMatchSummary(result: ArcadeMissionResult): MatchSumma
     title,
     styleBonus,
     afterburnerExitBonus,
+    lockBreakCashoutBonus,
     stolenRelicNames,
     interceptedRelicNames,
     pendingRivalRelicNames
@@ -76,6 +79,7 @@ export function buildArcadeMatchSummary(result: ArcadeMissionResult): MatchSumma
     runRating,
     styleBonus,
     afterburnerExitBonus,
+    lockBreakCashoutBonus,
     lootChain,
     greedRoute,
     stolenRelicNames,
@@ -86,7 +90,7 @@ export function buildArcadeMatchSummary(result: ArcadeMissionResult): MatchSumma
     carrierIntercepts,
     interceptedRelicNames,
     highlightLines,
-    caseFile: buildCaseFile(result, title, blueScore, redScore, runRating, styleBonus, afterburnerExitBonus)
+    caseFile: buildCaseFile(result, title, blueScore, redScore, runRating, styleBonus, afterburnerExitBonus, lockBreakCashoutBonus)
   };
 }
 
@@ -116,6 +120,7 @@ function runRatingForResult(result: Pick<ArcadeMissionResult, "outcome">, styleB
 
 function titleForResult(result: ArcadeMissionResult, winnerTeamId: MatchSummary["winnerTeamId"]): string {
   if ((result.carrierIntercepts ?? 0) > 0) return "Carrier Denied";
+  if ((result.lockBreakCashoutBonus ?? 0) > 0) return "Breakout Cashout";
   if ((result.pendingRivalRelicNames?.length ?? 0) > 0) return "Lift Denied";
   if (result.outcome === "escaped" && result.lootValue <= 0) return "Empty-Handed Exit";
   if (result.outcome === "escaped" && winnerTeamId === "blue" && result.alarm <= 2) return "Silent Moon Run";
@@ -130,6 +135,7 @@ function buildHighlightLines(
   title: string,
   styleBonus: number,
   afterburnerExitBonus: number,
+  lockBreakCashoutBonus: number,
   stolenRelicNames: string[],
   interceptedRelicNames: string[],
   pendingRivalRelicNames: string[]
@@ -162,6 +168,9 @@ function buildHighlightLines(
   } else {
     lines.push("Caught in the alarm wash");
   }
+  if (lockBreakCashoutBonus > 0) {
+    lines.push(`Breakout cashout +${lockBreakCashoutBonus}`);
+  }
   if (styleBonus > 0) {
     lines.push(`Clean exit bonus +${styleBonus}`);
   }
@@ -179,8 +188,8 @@ function formatRelicCount(count: number): string {
   return count + " relic" + (count === 1 ? "" : "s");
 }
 
-function cashoutBankedValue(result: Pick<ArcadeMissionResult, "outcome" | "lootValue">): number {
-  return result.outcome === "escaped" ? result.lootValue + 2 : 0;
+function cashoutBankedValue(result: Pick<ArcadeMissionResult, "outcome" | "lootValue" | "lockBreakCashoutBonus">): number {
+  return result.outcome === "escaped" ? result.lootValue + 2 + Math.max(0, result.lockBreakCashoutBonus ?? 0) : 0;
 }
 
 function buildCaseFile(
@@ -190,7 +199,8 @@ function buildCaseFile(
   redScore: TeamScore,
   runRating: string,
   styleBonus: number,
-  afterburnerExitBonus: number
+  afterburnerExitBonus: number,
+  lockBreakCashoutBonus: number
 ): string {
   const elapsedSeconds = Math.round(result.elapsedMs / 1000);
   const denialSwingLine =
@@ -221,6 +231,7 @@ function buildCaseFile(
     `Run Rating: ${runRating}`,
     styleBonus > 0 ? `Clean exit bonus: +${styleBonus}` : "Clean exit bonus: +0",
     afterburnerExitBonus > 0 ? `Afterburner Exit Bonus: +${afterburnerExitBonus}` : "Afterburner Exit Bonus: +0",
+    lockBreakCashoutBonus > 0 ? `Breakout Cashout Bonus: +${lockBreakCashoutBonus}` : "Breakout Cashout Bonus: +0",
     `Loot Chain: x${Math.max(1, result.artifactsStolen)}`,
     `Greed Route: ${result.artifactsStolen > 1 ? "successful" : "skipped"}`,
     `Relics Stolen: ${result.stolenRelicNames?.length ? result.stolenRelicNames.join(", ") : "none"}`,

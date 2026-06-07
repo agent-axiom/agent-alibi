@@ -104,6 +104,7 @@ export type MatchSummary = {
   runRating?: string;
   styleBonus?: number;
   afterburnerExitBonus?: number;
+  lockBreakCashoutBonus?: number;
   lootChain?: number;
   greedRoute?: "successful" | "skipped";
   stolenRelicNames?: string[];

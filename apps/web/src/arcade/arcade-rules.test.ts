@@ -72,6 +72,26 @@ describe("buildArcadeMatchSummary", () => {
     expect(summary.caseFile).toContain("Afterburner Exit Bonus: +1");
   });
 
+  it("adds a breakout cashout bonus after a broken Rook lock", () => {
+    const summary = buildArcadeMatchSummary({
+      outcome: "escaped",
+      playerName: "Agent You",
+      lootValue: 3,
+      artifactsStolen: 1,
+      aiLootValue: 0,
+      alarm: 2,
+      elapsedMs: 42_000,
+      lockBreakCashoutBonus: 2
+    });
+
+    expect(summary.title).toBe("Breakout Cashout");
+    expect(summary.lockBreakCashoutBonus).toBe(2);
+    expect(summary.teamScores.find((score) => score.teamId === "blue")?.total).toBe(10);
+    expect(summary.highlightLines).toContain("Breakout cashout +2");
+    expect(summary.caseFile).toContain("Cashout Banked: +7");
+    expect(summary.caseFile).toContain("Breakout Cashout Bonus: +2");
+  });
+
   it("records a successful greed route in the shareable case file", () => {
     const summary = buildArcadeMatchSummary({
       outcome: "escaped",
