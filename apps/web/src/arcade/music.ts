@@ -8,6 +8,7 @@ export type MusicSelectionInput = {
   timeLeftMs?: number;
   boostActive?: boolean;
   rivalPressureActive?: boolean;
+  rivalCarrierCritical?: boolean;
 };
 
 const LOCKDOWN_TIME_MS = 30_000;
@@ -29,6 +30,10 @@ export function selectMusicTrack(input: MusicSelectionInput): MusicTrackId | nul
   const timeLeftMs = input.timeLeftMs ?? Number.POSITIVE_INFINITY;
 
   if (alarm >= 5 || timeLeftMs <= LOCKDOWN_TIME_MS) {
+    return "lockdown";
+  }
+
+  if (input.rivalCarrierCritical) {
     return "lockdown";
   }
 

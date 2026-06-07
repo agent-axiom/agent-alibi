@@ -29,7 +29,8 @@ export function App() {
     alarm: arcadeHud?.alarm ?? localMatch.state?.alarm,
     timeLeftMs: arcadeHud?.timeLeftMs,
     boostActive: Boolean(arcadeHud?.lootSpeedSurge),
-    rivalPressureActive: Boolean((arcadeHud?.aiLootValue ?? 0) > 0 || arcadeHud?.rivalIntercept || arcadeHud?.lastRivalSteal)
+    rivalPressureActive: Boolean((arcadeHud?.aiLootValue ?? 0) > 0 || arcadeHud?.rivalIntercept || arcadeHud?.lastRivalSteal),
+    rivalCarrierCritical: arcadeHud?.rivalIntercept?.urgency === "critical"
   });
   const music = useDynamicMusic(musicTrack, soundEnabled);
   useMissionStingers({
