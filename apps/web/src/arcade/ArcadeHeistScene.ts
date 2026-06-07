@@ -47,6 +47,8 @@ const MOVEMENT_COACH_DISMISS_DISTANCE = 32;
 const LOOT_SPEED_SURGE_MS = 6_000;
 const LOOT_SPEED_SURGE_MULTIPLIER = 2.05;
 const LOOT_SPEED_SURGE_CAMERA_ZOOM = 1.08;
+const VAULT_RUSH_MS = 3_400;
+const VAULT_RUSH_DASH_COOLDOWN_MS = 520;
 
 const TEAM_COLORS: Record<TeamId, number> = {
   blue: 0x4cf4f0,
@@ -134,6 +136,18 @@ type ImpactBurstDebug = {
   x: number;
   y: number;
   radius: number;
+};
+
+type VaultRushDebug = {
+  active: true;
+  label: "VAULT RUSH";
+  source: string | null;
+  targetKind: ArcadeObjectiveTarget["kind"] | null;
+  secondsLeft: number;
+  dashCooldownMs: number;
+  pulseCount: number;
+  laneWidth: number;
+  distanceMeters: number;
 };
 
 type RuntimeArenaCallout = {
@@ -251,6 +265,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private alibiPulsesUsed = 0;
   private lootSpeedSurgeUntilMs = 0;
   private lootSpeedSurgeSource: string | null = null;
+  private vaultRushUntilMs = 0;
+  private vaultRushSource: string | null = null;
   private scanBurns = 0;
   private carrierIntercepts = 0;
   private interceptedRelicNames: string[] = [];
@@ -455,6 +471,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       carrierBadges: this.carrierBadgesDebug(),
       escapeZoneBadge: this.escapeZoneBadgeDebug(),
       lootSpeedSurge: this.lootSpeedSurgeDebug(),
+      vaultRush: this.vaultRushDebug(target),
       motionTrail: this.motionTrailDebug(),
       dashShockwave: this.dashShockwaveDebug(),
       impactBurst: this.impactBurstDebug(),
@@ -667,6 +684,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.alibiPulsesUsed = 0;
     this.lootSpeedSurgeUntilMs = 0;
     this.lootSpeedSurgeSource = null;
+    this.vaultRushUntilMs = 0;
+    this.vaultRushSource = null;
     this.scanBurns = 0;
     this.carrierIntercepts = 0;
     this.interceptedRelicNames = [];
@@ -1067,7 +1086,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       let speed = PLAYER_SPEED * surgeMultiplier;
       if ((this.shiftHeld || this.keys?.shift.isDown) && this.dashCooldownMs <= 0) {
         speed = DASH_SPEED * Math.min(surgeMultiplier, 1.18);
-        this.dashCooldownMs = DASH_COOLDOWN_MS;
+        this.dashCooldownMs = this.vaultRushActive() ? VAULT_RUSH_DASH_COOLDOWN_MS : DASH_COOLDOWN_MS;
         this.addTrail(this.player.x, this.player.y, vector);
         this.addDashShockwave(this.player.x, this.player.y);
         this.cameraKick("dash");
@@ -1234,7 +1253,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
   }
 
   private updateCameraZoom(delta: number) {
-    const targetZoom = this.cameraBaseZoom() * (this.lootSpeedSurgeActive() ? LOOT_SPEED_SURGE_CAMERA_ZOOM : 1);
+    const rushZoom = this.vaultRushActive() ? 1.035 : 1;
+    const targetZoom = this.cameraBaseZoom() * (this.lootSpeedSurgeActive() ? LOOT_SPEED_SURGE_CAMERA_ZOOM : 1) * rushZoom;
     const ease = Phaser.Math.Clamp(delta / 130, 0.08, 0.46);
     this.cameras.main.setZoom(Phaser.Math.Linear(this.cameras.main.zoom, targetZoom, ease));
   }
@@ -1359,6 +1379,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     if (!this.player) return;
     this.lootSpeedSurgeUntilMs = this.elapsedMs + LOOT_SPEED_SURGE_MS;
     this.lootSpeedSurgeSource = source;
+    this.triggerVaultRush(source);
     const target = this.currentObjectiveTarget();
     const direction = target
       ? new Phaser.Math.Vector2(target.x - this.player.x, target.y - this.player.y)
@@ -1367,6 +1388,16 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.addDashShockwave(this.player.x, this.player.y);
     this.flashArenaCallout("steal", "AFTERBURNER", this.player.x, this.player.y - 54, 0x7effdf);
     this.emitHudIfNeeded(true);
+  }
+
+  private triggerVaultRush(source: string) {
+    this.vaultRushUntilMs = Math.max(this.vaultRushUntilMs, this.elapsedMs + VAULT_RUSH_MS);
+    this.vaultRushSource = source;
+    this.dashCooldownMs = 0;
+  }
+
+  private vaultRushActive() {
+    return this.elapsedMs < this.vaultRushUntilMs;
   }
 
   private lootSpeedSurgeActive() {
@@ -1385,6 +1416,23 @@ export class ArcadeHeistScene extends Phaser.Scene {
       multiplier: LOOT_SPEED_SURGE_MULTIPLIER,
       source: this.lootSpeedSurgeSource,
       activeMs: Math.max(0, Math.round(this.lootSpeedSurgeUntilMs - this.elapsedMs))
+    };
+  }
+
+  private vaultRushDebug(target: ArcadeObjectiveTarget | undefined): VaultRushDebug | null {
+    if (!this.vaultRushActive()) return null;
+    const distance = this.player && target ? Phaser.Math.Distance.Between(this.player.x, this.player.y, target.x, target.y) : 0;
+    const spec = this.vaultRushLaneSpec(target, distance);
+    return {
+      active: true,
+      label: "VAULT RUSH",
+      source: this.vaultRushSource,
+      targetKind: target?.kind ?? null,
+      secondsLeft: Math.max(1, Math.ceil((this.vaultRushUntilMs - this.elapsedMs) / 1000)),
+      dashCooldownMs: VAULT_RUSH_DASH_COOLDOWN_MS,
+      pulseCount: spec.pulseCount,
+      laneWidth: spec.laneWidth,
+      distanceMeters: spec.distanceMeters
     };
   }
 
@@ -3314,6 +3362,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     const distance = Phaser.Math.Distance.Between(this.player.x, this.player.y, target.x, target.y);
     const lane = this.routeLaneSpec(target, distance);
     this.targetBeam.clear();
+    this.drawVaultRushRail(target, color, distance);
     this.drawRouteLane(target, color, lane);
     this.targetBeam.lineStyle(8, color, 0.1);
     this.targetBeam.strokeLineShape(new Phaser.Geom.Line(this.player.x, this.player.y, target.x, target.y));
@@ -3387,6 +3436,51 @@ export class ArcadeHeistScene extends Phaser.Scene {
       detail: `${distanceMeters}m to relic`,
       pulseCount,
       laneWidth
+    };
+  }
+
+  private drawVaultRushRail(target: ArcadeObjectiveTarget, color: number, distance: number) {
+    if (!this.player || !this.targetBeam || !this.vaultRushActive()) return;
+
+    const spec = this.vaultRushLaneSpec(target, distance);
+    const angle = Phaser.Math.Angle.Between(this.player.x, this.player.y, target.x, target.y);
+    const normalX = Math.cos(angle + Math.PI / 2);
+    const normalY = Math.sin(angle + Math.PI / 2);
+    const halfLane = spec.laneWidth / 2;
+    const rushColor = target.kind === "carrier" ? 0xff4f7b : 0x7effdf;
+    const fromX = this.player.x;
+    const fromY = this.player.y;
+    const toX = target.x;
+    const toY = target.y;
+
+    this.targetBeam.lineStyle(spec.laneWidth, rushColor, 0.055);
+    this.targetBeam.lineBetween(fromX, fromY, toX, toY);
+    this.targetBeam.lineStyle(4, 0xffffff, 0.12);
+    this.targetBeam.lineBetween(fromX + normalX * halfLane, fromY + normalY * halfLane, toX + normalX * halfLane, toY + normalY * halfLane);
+    this.targetBeam.lineBetween(fromX - normalX * halfLane, fromY - normalY * halfLane, toX - normalX * halfLane, toY - normalY * halfLane);
+
+    if (spec.pulseCount <= 0) return;
+    const phase = (this.elapsedMs / 360) % 1;
+    for (let index = 0; index < spec.pulseCount; index += 1) {
+      const progress = 0.08 + (((index + phase) / spec.pulseCount) % 1) * 0.84;
+      const x = Phaser.Math.Linear(fromX, toX, progress);
+      const y = Phaser.Math.Linear(fromY, toY, progress);
+      const alpha = 0.42 + (index % 3) * 0.1;
+      this.targetBeam.fillStyle(index % 2 === 0 ? rushColor : color, alpha);
+      this.targetBeam.fillCircle(x, y, target.kind === "carrier" ? 8 : 7);
+      this.targetBeam.fillStyle(0xffffff, 0.32);
+      this.targetBeam.fillCircle(x + normalX * halfLane, y + normalY * halfLane, 2.8);
+      this.targetBeam.fillCircle(x - normalX * halfLane, y - normalY * halfLane, 2.8);
+    }
+  }
+
+  private vaultRushLaneSpec(target: ArcadeObjectiveTarget | undefined, distance: number) {
+    const basePulseCount = target ? this.routePulseCount(distance) : 0;
+    const distanceMeters = Math.max(0, Math.round(distance / 8));
+    return {
+      pulseCount: target ? basePulseCount + (target.kind === "carrier" ? 4 : 3) : 0,
+      laneWidth: target?.kind === "carrier" ? 78 : 68,
+      distanceMeters
     };
   }
 

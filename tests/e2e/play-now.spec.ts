@@ -457,7 +457,8 @@ test("stealing a relic gives the player a short cashout speed surge", async ({ p
   await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget());
   await page.keyboard.press("KeyE");
 
-  const surge = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().lootSpeedSurge);
+  const postStealState = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());
+  const surge = postStealState?.lootSpeedSurge;
   expect(surge).toEqual(
     expect.objectContaining({
       active: true,
@@ -466,6 +467,21 @@ test("stealing a relic gives the player a short cashout speed surge", async ({ p
     })
   );
   expect(surge?.multiplier).toBeGreaterThan(1.3);
+  expect(postStealState?.vaultRush).toEqual(
+    expect.objectContaining({
+      active: true,
+      label: "VAULT RUSH",
+      source: "Moon Pearl",
+      targetKind: "escape",
+      dashCooldownMs: expect.any(Number),
+      pulseCount: expect.any(Number),
+      laneWidth: expect.any(Number)
+    })
+  );
+  expect(postStealState?.vaultRush?.pulseCount).toBeGreaterThan(postStealState?.routeGuide?.pulseCount ?? 0);
+  expect(postStealState?.vaultRush?.laneWidth).toBeGreaterThan(postStealState?.routeGuide?.laneWidth ?? 0);
+  expect(postStealState?.vaultRush?.dashCooldownMs).toBeLessThan(700);
+  expect(postStealState?.dashCooldownMs).toBe(0);
   await expect(page.locator(".arcade-shell")).toHaveClass(/afterburner-active/);
   const cashoutSurge = page.getByLabel(/cashout surge/i);
   await expect(cashoutSurge.getByText(/afterburner x2\.05/i)).toBeVisible();
