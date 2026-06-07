@@ -71,6 +71,18 @@ describe("buildRematchHook", () => {
     ).toBe("Next run: hit afterburner again and cashout before the boost dies.");
   });
 
+  it("turns a breakout cashout into a lock-break encore prompt", () => {
+    expect(
+      buildRematchHook(
+        summary({
+          lockBreakCashoutBonus: 2,
+          runRating: "S-Rank",
+          afterburnerExitBonus: 1
+        })
+      )
+    ).toBe("Next run: break Rook's lock, then cashout before the scan returns.");
+  });
+
   it("turns an empty escape into a relic-first rematch prompt", () => {
     expect(
       buildRematchHook(
@@ -154,6 +166,18 @@ describe("buildCaseStamp", () => {
     ).toBe("Afterburner cashout +1 · Stole Moon Pearl + Argent Crown");
   });
 
+  it("leads share stamps with breakout cashout when the lock-break bonus lands", () => {
+    expect(
+      buildCaseStamp(
+        summary({
+          lockBreakCashoutBonus: 2,
+          afterburnerExitBonus: 1,
+          highlightLines: ["Stole Moon Pearl"]
+        })
+      ).quote
+    ).toBe("Breakout cashout +2 · Stole Moon Pearl");
+  });
+
   it("leads carrier-intercept share stamps with the denied Red loot", () => {
     expect(
       buildCaseStamp(
@@ -229,6 +253,25 @@ describe("buildLocalBestCaseStatus", () => {
 
     expect(status.current).toMatchObject({ afterburnerExitBonus: 1 });
     expect(status.detail).toBe("Score 12 · S-Rank · chain x2 · boost +1");
+  });
+
+  it("keeps breakout cashout in a new local best record", () => {
+    const status = buildLocalBestCaseStatus(
+      summary({
+        runRating: "S-Rank",
+        lootChain: 1,
+        lockBreakCashoutBonus: 2,
+        teamScores: [
+          { teamId: "blue", loot: 3, escape: 2, penalties: 0, total: 10 },
+          { teamId: "red", loot: 0, escape: 0, penalties: 0, total: 0 }
+        ]
+      }),
+      null,
+      654
+    );
+
+    expect(status.current).toMatchObject({ lockBreakCashoutBonus: 2 });
+    expect(status.detail).toBe("Score 10 · S-Rank · chain x1 · breakout +2");
   });
 
   it("keeps carrier denial in a new local best record", () => {

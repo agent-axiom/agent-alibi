@@ -217,19 +217,19 @@ export function buildActiveActionHint(input: ActiveActionHintInput): ActiveActio
     };
   }
 
-  if (input.alibiPulseReady) {
-    return {
-      key: "E / Space",
-      label: "Jam scan",
-      tone: "danger"
-    };
-  }
-
   if (input.nearExit && input.canEscape) {
     return {
       key: "E / Space",
       label: buildCashoutActionLabel(input.cashoutValue ?? null),
       tone: "success"
+    };
+  }
+
+  if (input.alibiPulseReady) {
+    return {
+      key: "E / Space",
+      label: "Jam scan",
+      tone: "danger"
     };
   }
 

@@ -57,6 +57,8 @@ const AMBUSH_NEAR_MISS_COOLDOWN_MS = 2_400;
 const HUNTER_LOCK_BREAK_ACTIVE_MS = 1_400;
 const HUNTER_LOCK_BREAK_SUPPRESS_MS = 1_700;
 const HUNTER_LOCK_BREAK_COOLDOWN_MS = 2_400;
+const LOCK_BREAK_CASHOUT_WINDOW_MS = 8_500;
+const LOCK_BREAK_CASHOUT_BONUS = 2;
 
 const TEAM_COLORS: Record<TeamId, number> = {
   blue: 0x4cf4f0,
@@ -213,6 +215,15 @@ type HunterLockBreakDebug = {
   activeMs?: number;
 };
 
+type ComboCashoutDebug = {
+  active: boolean;
+  status: "inactive" | "armed" | "claimed";
+  label: string;
+  bonus: number;
+  cashoutValue: number;
+  activeMs?: number;
+};
+
 type AmbushNearMissDebug = {
   active: boolean;
   count: number;
@@ -348,6 +359,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private hunterLockBreakUntilMs = 0;
   private hunterLockBreakCooldownMs = 0;
   private hunterLockSuppressedUntilMs = 0;
+  private lockBreakCashoutArmedUntilMs = 0;
+  private lockBreakCashoutBonusClaimed = 0;
   private interceptedRelicNames: string[] = [];
   private interceptedLootValue = 0;
   private lastRivalSteal: string | null = null;
@@ -551,6 +564,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       rivalHunter: this.rivalHunterDebug(),
       hunterLockOn: this.hunterLockOnDebug(),
       hunterLockBreak: this.hunterLockBreakDebug(),
+      comboCashout: this.comboCashoutDebug(),
       ambushNearMiss: this.ambushNearMissDebug(),
       routeSignal: this.routeSignalDebug(),
       threatHalo: this.threatHaloDebug(),
@@ -594,6 +608,18 @@ export class ArcadeHeistScene extends Phaser.Scene {
     if (!target) return;
     const offsetY = target.kind === "artifact" ? 28 : 0;
     this.moveAgent(this.player, target.x - this.player.x, target.y + offsetY - this.player.y);
+    this.afterDebugTeleport();
+  }
+
+  teleportToExitForDebug() {
+    if (!this.player) return;
+    const target = this.escapeZone ?? this.rooms.get("atrium");
+    if (!target) return;
+    this.moveAgent(this.player, target.x - this.player.x, target.y - this.player.y);
+    this.afterDebugTeleport();
+  }
+
+  private afterDebugTeleport() {
     this.pointerTarget = undefined;
     this.updateTargetMarker();
     this.updateGreedRouteHint();
@@ -815,6 +841,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.hunterLockBreakUntilMs = 0;
     this.hunterLockBreakCooldownMs = 0;
     this.hunterLockSuppressedUntilMs = 0;
+    this.lockBreakCashoutArmedUntilMs = 0;
+    this.lockBreakCashoutBonusClaimed = 0;
     this.interceptedRelicNames = [];
     this.interceptedLootValue = 0;
     this.lastRivalSteal = null;
@@ -1773,7 +1801,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
   }
 
   private buildEscapeBanner(includeGreedHint: boolean): ArcadeObjectiveBanner {
-    const cashout = this.lootValue + 2;
+    const cashout = this.currentCashoutValue();
     return {
       tone: "escape",
       title: `Escape with ${this.lootValue} loot`,
@@ -1789,14 +1817,15 @@ export class ArcadeHeistScene extends Phaser.Scene {
       return;
     }
 
+    if (this.isNearExit() && (this.lootValue > 0 || this.timeLeftMs() <= 30_000)) {
+      this.startExtractionSequence("escaped");
+      return;
+    }
+
     if (this.tryAlibiPulse()) return;
 
     if (this.isNearExit()) {
-      if (this.lootValue > 0 || this.timeLeftMs() <= 30_000) {
-        this.startExtractionSequence("escaped");
-      } else {
-        this.feedLine("The lift rejects an empty-handed alibi.");
-      }
+      this.feedLine("The lift rejects an empty-handed alibi.");
       return;
     }
 
@@ -2000,6 +2029,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
     const rivalPressure = this.rivalPressure(nearestRival);
     const rivalCarrier = this.nearRivalCarrier();
     const rivalCarrierRelic = rivalCarrier?.carriedRelics.at(-1) ?? null;
+    const nearExit = this.isNearExit();
+    const cashoutReady = nearExit && canEscape;
     const escapePayout = this.escapePayout(canEscape);
     const guidance = buildArcadeGuidance({
       lootValue: this.lootValue,
@@ -2008,13 +2039,13 @@ export class ArcadeHeistScene extends Phaser.Scene {
       totalArtifacts: this.artifacts.length,
       targetArtifactName: targetArtifactLabel,
       nearArtifactName: nearArtifact?.name ?? null,
-      nearExit: this.isNearExit(),
+      nearExit,
       canEscape,
       cashoutValue: escapePayout?.cashout ?? null,
       timeLeftMs: this.timeLeftMs()
     });
     const greedPromptActive = this.routeMode === "greed" && Boolean(targetArtifact);
-    const alibiPulseReady = !rivalCarrier && canUseAlibiPulse(rivalPressure.level, this.alibiPulseCooldownMs);
+    const alibiPulseReady = !rivalCarrier && !cashoutReady && canUseAlibiPulse(rivalPressure.level, this.alibiPulseCooldownMs);
     const prompt = rivalCarrier ? "Press E / Space to intercept" : alibiPulseReady ? "Press E / Space to jam rival scan" : greedPromptActive && nearArtifact ? "Press E / Space to steal" : guidance.prompt;
     const greedStatus = this.greedStatus(guidance.greedStatus);
     const rivalIntercept = this.rivalIntercept();
@@ -2063,7 +2094,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
         nearRivalCarrierValue: rivalCarrierRelic?.value ?? null,
         nearArtifactName: nearArtifact?.name ?? null,
         nearArtifactValue: nearArtifact?.value ?? null,
-        nearExit: this.isNearExit(),
+        nearExit,
         canEscape,
         cashoutValue: escapePayout?.cashout ?? null
       }),
@@ -2221,7 +2252,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     const escapeBonus = 2;
     return {
       escapeBonus,
-      cashout: this.lootValue + escapeBonus
+      cashout: this.lootValue + escapeBonus + this.currentLockBreakCashoutBonus()
     };
   }
 
@@ -2234,7 +2265,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       return;
     }
 
-    const label = `Cashout +${this.lootValue + 2}`;
+    const label = `Cashout +${this.currentCashoutValue()}`;
     this.escapePayoutBadgeLabel.setText(label.toUpperCase());
     this.escapePayoutBadge.setVisible(true);
     this.escapePayoutBadge.setData("visible", true);
@@ -2877,8 +2908,51 @@ export class ArcadeHeistScene extends Phaser.Scene {
       detail: "Dash broke Rook's scan"
     });
     this.flashArenaCallout("dodge", "LOCK BROKEN", this.player.x, this.player.y - 48, 0x7effdf);
-    this.feedLine("Lock broken. Your dash cut Rook's scan.");
+    if (this.lootValue > 0) {
+      this.lockBreakCashoutArmedUntilMs = this.elapsedMs + LOCK_BREAK_CASHOUT_WINDOW_MS;
+      this.flashObjectiveBanner(this.buildEscapeBanner(this.canGreedRoute()), 2_100);
+      this.feedLine("Breakout cashout armed. Bank before Rook reacquires.");
+    } else {
+      this.feedLine("Lock broken. Your dash cut Rook's scan.");
+    }
     this.impactPulse("dodge", this.player.x, this.player.y);
+  }
+
+  private lockBreakCashoutArmed() {
+    return this.lockBreakCashoutBonusClaimed <= 0 && this.lootValue > 0 && this.elapsedMs < this.lockBreakCashoutArmedUntilMs;
+  }
+
+  private currentLockBreakCashoutBonus() {
+    if (this.lockBreakCashoutBonusClaimed > 0) return this.lockBreakCashoutBonusClaimed;
+    return this.lockBreakCashoutArmed() ? LOCK_BREAK_CASHOUT_BONUS : 0;
+  }
+
+  private currentCashoutValue() {
+    return this.lootValue + 2 + this.currentLockBreakCashoutBonus();
+  }
+
+  private comboCashoutDebug(): ComboCashoutDebug {
+    const bonus = this.currentLockBreakCashoutBonus();
+    if (this.lockBreakCashoutBonusClaimed > 0) {
+      return {
+        active: false,
+        status: "claimed",
+        label: "Breakout Cashout",
+        bonus,
+        cashoutValue: this.currentCashoutValue()
+      };
+    }
+    if (!this.lockBreakCashoutArmed()) {
+      return { active: false, status: "inactive", label: "", bonus: 0, cashoutValue: this.lootValue > 0 ? this.lootValue + 2 : 0 };
+    }
+    return {
+      active: true,
+      status: "armed",
+      label: "Breakout Cashout",
+      bonus,
+      cashoutValue: this.currentCashoutValue(),
+      activeMs: Math.max(0, Math.round(this.lockBreakCashoutArmedUntilMs - this.elapsedMs))
+    };
   }
 
   private hunterLockBreakDebug(): HunterLockBreakDebug {
@@ -3389,7 +3463,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       const target = this.escapeZone ?? this.rooms.get("atrium");
       return {
         key: "E / Space",
-        label: this.lootValue > 0 ? `Cashout +${this.lootValue + 2}` : "Escape",
+        label: this.lootValue > 0 ? `Cashout +${this.currentCashoutValue()}` : "Escape",
         x: target?.x ?? this.player?.x ?? WORLD_WIDTH / 2,
         y: target?.y ?? this.player?.y ?? WORLD_HEIGHT / 2
       };
@@ -3705,7 +3779,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
   }
 
   private targetMarkerLabel(target: ArcadeObjectiveTarget): string {
-    if (target.kind === "escape" && this.lootValue > 0) return `Cashout +${this.lootValue + 2}`;
+    if (target.kind === "escape" && this.lootValue > 0) return `Cashout +${this.currentCashoutValue()}`;
     if (target.kind !== "carrier") return target.label;
     const carrier = this.aiAgents.find((agent) => agent.id === target.id);
     if (!carrier) return target.label;
@@ -3754,7 +3828,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
 
     if (target.kind === "escape") {
       return {
-        laneLabel: this.lootValue > 0 ? `BANK +${this.lootValue + 2}` : "EXIT ROUTE",
+        laneLabel: this.lootValue > 0 ? `BANK +${this.currentCashoutValue()}` : "EXIT ROUTE",
         detail: `${distanceMeters}m to lift`,
         pulseCount,
         laneWidth
@@ -4062,8 +4136,12 @@ export class ArcadeHeistScene extends Phaser.Scene {
     if (!this.player || this.finished || this.extractionSequenceActive()) return;
 
     const target = this.escapeZone ?? this.rooms.get("atrium");
-    const cashoutValue = this.lootValue + 2;
+    const lockBreakCashoutBonus = outcome === "escaped" ? this.currentLockBreakCashoutBonus() : 0;
+    const cashoutValue = this.lootValue + 2 + lockBreakCashoutBonus;
     const afterburnerExit = outcome === "escaped" && this.lootValue > 0 && this.lootSpeedSurgeActive();
+    if (lockBreakCashoutBonus > 0) {
+      this.lockBreakCashoutBonusClaimed = lockBreakCashoutBonus;
+    }
 
     this.extractionOutcome = outcome;
     this.extractionStartedAtMs = this.elapsedMs;
@@ -4075,8 +4153,10 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.dashCooldownMs = 0;
     this.scorePopup = {
       tone: "bonus",
-      label: "+2 Escape bonus",
-      detail: afterburnerExit ? "Cashout " + cashoutValue + " · Afterburner +1" : "Cashout " + cashoutValue
+      label: lockBreakCashoutBonus > 0 ? `+${lockBreakCashoutBonus} Breakout cashout` : "+2 Escape bonus",
+      detail: ["Cashout " + cashoutValue, afterburnerExit ? "Afterburner +1" : null, lockBreakCashoutBonus > 0 ? "Rook lock broken" : null]
+        .filter(Boolean)
+        .join(" · ")
     };
     this.scorePopupUntilMs = this.extractionActiveUntilMs + 1_200;
     this.flashSpotlight(outcome === "escaped" ? "Extraction live" : "Vault sealing");
@@ -4159,7 +4239,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       active: true,
       label: "EXTRACTION LIVE",
       outcome: this.extractionOutcome,
-      cashoutValue: this.lootValue + 2,
+      cashoutValue: this.currentCashoutValue(),
       ageMs,
       remainingMs: Math.max(0, Math.round(this.extractionActiveUntilMs - this.elapsedMs)),
       ringCount: EXTRACTION_SEQUENCE_RING_COUNT,
@@ -4175,14 +4255,17 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private finish(outcome: MissionOutcome) {
     if (!this.config || this.finished) return;
     const afterburnerExit = outcome === "escaped" && this.lootValue > 0 && this.lootSpeedSurgeActive();
+    const lockBreakCashoutBonus = outcome === "escaped" ? this.lockBreakCashoutBonusClaimed : 0;
     const extractionAlreadyPlayed = this.extractionOutcome === outcome;
     this.finished = true;
     if (outcome === "escaped" && !extractionAlreadyPlayed) {
       this.impactPulse("escape");
       this.scorePopup = {
         tone: "bonus",
-        label: "+2 Escape bonus",
-        detail: afterburnerExit ? "Cashout " + (this.lootValue + 2) + " · Afterburner +1" : "Cashout " + (this.lootValue + 2)
+        label: lockBreakCashoutBonus > 0 ? `+${lockBreakCashoutBonus} Breakout cashout` : "+2 Escape bonus",
+        detail: ["Cashout " + this.currentCashoutValue(), afterburnerExit ? "Afterburner +1" : null, lockBreakCashoutBonus > 0 ? "Rook lock broken" : null]
+          .filter(Boolean)
+          .join(" · ")
       };
       this.scorePopupUntilMs = this.elapsedMs + 1_800;
     }
@@ -4203,7 +4286,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
       carrierIntercepts: this.carrierIntercepts,
       interceptedRelicNames: this.interceptedRelicNames,
       interceptedLootValue: this.interceptedLootValue,
-      afterburnerExit
+      afterburnerExit,
+      lockBreakCashoutBonus
     });
   }
 

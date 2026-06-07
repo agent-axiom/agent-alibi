@@ -265,18 +265,19 @@ describe("buildArcadeGuidance", () => {
     expect(hint.tone).toBe("success");
   });
 
-  it("prioritizes alibi pulse over other contextual actions", () => {
+  it("prioritizes cashout over alibi pulse when escape is in reach", () => {
     const hint = buildActiveActionHint({
       alibiPulseReady: true,
       nearRivalCarrierName: null,
       nearArtifactName: "Moon Pearl",
       nearExit: true,
-      canEscape: true
+      canEscape: true,
+      cashoutValue: 7
     });
 
     expect(hint.key).toBe("E / Space");
-    expect(hint.label).toBe("Jam scan");
-    expect(hint.tone).toBe("danger");
+    expect(hint.label).toBe("Cashout +7");
+    expect(hint.tone).toBe("success");
   });
 
   it("prioritizes intercepting a rival carrier over jamming a scan", () => {

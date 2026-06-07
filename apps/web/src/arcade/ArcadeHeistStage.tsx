@@ -14,6 +14,7 @@ declare global {
     __AGENT_ALIBI_ARCADE_STATE__?: () => ReturnType<ArcadeHeistScene["getDebugState"]>;
     __AGENT_ALIBI_ARCADE_DEBUG__?: {
       teleportToTarget: () => void;
+      teleportToExit: () => void;
       forceRivalsActive: () => void;
       forceRivalPressure: (distanceMeters?: number) => void;
       forceRivalSteal: () => void;
@@ -67,6 +68,7 @@ export function ArcadeHeistStage({ state, runId, onHudUpdate, onFinish, hud }: A
       window.__AGENT_ALIBI_ARCADE_STATE__ = () => scene.getDebugState();
       window.__AGENT_ALIBI_ARCADE_DEBUG__ = {
         teleportToTarget: () => scene.teleportToTargetForDebug(),
+        teleportToExit: () => scene.teleportToExitForDebug(),
         forceRivalsActive: () => scene.forceRivalsActiveForDebug(),
         forceRivalPressure: (distanceMeters?: number) => scene.forceRivalPressureForDebug(distanceMeters),
         forceRivalSteal: () => scene.forceRivalStealForDebug(),

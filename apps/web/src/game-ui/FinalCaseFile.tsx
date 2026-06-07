@@ -28,6 +28,7 @@ export type LocalBestCaseRecord = {
   lootChain: number;
   relicCount: number;
   afterburnerExitBonus?: number;
+  lockBreakCashoutBonus?: number;
   carrierIntercepts?: number;
 };
 
@@ -115,6 +116,13 @@ export function FinalCaseFile({ summary, soundEnabled = false, onToggleSound, on
               <span>Afterburner Exit</span>
               <strong>+{summary.afterburnerExitBonus}</strong>
               <small>Boost cashout</small>
+            </div>
+          ) : null}
+          {summary.lockBreakCashoutBonus && summary.lockBreakCashoutBonus > 0 ? (
+            <div className="final-score final-breakout">
+              <span>Breakout Cashout</span>
+              <strong>+{summary.lockBreakCashoutBonus}</strong>
+              <small>Rook lock broken</small>
             </div>
           ) : null}
           {summary.lootChain && summary.lootChain > 1 ? (
@@ -243,6 +251,10 @@ export function buildRematchHook(summary: MatchSummary): string {
     return "Next run: steal one relic before you call the lift.";
   }
 
+  if (summary.lockBreakCashoutBonus && summary.lockBreakCashoutBonus > 0) {
+    return "Next run: break Rook's lock, then cashout before the scan returns.";
+  }
+
   if (summary.afterburnerExitBonus && summary.afterburnerExitBonus > 0) {
     return "Next run: hit afterburner again and cashout before the boost dies.";
   }
@@ -261,6 +273,7 @@ export function buildRematchHook(summary: MatchSummary): string {
 export function buildLocalBestCaseRecord(summary: MatchSummary, at = Date.now()): LocalBestCaseRecord {
   const blueScore = summary.teamScores.find((score) => score.teamId === "blue");
   const afterburnerExitBonus = summary.afterburnerExitBonus && summary.afterburnerExitBonus > 0 ? summary.afterburnerExitBonus : undefined;
+  const lockBreakCashoutBonus = summary.lockBreakCashoutBonus && summary.lockBreakCashoutBonus > 0 ? summary.lockBreakCashoutBonus : undefined;
   const carrierIntercepts = summary.carrierIntercepts && summary.carrierIntercepts > 0 ? summary.carrierIntercepts : undefined;
   return {
     version: 1,
@@ -271,6 +284,7 @@ export function buildLocalBestCaseRecord(summary: MatchSummary, at = Date.now())
     lootChain: summary.lootChain ?? 1,
     relicCount: summary.stolenRelicNames?.length ?? 0,
     ...(afterburnerExitBonus ? { afterburnerExitBonus } : {}),
+    ...(lockBreakCashoutBonus ? { lockBreakCashoutBonus } : {}),
     ...(carrierIntercepts ? { carrierIntercepts } : {})
   };
 }
@@ -332,6 +346,7 @@ function isLocalBestCaseRecord(value: unknown): value is LocalBestCaseRecord {
     typeof record.lootChain === "number" &&
     typeof record.relicCount === "number" &&
     (record.afterburnerExitBonus === undefined || typeof record.afterburnerExitBonus === "number") &&
+    (record.lockBreakCashoutBonus === undefined || typeof record.lockBreakCashoutBonus === "number") &&
     (record.carrierIntercepts === undefined || typeof record.carrierIntercepts === "number")
   );
 }
@@ -345,6 +360,9 @@ function compareLocalBestCaseRecords(left: LocalBestCaseRecord, right: LocalBest
 
   const carrierDenialDelta = (left.carrierIntercepts ?? 0) - (right.carrierIntercepts ?? 0);
   if (carrierDenialDelta !== 0) return carrierDenialDelta;
+
+  const breakoutDelta = (left.lockBreakCashoutBonus ?? 0) - (right.lockBreakCashoutBonus ?? 0);
+  if (breakoutDelta !== 0) return breakoutDelta;
 
   const chainDelta = left.lootChain - right.lootChain;
   if (chainDelta !== 0) return chainDelta;
@@ -362,8 +380,9 @@ function localBestRatingValue(rating: string): number {
 
 export function formatLocalBestCaseDetail(record: LocalBestCaseRecord): string {
   const boostDetail = record.afterburnerExitBonus && record.afterburnerExitBonus > 0 ? ` · boost +${record.afterburnerExitBonus}` : "";
+  const breakoutDetail = record.lockBreakCashoutBonus && record.lockBreakCashoutBonus > 0 ? ` · breakout +${record.lockBreakCashoutBonus}` : "";
   const denialDetail = record.carrierIntercepts && record.carrierIntercepts > 0 ? ` · denial x${record.carrierIntercepts}` : "";
-  return `Score ${record.score} · ${record.runRating} · chain x${record.lootChain}${boostDetail}${denialDetail}`;
+  return `Score ${record.score} · ${record.runRating} · chain x${record.lootChain}${boostDetail}${breakoutDetail}${denialDetail}`;
 }
 
 function buildLocalBestDelta(current: LocalBestCaseRecord, previous: LocalBestCaseRecord | null, isNewBest: boolean): string {
@@ -552,9 +571,11 @@ export function buildCaseStamp(summary: MatchSummary) {
       : null;
   const baseQuote = deniedCarrierQuote ?? summary.highlightLines?.[0] ?? buildRematchHook(summary);
   const quote =
-    summary.afterburnerExitBonus && summary.afterburnerExitBonus > 0
-      ? `Afterburner cashout +${summary.afterburnerExitBonus}${baseQuote ? ` · ${baseQuote}` : ""}`
-      : baseQuote;
+    summary.lockBreakCashoutBonus && summary.lockBreakCashoutBonus > 0
+      ? `Breakout cashout +${summary.lockBreakCashoutBonus}${baseQuote ? ` · ${baseQuote}` : ""}`
+      : summary.afterburnerExitBonus && summary.afterburnerExitBonus > 0
+        ? `Afterburner cashout +${summary.afterburnerExitBonus}${baseQuote ? ` · ${baseQuote}` : ""}`
+        : baseQuote;
 
   if (summary.runRating) {
     resultParts.push(summary.runRating);

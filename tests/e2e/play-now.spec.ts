@@ -783,6 +783,64 @@ test("dash breaks an active Rook lock-on", async ({ page }) => {
   expect(broken.lastImpact?.kind).toBe("dodge");
 });
 
+test("breaking Rook lock turns a fast cashout into a combo payoff", async ({ page }) => {
+  await startSoloArcade(page);
+  await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget === "function");
+
+  await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget());
+  await page.keyboard.press("KeyE");
+  await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.forceRivalsActive?.());
+
+  const lockBeforeDash = await page.evaluate(() => (window.__AGENT_ALIBI_ARCADE_STATE__?.() as any)?.hunterLockOn);
+  expect(lockBeforeDash).toEqual(
+    expect.objectContaining({
+      visible: true,
+      status: "danger",
+      agentName: "Rook"
+    })
+  );
+
+  await page.keyboard.down("Shift");
+  await page.keyboard.down("ArrowRight");
+  await page.waitForTimeout(140);
+  await page.keyboard.up("ArrowRight");
+  await page.keyboard.up("Shift");
+
+  await expect(page.getByLabel(/score popup/i).getByText(/lock broken/i)).toBeVisible();
+  await expect(page.getByLabel(/mission radio/i).getByText(/breakout cashout armed/i)).toBeVisible();
+  const armedCombo = await page.evaluate(() => (window.__AGENT_ALIBI_ARCADE_STATE__?.() as any)?.comboCashout);
+  expect(armedCombo).toEqual(
+    expect.objectContaining({
+      active: true,
+      status: "armed",
+      label: "Breakout Cashout",
+      bonus: 2,
+      cashoutValue: 7
+    })
+  );
+
+  await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToExit?.());
+  await expect(page.getByLabel(/active action/i).getByText(/cashout \+7/i)).toBeVisible();
+  await page.keyboard.press("KeyE");
+
+  const extractionSequence = await page.evaluate(() => (window.__AGENT_ALIBI_ARCADE_STATE__?.() as any)?.extractionSequence);
+  expect(extractionSequence).toEqual(
+    expect.objectContaining({
+      active: true,
+      outcome: "escaped",
+      cashoutValue: 7
+    })
+  );
+
+  await expect(page.locator(".case-file pre").getByText(/agent alibi case file/i)).toBeVisible();
+  const finalScores = page.getByLabel(/final scores/i);
+  await expect(finalScores.getByText(/breakout cashout/i)).toBeVisible();
+  await expect(finalScores.getByText(/\+2/i)).toBeVisible();
+  const caseHighlights = page.getByLabel(/case highlights/i);
+  await expect(caseHighlights.getByText(/breakout cashout \+2/i)).toBeVisible();
+  await expect(page.getByText(/cashout banked: \+7/i)).toBeVisible();
+});
+
 test("first score triggers a visible rival breach cut-in", async ({ page }) => {
   await startSoloArcade(page);
   await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget === "function");
