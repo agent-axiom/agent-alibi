@@ -43,6 +43,8 @@ const SECURITY_SWEEP_HIT_ALARM_DELTA = 0.46;
 const SECURITY_SWEEP_HIT_COOLDOWN_MS = 1_350;
 const MOVEMENT_COACH_MAX_MS = 6_500;
 const MOVEMENT_COACH_DISMISS_DISTANCE = 48;
+const LOOT_SPEED_SURGE_MS = 2_200;
+const LOOT_SPEED_SURGE_MULTIPLIER = 2.05;
 
 const TEAM_COLORS: Record<TeamId, number> = {
   blue: 0x4cf4f0,
@@ -234,6 +236,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private rivalScanState: RivalScanState = { chargeMs: 0, cooldownMs: 0 };
   private alibiPulseCooldownMs = 0;
   private alibiPulsesUsed = 0;
+  private lootSpeedSurgeUntilMs = 0;
+  private lootSpeedSurgeSource: string | null = null;
   private scanBurns = 0;
   private carrierIntercepts = 0;
   private interceptedRelicNames: string[] = [];
@@ -427,6 +431,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       securitySweep: this.securitySweepDebug(),
       carrierBadges: this.carrierBadgesDebug(),
       escapeZoneBadge: this.escapeZoneBadgeDebug(),
+      lootSpeedSurge: this.lootSpeedSurgeDebug(),
       motionTrail: this.motionTrailDebug(),
       dashShockwave: this.dashShockwaveDebug(),
       arenaLabels: this.arenaLabelsDebug(),
@@ -633,6 +638,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.rivalScanState = { chargeMs: 0, cooldownMs: 0 };
     this.alibiPulseCooldownMs = 0;
     this.alibiPulsesUsed = 0;
+    this.lootSpeedSurgeUntilMs = 0;
+    this.lootSpeedSurgeSource = null;
     this.scanBurns = 0;
     this.carrierIntercepts = 0;
     this.interceptedRelicNames = [];
@@ -1019,9 +1026,10 @@ export class ArcadeHeistScene extends Phaser.Scene {
     }
 
     if (vector.lengthSq() > 0) {
-      let speed = PLAYER_SPEED;
+      const surgeMultiplier = this.lootSpeedSurgeMultiplier();
+      let speed = PLAYER_SPEED * surgeMultiplier;
       if ((this.shiftHeld || this.keys?.shift.isDown) && this.dashCooldownMs <= 0) {
-        speed = DASH_SPEED;
+        speed = DASH_SPEED * Math.min(surgeMultiplier, 1.18);
         this.dashCooldownMs = DASH_COOLDOWN_MS;
         this.addTrail(this.player.x, this.player.y, vector);
         this.addDashShockwave(this.player.x, this.player.y);
@@ -1229,6 +1237,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       this.flashArenaCallout("steal", `+${artifact.value} ${artifact.name}`, artifact.x, artifact.y, 0xffd56a);
       this.flashObjectiveBanner(this.buildEscapeBanner(this.artifactsStolen === 1));
       this.impactPulse("steal");
+      this.triggerLootSpeedSurge(artifact.name);
       this.collectArtifactVisual(artifact, 0xffd56a);
       this.updateEscapePayoutBadge();
       if (this.artifactsStolen === 1) {
@@ -1301,6 +1310,38 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.scorePopup = popup;
     this.scorePopupUntilMs = this.elapsedMs + 1_800;
     this.emitHudIfNeeded(true);
+  }
+
+  private triggerLootSpeedSurge(source: string) {
+    if (!this.player) return;
+    this.lootSpeedSurgeUntilMs = this.elapsedMs + LOOT_SPEED_SURGE_MS;
+    this.lootSpeedSurgeSource = source;
+    const target = this.currentObjectiveTarget();
+    const direction = target
+      ? new Phaser.Math.Vector2(target.x - this.player.x, target.y - this.player.y)
+      : new Phaser.Math.Vector2(0, -1);
+    this.addTrail(this.player.x, this.player.y, direction);
+    this.addDashShockwave(this.player.x, this.player.y);
+    this.flashArenaCallout("steal", "AFTERBURNER", this.player.x, this.player.y - 54, 0x7effdf);
+  }
+
+  private lootSpeedSurgeActive() {
+    return this.elapsedMs < this.lootSpeedSurgeUntilMs;
+  }
+
+  private lootSpeedSurgeMultiplier() {
+    return this.lootSpeedSurgeActive() ? LOOT_SPEED_SURGE_MULTIPLIER : 1;
+  }
+
+  private lootSpeedSurgeDebug() {
+    if (!this.lootSpeedSurgeActive()) return null;
+    return {
+      active: true,
+      label: "AFTERBURNER",
+      multiplier: LOOT_SPEED_SURGE_MULTIPLIER,
+      source: this.lootSpeedSurgeSource,
+      activeMs: Math.max(0, Math.round(this.lootSpeedSurgeUntilMs - this.elapsedMs))
+    };
   }
 
   private flashObjectiveBanner(banner: ArcadeObjectiveBanner, durationMs = 1_550) {

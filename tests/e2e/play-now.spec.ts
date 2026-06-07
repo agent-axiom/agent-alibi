@@ -402,6 +402,32 @@ test("in-world action ring switches from approach to ready prompts", async ({ pa
   );
 });
 
+test("stealing a relic gives the player a short cashout speed surge", async ({ page }) => {
+  await startSoloArcade(page);
+  await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_STATE__ === "function");
+
+  await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget());
+  await page.keyboard.press("KeyE");
+
+  const surge = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().lootSpeedSurge);
+  expect(surge).toEqual(
+    expect.objectContaining({
+      active: true,
+      label: "AFTERBURNER",
+      multiplier: expect.any(Number)
+    })
+  );
+  expect(surge?.multiplier).toBeGreaterThan(1.3);
+
+  const beforeSurgeMove = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().player);
+  await page.keyboard.down("ArrowRight");
+  await page.waitForTimeout(620);
+  await page.keyboard.up("ArrowRight");
+  const afterSurgeMove = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().player);
+
+  expect((afterSurgeMove?.x ?? 0) - (beforeSurgeMove?.x ?? 0)).toBeGreaterThan(100);
+});
+
 test("opening movement coach disappears after the player moves", async ({ page }) => {
   await startSoloArcade(page);
   await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_STATE__ === "function");
