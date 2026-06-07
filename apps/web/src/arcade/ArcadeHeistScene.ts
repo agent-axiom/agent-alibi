@@ -188,6 +188,20 @@ type RivalHunterDebug = {
   distanceMeters: number;
 };
 
+type HunterLockOnStatus = "standby" | "warming" | "danger";
+
+type HunterLockOnDebug = {
+  visible: boolean;
+  label: string;
+  agentName: string;
+  targetLabel: string;
+  status: HunterLockOnStatus;
+  distanceMeters: number;
+  beamCount: number;
+  pipCount: number;
+  coneWidth: number;
+};
+
 type AmbushNearMissDebug = {
   active: boolean;
   count: number;
@@ -351,6 +365,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private threatHalo?: Phaser.GameObjects.Graphics;
   private carrierRoute?: Phaser.GameObjects.Graphics;
   private rivalIntentRoutes?: Phaser.GameObjects.Graphics;
+  private hunterLockOn?: Phaser.GameObjects.Graphics;
   private securitySweep?: Phaser.GameObjects.Graphics;
   private securitySweepHitCooldownMs = 0;
   private securitySweepHitCount = 0;
@@ -519,6 +534,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       routeGuide,
       rivalAmbushVector: this.rivalAmbushVectorDebug(),
       rivalHunter: this.rivalHunterDebug(),
+      hunterLockOn: this.hunterLockOnDebug(),
       ambushNearMiss: this.ambushNearMissDebug(),
       routeSignal: this.routeSignalDebug(),
       threatHalo: this.threatHaloDebug(),
@@ -590,6 +606,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     }
 
     this.updateRivalIntentRoutes();
+    this.updateHunterLockOn();
     this.updateRivalPressureFeed();
     this.updateThreatHalo();
     this.emitHudIfNeeded(true);
@@ -707,6 +724,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.updateThreatHalo();
     this.updateCarrierCashoutRoute();
     this.updateRivalIntentRoutes();
+    this.updateHunterLockOn();
     this.updateSecuritySweep(delta);
     this.updateRivalBarkBubbles();
     this.updateEscapePayoutBadge();
@@ -806,6 +824,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.escapePayoutBadgeLabel = undefined;
     this.carrierRoute = undefined;
     this.rivalIntentRoutes = undefined;
+    this.hunterLockOn = undefined;
     this.securitySweep = undefined;
     this.securitySweepHitCooldownMs = 0;
     this.securitySweepHitCount = 0;
@@ -876,6 +895,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.updateThreatHalo();
     this.updateCarrierCashoutRoute();
     this.updateRivalIntentRoutes();
+    this.updateHunterLockOn();
     this.updateSecuritySweep(16);
     this.updateCarrierBadges();
     this.updateEscapePayoutBadge();
@@ -1677,6 +1697,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.assignRivalHunter();
     this.setRivalStandbyVisuals(false);
     this.updateRivalIntentRoutes();
+    this.updateHunterLockOn();
     if (announce) {
       this.feedLine("Rival agents entered the vault.");
       const hunterName = this.rivalHunter()?.name ?? "Rook";
@@ -2704,6 +2725,114 @@ export class ArcadeHeistScene extends Phaser.Scene {
       visible: true,
       routeCount: Number(this.rivalIntentRoutes.getData("routeCount") ?? 0),
       targetLabels: (this.rivalIntentRoutes.getData("targetLabels") as string[] | undefined) ?? []
+    };
+  }
+
+  private updateHunterLockOn() {
+    const hunter = this.rivalHunter();
+    if (
+      !this.aiReleased ||
+      !this.player ||
+      !hunter ||
+      hunter.carriedRelics.length > 0 ||
+      this.lootValue <= 0 ||
+      this.extractionSequenceActive()
+    ) {
+      this.clearHunterLockOn();
+      return;
+    }
+
+    if (!this.hunterLockOn) {
+      this.hunterLockOn = this.add.graphics().setDepth(18);
+    }
+
+    const distance = Phaser.Math.Distance.Between(hunter.x, hunter.y, this.player.x, this.player.y);
+    const distanceMeters = Math.max(0, Math.round(distance / 8));
+    const status: HunterLockOnStatus = this.rivalsAreActive() ? "danger" : "warming";
+    const beamCount = status === "danger" ? 3 : 2;
+    const pipCount = Phaser.Math.Clamp(Math.floor(distance / 82), 2, 8);
+    const coneWidth = status === "danger" ? 126 : 88;
+    const color = status === "danger" ? 0xff4f7b : 0xffd56a;
+    const alpha = status === "danger" ? 0.7 : 0.46;
+    const angle = Phaser.Math.Angle.Between(hunter.x, hunter.y, this.player.x, this.player.y);
+    const normalX = Math.cos(angle + Math.PI / 2);
+    const normalY = Math.sin(angle + Math.PI / 2);
+    const forwardX = Math.cos(angle);
+    const forwardY = Math.sin(angle);
+    const halfCone = coneWidth / 2;
+    const noseX = this.player.x - forwardX * 28;
+    const noseY = this.player.y - forwardY * 28;
+    const sourceX = hunter.x + forwardX * 28;
+    const sourceY = hunter.y + forwardY * 28;
+
+    this.hunterLockOn.clear();
+    this.hunterLockOn.fillStyle(color, status === "danger" ? 0.13 : 0.08);
+    this.hunterLockOn.fillTriangle(sourceX, sourceY, noseX + normalX * halfCone, noseY + normalY * halfCone, noseX - normalX * halfCone, noseY - normalY * halfCone);
+
+    for (let index = 0; index < beamCount; index += 1) {
+      const offset = ((index / (beamCount - 1)) - 0.5) * coneWidth * 0.62;
+      this.hunterLockOn.lineStyle(index === 1 ? 4 : 2, color, alpha - index * 0.08);
+      this.hunterLockOn.lineBetween(sourceX, sourceY, noseX + normalX * offset, noseY + normalY * offset);
+    }
+
+    const phase = (this.elapsedMs / (status === "danger" ? 360 : 520)) % 1;
+    for (let index = 0; index < pipCount; index += 1) {
+      const progress = 0.18 + (((index + phase) / pipCount) % 1) * 0.68;
+      const widthAtProgress = halfCone * progress * 0.45;
+      const x = Phaser.Math.Linear(sourceX, noseX, progress);
+      const y = Phaser.Math.Linear(sourceY, noseY, progress);
+      this.hunterLockOn.fillStyle(index % 2 === 0 ? color : 0xffffff, status === "danger" ? 0.72 : 0.54);
+      this.hunterLockOn.fillCircle(x + normalX * widthAtProgress, y + normalY * widthAtProgress, status === "danger" ? 5.2 : 4.2);
+      this.hunterLockOn.fillCircle(x - normalX * widthAtProgress, y - normalY * widthAtProgress, status === "danger" ? 5.2 : 4.2);
+    }
+
+    this.hunterLockOn.lineStyle(status === "danger" ? 4 : 3, color, status === "danger" ? 0.82 : 0.58);
+    this.hunterLockOn.strokeCircle(this.player.x, this.player.y, status === "danger" ? 42 : 34);
+    this.hunterLockOn.lineStyle(2, 0xffffff, status === "danger" ? 0.54 : 0.32);
+    this.hunterLockOn.lineBetween(this.player.x - 54, this.player.y, this.player.x - 24, this.player.y);
+    this.hunterLockOn.lineBetween(this.player.x + 24, this.player.y, this.player.x + 54, this.player.y);
+    this.hunterLockOn.lineBetween(this.player.x, this.player.y - 54, this.player.x, this.player.y - 24);
+    this.hunterLockOn.lineBetween(this.player.x, this.player.y + 24, this.player.x, this.player.y + 54);
+
+    this.hunterLockOn.setData("visible", true);
+    this.hunterLockOn.setData("label", "HUNTER LOCK");
+    this.hunterLockOn.setData("agentName", hunter.name);
+    this.hunterLockOn.setData("targetLabel", "YOU");
+    this.hunterLockOn.setData("status", status);
+    this.hunterLockOn.setData("distanceMeters", distanceMeters);
+    this.hunterLockOn.setData("beamCount", beamCount);
+    this.hunterLockOn.setData("pipCount", pipCount);
+    this.hunterLockOn.setData("coneWidth", coneWidth);
+  }
+
+  private clearHunterLockOn() {
+    this.hunterLockOn?.clear();
+    this.hunterLockOn?.setData("visible", false);
+    this.hunterLockOn?.setData("label", "");
+    this.hunterLockOn?.setData("agentName", "");
+    this.hunterLockOn?.setData("targetLabel", "");
+    this.hunterLockOn?.setData("status", "standby");
+    this.hunterLockOn?.setData("distanceMeters", 0);
+    this.hunterLockOn?.setData("beamCount", 0);
+    this.hunterLockOn?.setData("pipCount", 0);
+    this.hunterLockOn?.setData("coneWidth", 0);
+  }
+
+  private hunterLockOnDebug(): HunterLockOnDebug {
+    if (!this.hunterLockOn?.getData("visible")) {
+      return { visible: false, label: "", agentName: "", targetLabel: "", status: "standby", distanceMeters: 0, beamCount: 0, pipCount: 0, coneWidth: 0 };
+    }
+
+    return {
+      visible: true,
+      label: String(this.hunterLockOn.getData("label") ?? ""),
+      agentName: String(this.hunterLockOn.getData("agentName") ?? ""),
+      targetLabel: String(this.hunterLockOn.getData("targetLabel") ?? ""),
+      status: (this.hunterLockOn.getData("status") as HunterLockOnStatus | undefined) ?? "standby",
+      distanceMeters: Number(this.hunterLockOn.getData("distanceMeters") ?? 0),
+      beamCount: Number(this.hunterLockOn.getData("beamCount") ?? 0),
+      pipCount: Number(this.hunterLockOn.getData("pipCount") ?? 0),
+      coneWidth: Number(this.hunterLockOn.getData("coneWidth") ?? 0)
     };
   }
 
