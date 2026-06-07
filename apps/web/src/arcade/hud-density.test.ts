@@ -63,6 +63,14 @@ function hud(overrides: Partial<ArcadeHudState> = {}): ArcadeHudState {
       detail: "The gold marker points to the score. Rivals arrive fast.",
       action: "Move with WASD / arrows"
     },
+    directorCue: {
+      tone: "focus",
+      label: "Director cue",
+      title: "First hit: Moon Pearl",
+      detail: "Follow the gold beam and steal +3 before Red wakes up.",
+      reward: "First score unlocks the cashout route.",
+      action: "Move, touch the relic, press E / Space."
+    },
     threatCue: null,
     objectiveBanner: null,
     rivalBark: null,

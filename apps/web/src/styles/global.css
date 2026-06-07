@@ -1958,6 +1958,10 @@ p {
   display: none;
 }
 
+.arcade-shell.dense-threat-active .arcade-director-cue {
+  display: none;
+}
+
 .arcade-shell.dense-threat-active .arcade-mission-beat {
   min-height: 34px;
   grid-template-columns: auto minmax(0, 1fr) auto;
@@ -2038,6 +2042,15 @@ p {
   max-height: 360px;
   border-color: rgba(76, 244, 240, 0.42);
   box-shadow: 0 20px 54px rgba(0, 0, 0, 0.34), 0 0 30px rgba(76, 244, 240, 0.14);
+}
+
+.arcade-shell.breach-alert .arcade-mission-beat {
+  gap: 3px 6px;
+  padding: 5px 7px;
+}
+
+.arcade-shell.breach-alert .arcade-director-cue {
+  padding: 3px 5px;
 }
 
 .arcade-shell.breach-alert .arcade-mission-meta {
@@ -2410,7 +2423,9 @@ p {
 
 .arcade-shell.compact-opening .arcade-objective {
   width: min(700px, calc(100vw - 310px));
+  gap: 4px 8px;
   max-height: 218px;
+  padding: 7px 10px;
   border-color: rgba(255, 213, 106, 0.34);
   background: rgba(7, 16, 28, 0.78);
   box-shadow: 0 20px 54px rgba(0, 0, 0, 0.34), 0 0 26px rgba(255, 213, 106, 0.12);
@@ -2421,13 +2436,31 @@ p {
 }
 
 .arcade-shell.compact-opening .arcade-mission-beat {
-  min-height: 34px;
+  min-height: 30px;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
+  gap: 3px 6px;
+  padding: 5px 7px;
 }
 
 .arcade-shell.compact-opening .arcade-mission-beat p {
   display: none;
+}
+
+.arcade-shell.compact-opening .arcade-director-cue {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 4px 6px;
+  margin-top: 0;
+  padding: 4px 5px;
+}
+
+.arcade-shell.compact-opening .arcade-director-cue p {
+  display: none;
+}
+
+.arcade-shell.compact-opening .arcade-director-cue em {
+  grid-column: 3;
+  padding: 3px 5px;
 }
 
 .arcade-shell.compact-opening .arcade-steps,
@@ -3100,6 +3133,88 @@ p {
   border-color: rgba(57, 229, 192, 0.68);
   background: linear-gradient(135deg, rgba(57, 229, 192, 0.18), rgba(255, 213, 106, 0.08));
   box-shadow: inset 0 0 30px rgba(57, 229, 192, 0.1), 0 0 28px rgba(57, 229, 192, 0.16);
+}
+
+.arcade-director-cue {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: auto minmax(0, 0.9fr) minmax(0, 1.2fr) auto;
+  align-items: center;
+  gap: 5px 8px;
+  margin-top: 1px;
+  border: 1px solid rgba(255, 213, 106, 0.3);
+  border-radius: 7px;
+  padding: 5px 6px;
+  background: rgba(7, 16, 28, 0.54);
+  box-shadow: inset 0 0 18px rgba(255, 213, 106, 0.08);
+}
+
+.arcade-director-cue span,
+.arcade-director-cue strong,
+.arcade-director-cue p,
+.arcade-director-cue em {
+  min-width: 0;
+  display: block;
+  overflow-wrap: anywhere;
+  line-height: 1.1;
+}
+
+.arcade-director-cue span {
+  grid-column: 1;
+  color: #ffd56a;
+  font-size: 0.62rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.arcade-director-cue strong {
+  grid-column: 2;
+  color: #f4fbff;
+  font-size: 0.74rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.arcade-director-cue p {
+  grid-column: 3;
+  margin: 0;
+  overflow: hidden;
+  color: #cce4f1;
+  font-size: 0.68rem;
+  font-weight: 850;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.arcade-director-cue em {
+  grid-column: 4;
+  justify-self: end;
+  color: #07101c;
+  border-radius: 6px;
+  padding: 4px 6px;
+  background: #d8fcff;
+  font-size: 0.66rem;
+  font-style: normal;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.arcade-director-cue.danger {
+  border-color: rgba(255, 79, 123, 0.58);
+  box-shadow: inset 0 0 20px rgba(255, 79, 123, 0.1), 0 0 18px rgba(255, 79, 123, 0.14);
+}
+
+.arcade-director-cue.danger em {
+  background: #ff4f7b;
+  color: #fff4f7;
+}
+
+.arcade-director-cue.success {
+  border-color: rgba(57, 229, 192, 0.52);
+}
+
+.arcade-director-cue.success em {
+  background: #39e5c0;
 }
 
 .arcade-threat-cue {
@@ -4068,6 +4183,25 @@ p {
   }
 
   .arcade-mission-beat p {
+    white-space: normal;
+  }
+
+  .arcade-director-cue {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .arcade-director-cue span {
+    grid-column: 1;
+  }
+
+  .arcade-director-cue strong {
+    grid-column: 2;
+  }
+
+  .arcade-director-cue p,
+  .arcade-director-cue em {
+    grid-column: 1 / -1;
+    justify-self: stretch;
     white-space: normal;
   }
 

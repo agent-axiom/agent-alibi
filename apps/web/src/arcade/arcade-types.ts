@@ -1,5 +1,6 @@
 import type { GameState } from "@agent-alibi/shared";
 import type { ArcadeMissionResult } from "./arcade-rules";
+import type { DirectorCue } from "./director-cue";
 import type { ActiveActionHint, ArcadeLoopStep, ObjectiveCompass, RivalPressureLevel } from "./guidance";
 import type { RivalScanStatus } from "./rival-scan";
 
@@ -147,6 +148,7 @@ export type ArcadeHudState = {
   lootChainWindow: ArcadeLootChainWindow | null;
   lootSpeedSurge: ArcadeLootSpeedSurge | null;
   missionBeat: ArcadeMissionBeat;
+  directorCue: DirectorCue;
   threatCue: ArcadeThreatCue | null;
   objectiveBanner: ArcadeObjectiveBanner | null;
   rivalBark: ArcadeRivalBark | null;
