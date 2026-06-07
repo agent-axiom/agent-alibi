@@ -47,7 +47,7 @@ export function HomeScreen({ actions, soundEnabled, onToggleSound }: HomeScreenP
             <span>Best case</span>
             <strong>{savedBestCase.title}</strong>
             <small>{formatLocalBestCaseDetail(savedBestCase)}</small>
-            <em>Beat your case</em>
+            <em>{buildSavedBestCaseCta(savedBestCase)}</em>
           </section>
         ) : null}
         <div className="home-actions">
@@ -64,6 +64,11 @@ export function HomeScreen({ actions, soundEnabled, onToggleSound }: HomeScreenP
       </section>
     </main>
   );
+}
+
+function buildSavedBestCaseCta(record: LocalBestCaseRecord): string {
+  if (record.carrierIntercepts && record.carrierIntercepts > 0) return "Repeat denial run";
+  return "Beat your case";
 }
 
 function readSavedBestCase(): LocalBestCaseRecord | null {
