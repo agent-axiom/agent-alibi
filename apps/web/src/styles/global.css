@@ -942,6 +942,46 @@ p {
   box-shadow: 0 9px 0 rgba(255, 79, 123, 0.72), 0 0 22px rgba(76, 244, 240, 0.12);
 }
 
+.final-shell .final-actions .final-run-it-back {
+  min-width: min(100%, 270px);
+  justify-content: flex-start;
+  border: 1px solid rgba(126, 255, 223, 0.7);
+  background:
+    linear-gradient(135deg, rgba(15, 58, 54, 0.98), rgba(19, 26, 45, 0.98)),
+    radial-gradient(circle at 100% 0%, rgba(255, 213, 106, 0.22), transparent 58%);
+  box-shadow: 0 9px 0 rgba(126, 255, 223, 0.54), 0 0 28px rgba(126, 255, 223, 0.18);
+}
+
+.final-run-it-back {
+  display: inline-grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  column-gap: 10px;
+  align-items: center;
+  text-align: left;
+}
+
+.final-run-it-back svg {
+  grid-row: 1 / span 2;
+}
+
+.final-run-it-back span,
+.final-run-it-back small {
+  min-width: 0;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.final-run-it-back small {
+  color: #ffd56a;
+  font-size: 0.72rem;
+  font-weight: 950;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
 .slot-list {
   display: grid;
   gap: 8px;
