@@ -1,6 +1,15 @@
 import { describe, expect, it } from "vitest";
 import type { MatchSummary } from "@agent-alibi/shared";
-import { buildCaseShareText, buildCaseStamp, buildNextRunContracts, buildRematchHook, buildScoreMarginLabel } from "./FinalCaseFile";
+import {
+  buildCaseShareText,
+  buildCaseStamp,
+  buildLocalBestCaseRecord,
+  buildLocalBestCaseStatus,
+  buildNextRunContracts,
+  buildRematchHook,
+  buildScoreMarginLabel,
+  parseLocalBestCaseRecord
+} from "./FinalCaseFile";
 
 function summary(overrides: Partial<MatchSummary> = {}): MatchSummary {
   return {
@@ -89,6 +98,81 @@ describe("buildCaseStamp", () => {
       result: "Blue Crew wins · S-Rank · Loot chain x2",
       quote: "GremlinBot promised loyalty, then escaped alone with Moon Pearl"
     });
+  });
+});
+
+describe("buildLocalBestCaseStatus", () => {
+  it("turns a first finished run into a new local best record", () => {
+    const status = buildLocalBestCaseStatus(
+      summary({
+        runRating: "S-Rank",
+        lootChain: 2,
+        stolenRelicNames: ["Moon Pearl", "Argent Crown"],
+        teamScores: [
+          { teamId: "blue", loot: 6, escape: 2, penalties: 0, total: 11 },
+          { teamId: "red", loot: 0, escape: 0, penalties: 0, total: 0 }
+        ]
+      }),
+      null,
+      123
+    );
+
+    expect(status).toEqual({
+      current: {
+        version: 1,
+        at: 123,
+        score: 11,
+        title: "Hot Exit",
+        runRating: "S-Rank",
+        lootChain: 2,
+        relicCount: 2
+      },
+      previous: null,
+      best: {
+        version: 1,
+        at: 123,
+        score: 11,
+        title: "Hot Exit",
+        runRating: "S-Rank",
+        lootChain: 2,
+        relicCount: 2
+      },
+      isNewBest: true,
+      title: "New best case",
+      detail: "Score 11 · S-Rank · chain x2",
+      delta: "First record saved"
+    });
+  });
+
+  it("keeps a stronger stored case as the target to beat", () => {
+    const previous = buildLocalBestCaseRecord(
+      summary({
+        title: "Profitable Disaster",
+        runRating: "S-Rank",
+        lootChain: 2,
+        stolenRelicNames: ["Moon Pearl", "Argent Crown"],
+        teamScores: [
+          { teamId: "blue", loot: 6, escape: 2, penalties: 0, total: 12 },
+          { teamId: "red", loot: 0, escape: 0, penalties: 0, total: 0 }
+        ]
+      }),
+      100
+    );
+
+    const status = buildLocalBestCaseStatus(summary({ runRating: "A-Rank", styleBonus: 2 }), previous, 200);
+
+    expect(status.isNewBest).toBe(false);
+    expect(status.best).toBe(previous);
+    expect(status.title).toBe("Best case to beat");
+    expect(status.detail).toBe("Best 12 · current 5");
+    expect(status.delta).toBe("8 points to beat");
+  });
+});
+
+describe("parseLocalBestCaseRecord", () => {
+  it("drops malformed stored records", () => {
+    expect(parseLocalBestCaseRecord("{bad json")).toBeNull();
+    expect(parseLocalBestCaseRecord(JSON.stringify({ version: 1, score: "11" }))).toBeNull();
   });
 });
 

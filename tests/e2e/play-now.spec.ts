@@ -266,6 +266,13 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(finalScores.getByText(/relics stolen/i)).toBeVisible();
   await expect(finalScores.getByText(/moon pearl/i)).toBeVisible();
   await expect(finalScores.getByText(/argent crown/i)).toBeVisible();
+  const localBestCase = page.getByLabel(/local best case/i);
+  await expect(localBestCase.getByText(/new best case/i)).toBeVisible();
+  await expect(localBestCase.getByText(/score \d+ · s-rank · chain x2/i)).toBeVisible();
+  await expect(localBestCase.getByText(/first record saved/i)).toBeVisible();
+  const storedBestCase = await page.evaluate(() => localStorage.getItem("agent-alibi:best-case:v1"));
+  expect(storedBestCase).toContain('"score"');
+  expect(storedBestCase).toContain('"lootChain":2');
   const caseHighlights = page.getByLabel(/case highlights/i);
   await expect(caseHighlights.getByText(/stole moon pearl \+ argent crown/i)).toBeVisible();
   await expect(caseHighlights.getByText(/cashed out \+8 at lift/i)).toBeVisible();
