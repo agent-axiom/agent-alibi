@@ -71,6 +71,13 @@ export type ArcadeLootChainWindow = {
   secondsLeft: number;
 };
 
+export type ArcadeLootSpeedSurge = {
+  label: "Afterburner";
+  multiplier: number;
+  secondsLeft: number;
+  source: string | null;
+};
+
 export type ArcadeMissionBeat = {
   tone: "focus" | "danger" | "success";
   kicker: string;
@@ -138,6 +145,7 @@ export type ArcadeHudState = {
   paceStatus: string;
   cleanBonusWindow: ArcadeCleanBonusWindow | null;
   lootChainWindow: ArcadeLootChainWindow | null;
+  lootSpeedSurge: ArcadeLootSpeedSurge | null;
   missionBeat: ArcadeMissionBeat;
   threatCue: ArcadeThreatCue | null;
   objectiveBanner: ArcadeObjectiveBanner | null;

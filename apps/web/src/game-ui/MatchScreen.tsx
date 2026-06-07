@@ -57,10 +57,11 @@ export function MatchScreen({ match, soundEnabled = false, onToggleSound }: Matc
     const breachAlert = visibleRivalBark?.agentName === "Red Crew" && /breach live/i.test(visibleRivalBark.line);
     const stealComplete = (hud?.lootValue ?? 0) > 0 || (hud?.artifactsStolen ?? 0) > 0;
     const cashoutSurge =
-      carriedLoot && hud?.escapePayout && hud.scorePopup?.tone === "loot"
+      carriedLoot && hud?.escapePayout && (hud.scorePopup?.tone === "loot" || hud.lootSpeedSurge)
         ? {
             cashout: hud.escapePayout.cashout,
-            seconds: extractStatusSeconds(hud.rivalStatus)
+            seconds: extractStatusSeconds(hud.rivalStatus),
+            afterburner: hud.lootSpeedSurge
           }
         : null;
     const cashoutCurrent = Boolean(hud?.canEscape) || countdownPulseActive;
@@ -118,6 +119,11 @@ export function MatchScreen({ match, soundEnabled = false, onToggleSound }: Matc
           <div className="arcade-cashout-surge" aria-label="Cashout surge" aria-live="polite">
             <span>Run to lift</span>
             <strong>Bank +{cashoutSurge.cashout}</strong>
+            {cashoutSurge.afterburner ? (
+              <small className="arcade-cashout-afterburner">
+                Afterburner x{cashoutSurge.afterburner.multiplier.toFixed(2)} · {cashoutSurge.afterburner.secondsLeft}s boost
+              </small>
+            ) : null}
             <small>{cashoutSurge.seconds}s before scans · cashout or greed</small>
           </div>
         ) : null}
