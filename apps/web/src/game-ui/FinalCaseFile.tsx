@@ -488,18 +488,27 @@ export function buildNextRunContracts(summary: MatchSummary): NextRunContract[] 
 
 export function buildCaseShareText(summary: MatchSummary): string {
   const lines = [summary.caseFile];
+  const highlightLines = buildShareHighlightLines(summary);
 
-  if (summary.highlightLines?.length) {
+  if (highlightLines.length) {
     lines.push(
       "",
       "CASE HIGHLIGHTS",
-      ...summary.highlightLines.map((line, index) => `${String(index + 1).padStart(2, "0")}. ${line}`)
+      ...highlightLines.map((line, index) => `${String(index + 1).padStart(2, "0")}. ${line}`)
     );
   }
 
   lines.push("", "NEXT RUN", buildRematchHook(summary));
   lines.push("", "PLAY", PUBLIC_PLAY_URL);
   return lines.join("\n");
+}
+
+function buildShareHighlightLines(summary: MatchSummary): string[] {
+  const baseLines = summary.highlightLines ?? [];
+  if (!summary.carrierIntercepts || summary.carrierIntercepts <= 0) return baseLines;
+
+  const deniedLine = `Red denied: ${summary.interceptedRelicNames?.length ? summary.interceptedRelicNames.join(" + ") : "recovered loot"}`;
+  return [deniedLine, ...baseLines.filter((line) => line.toLowerCase() !== deniedLine.toLowerCase())];
 }
 
 export function buildCaseStamp(summary: MatchSummary) {
