@@ -3245,6 +3245,12 @@ p {
   box-shadow: 0 0 18px rgba(255, 79, 123, 0.5);
 }
 
+.arcade-shell.rival-pressure-active .arcade-race,
+.arcade-shell.rival-pressure-active .arcade-rivals {
+  border-color: rgba(255, 79, 123, 0.72);
+  box-shadow: 0 0 24px rgba(255, 79, 123, 0.2), inset 0 0 20px rgba(255, 213, 106, 0.08);
+}
+
 .arcade-rival-loot {
   width: fit-content;
   border: 1px solid rgba(255, 79, 123, 0.56);
