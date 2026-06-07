@@ -56,6 +56,7 @@ function hud(overrides: Partial<ArcadeHudState> = {}): ArcadeHudState {
     cleanBonusWindow: null,
     lootChainWindow: null,
     lootSpeedSurge: null,
+    comboCashoutWindow: null,
     missionBeat: {
       tone: "focus",
       kicker: "First objective",
