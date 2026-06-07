@@ -298,6 +298,7 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(scorePopup.getByText(/afterburner \+1/i)).toBeVisible();
 
   await expect(page.locator(".case-file pre").getByText(/agent alibi case file/i)).toBeVisible();
+  await expect(page.locator(".final-shell")).toHaveClass(/afterburner-finish/);
   const shareStamp = page.getByLabel(/share case stamp/i);
   await expect(shareStamp.getByText(/agent alibi case file/i)).toBeVisible();
   await expect(shareStamp.getByText(/blue crew wins/i)).toBeVisible();
@@ -788,7 +789,7 @@ test("on-screen arcade controls move, dash, interact, and switch route", async (
   await expect(page.locator(".arcade-spotlight").getByText(/moon pearl secured/i)).toBeVisible();
   await expect(page.getByLabel(/route choice/i).getByText(/press g/i)).toBeVisible();
   await controls.getByRole("button", { name: /switch route/i }).click();
-  await expect(page.getByLabel(/optional relic/i).getByText(/greed route/i)).toBeVisible();
+  await expect(page.getByLabel(/current objective/i).getByText(/greed route: steal argent crown \+3/i)).toBeVisible();
   const afterRoute = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().routeMode);
   expect(afterRoute).toBe("greed");
 });
