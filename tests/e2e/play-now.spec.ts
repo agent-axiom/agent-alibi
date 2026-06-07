@@ -351,7 +351,7 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(page.getByText(/copied/i)).toBeVisible();
   const runItBack = page.getByRole("button", { name: /run it back/i });
   await expect(runItBack).toBeVisible();
-  await expect(runItBack).toContainText(/beat your case/i);
+  await expect(runItBack).toContainText(/afterburner encore/i);
   await runItBack.click();
   await expect(page.getByLabel(/opening contract/i).getByText(/moon vault contract/i)).toBeVisible();
   await expect(page.getByLabel(/final scores/i)).toBeHidden();
