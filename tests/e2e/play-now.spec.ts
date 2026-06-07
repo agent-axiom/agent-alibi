@@ -32,6 +32,18 @@ test("home screen surfaces the saved best case target", async ({ page }) => {
   await expect(savedBest.getByText(/beat your case/i)).toBeVisible();
 });
 
+test("sound preference survives a reload", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: /sound off/i }).click();
+  await expect(page.getByRole("button", { name: /sound on/i })).toBeVisible();
+  await expect
+    .poll(() => page.evaluate(() => localStorage.getItem("agent-alibi:sound-enabled:v1")))
+    .toBe("true");
+
+  await page.reload();
+  await expect(page.getByRole("button", { name: /sound on/i })).toBeVisible();
+});
+
 test("solo match starts and reaches final case file", async ({ page }) => {
   await startSoloArcade(page);
 
