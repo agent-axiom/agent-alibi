@@ -27,7 +27,8 @@ export function App() {
     screen: effectiveMusicScreen,
     isArcade: Boolean(localMatch.arcade?.enabled),
     alarm: arcadeHud?.alarm ?? localMatch.state?.alarm,
-    timeLeftMs: arcadeHud?.timeLeftMs
+    timeLeftMs: arcadeHud?.timeLeftMs,
+    boostActive: Boolean(arcadeHud?.lootSpeedSurge)
   });
   const music = useDynamicMusic(musicTrack, soundEnabled);
   useMissionStingers({
