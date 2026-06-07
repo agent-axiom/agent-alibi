@@ -295,6 +295,7 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(extractionCue.getByText(/press e \/ space to cashout \+8/i)).toBeVisible();
   await page.keyboard.press("KeyE");
   await expect(scorePopup.getByText(/\+2 escape bonus/i)).toBeVisible();
+  await expect(scorePopup.getByText(/afterburner \+1/i)).toBeVisible();
 
   await expect(page.locator(".case-file pre").getByText(/agent alibi case file/i)).toBeVisible();
   const shareStamp = page.getByLabel(/share case stamp/i);
