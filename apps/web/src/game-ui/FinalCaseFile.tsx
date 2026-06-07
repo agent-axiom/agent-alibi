@@ -28,6 +28,7 @@ export type LocalBestCaseRecord = {
   lootChain: number;
   relicCount: number;
   afterburnerExitBonus?: number;
+  carrierIntercepts?: number;
 };
 
 export type LocalBestCaseStatus = {
@@ -260,6 +261,7 @@ export function buildRematchHook(summary: MatchSummary): string {
 export function buildLocalBestCaseRecord(summary: MatchSummary, at = Date.now()): LocalBestCaseRecord {
   const blueScore = summary.teamScores.find((score) => score.teamId === "blue");
   const afterburnerExitBonus = summary.afterburnerExitBonus && summary.afterburnerExitBonus > 0 ? summary.afterburnerExitBonus : undefined;
+  const carrierIntercepts = summary.carrierIntercepts && summary.carrierIntercepts > 0 ? summary.carrierIntercepts : undefined;
   return {
     version: 1,
     at,
@@ -268,7 +270,8 @@ export function buildLocalBestCaseRecord(summary: MatchSummary, at = Date.now())
     runRating: summary.runRating ?? "Unrated",
     lootChain: summary.lootChain ?? 1,
     relicCount: summary.stolenRelicNames?.length ?? 0,
-    ...(afterburnerExitBonus ? { afterburnerExitBonus } : {})
+    ...(afterburnerExitBonus ? { afterburnerExitBonus } : {}),
+    ...(carrierIntercepts ? { carrierIntercepts } : {})
   };
 }
 
@@ -328,7 +331,8 @@ function isLocalBestCaseRecord(value: unknown): value is LocalBestCaseRecord {
     typeof record.runRating === "string" &&
     typeof record.lootChain === "number" &&
     typeof record.relicCount === "number" &&
-    (record.afterburnerExitBonus === undefined || typeof record.afterburnerExitBonus === "number")
+    (record.afterburnerExitBonus === undefined || typeof record.afterburnerExitBonus === "number") &&
+    (record.carrierIntercepts === undefined || typeof record.carrierIntercepts === "number")
   );
 }
 
@@ -338,6 +342,9 @@ function compareLocalBestCaseRecords(left: LocalBestCaseRecord, right: LocalBest
 
   const ratingDelta = localBestRatingValue(left.runRating) - localBestRatingValue(right.runRating);
   if (ratingDelta !== 0) return ratingDelta;
+
+  const carrierDenialDelta = (left.carrierIntercepts ?? 0) - (right.carrierIntercepts ?? 0);
+  if (carrierDenialDelta !== 0) return carrierDenialDelta;
 
   const chainDelta = left.lootChain - right.lootChain;
   if (chainDelta !== 0) return chainDelta;
@@ -355,7 +362,8 @@ function localBestRatingValue(rating: string): number {
 
 export function formatLocalBestCaseDetail(record: LocalBestCaseRecord): string {
   const boostDetail = record.afterburnerExitBonus && record.afterburnerExitBonus > 0 ? ` · boost +${record.afterburnerExitBonus}` : "";
-  return `Score ${record.score} · ${record.runRating} · chain x${record.lootChain}${boostDetail}`;
+  const denialDetail = record.carrierIntercepts && record.carrierIntercepts > 0 ? ` · denial x${record.carrierIntercepts}` : "";
+  return `Score ${record.score} · ${record.runRating} · chain x${record.lootChain}${boostDetail}${denialDetail}`;
 }
 
 function buildLocalBestDelta(current: LocalBestCaseRecord, previous: LocalBestCaseRecord | null, isNewBest: boolean): string {

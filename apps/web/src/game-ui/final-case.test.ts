@@ -231,6 +231,59 @@ describe("buildLocalBestCaseStatus", () => {
     expect(status.detail).toBe("Score 12 · S-Rank · chain x2 · boost +1");
   });
 
+  it("keeps carrier denial in a new local best record", () => {
+    const status = buildLocalBestCaseStatus(
+      summary({
+        runRating: "S-Rank",
+        lootChain: 1,
+        carrierIntercepts: 1,
+        interceptedRelicNames: ["Moon Pearl"],
+        teamScores: [
+          { teamId: "blue", loot: 3, escape: 2, penalties: 0, total: 8 },
+          { teamId: "red", loot: 0, escape: 0, penalties: 0, total: 0 }
+        ]
+      }),
+      null,
+      654
+    );
+
+    expect(status.current).toMatchObject({ carrierIntercepts: 1 });
+    expect(status.detail).toBe("Score 8 · S-Rank · chain x1 · denial x1");
+  });
+
+  it("breaks equal best-case ties with carrier denials", () => {
+    const previous = buildLocalBestCaseRecord(
+      summary({
+        runRating: "S-Rank",
+        lootChain: 1,
+        stolenRelicNames: ["Moon Pearl"],
+        teamScores: [
+          { teamId: "blue", loot: 3, escape: 2, penalties: 0, total: 8 },
+          { teamId: "red", loot: 0, escape: 0, penalties: 0, total: 0 }
+        ]
+      }),
+      100
+    );
+
+    const status = buildLocalBestCaseStatus(
+      summary({
+        runRating: "S-Rank",
+        lootChain: 1,
+        carrierIntercepts: 1,
+        stolenRelicNames: ["Moon Pearl"],
+        teamScores: [
+          { teamId: "blue", loot: 3, escape: 2, penalties: 0, total: 8 },
+          { teamId: "red", loot: 0, escape: 0, penalties: 0, total: 0 }
+        ]
+      }),
+      previous,
+      200
+    );
+
+    expect(status.isNewBest).toBe(true);
+    expect(status.best).toMatchObject({ carrierIntercepts: 1 });
+  });
+
   it("keeps a stronger stored case as the target to beat", () => {
     const previous = buildLocalBestCaseRecord(
       summary({
