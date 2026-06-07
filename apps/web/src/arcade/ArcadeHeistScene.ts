@@ -91,6 +91,14 @@ type ArcadeObjectiveTarget =
   | { kind: "carrier"; id: string; label: string; x: number; y: number }
   | { kind: "escape"; id: "escape"; label: string; x: number; y: number };
 
+type ActionRingState = {
+  color: number;
+  cue: string;
+  label: string;
+  radius: number;
+  state: "approach" | "ready";
+};
+
 type RouteMode = "escape" | "greed";
 
 type RivalScan = {
@@ -229,6 +237,11 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private escapePayoutBadgeLabel?: Phaser.GameObjects.Text;
   private targetMarker?: Phaser.GameObjects.Container;
   private targetBeam?: Phaser.GameObjects.Graphics;
+  private actionRing?: Phaser.GameObjects.Container;
+  private actionRingOuter?: Phaser.GameObjects.Arc;
+  private actionRingInner?: Phaser.GameObjects.Arc;
+  private actionRingLabel?: Phaser.GameObjects.Text;
+  private actionRingCue?: Phaser.GameObjects.Text;
   private interactionPrompt?: Phaser.GameObjects.Container;
   private interactionPromptPlate?: Phaser.GameObjects.Rectangle;
   private interactionPromptKey?: Phaser.GameObjects.Text;
@@ -387,6 +400,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
         : null,
       target,
       targetMarker: this.targetMarkerDebug(),
+      actionRing: this.actionRingDebug(),
       interactionPrompt: this.interactionPromptDebug(),
       hasTargetBeam: Boolean(this.targetBeam),
       routeGuide,
@@ -429,6 +443,9 @@ export class ArcadeHeistScene extends Phaser.Scene {
     const offsetY = target.kind === "artifact" ? 28 : 0;
     this.moveAgent(this.player, target.x - this.player.x, target.y + offsetY - this.player.y);
     this.pointerTarget = undefined;
+    this.updateTargetMarker();
+    this.updateInteractionPrompt();
+    this.updateCameraLookahead(16);
     this.emitHudIfNeeded(true);
   }
 
@@ -597,6 +614,11 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.routeMode = "escape";
     this.targetMarker = undefined;
     this.targetBeam = undefined;
+    this.actionRing = undefined;
+    this.actionRingOuter = undefined;
+    this.actionRingInner = undefined;
+    this.actionRingLabel = undefined;
+    this.actionRingCue = undefined;
     this.interactionPrompt = undefined;
     this.interactionPromptPlate = undefined;
     this.interactionPromptKey = undefined;
@@ -2630,6 +2652,20 @@ export class ArcadeHeistScene extends Phaser.Scene {
     };
   }
 
+  private actionRingDebug() {
+    if (!this.actionRing?.getData("visible")) return null;
+    return {
+      visible: true,
+      kind: String(this.actionRing.getData("kind") ?? ""),
+      state: String(this.actionRing.getData("state") ?? ""),
+      label: String(this.actionRing.getData("label") ?? ""),
+      cue: String(this.actionRing.getData("cue") ?? ""),
+      x: Math.round(this.actionRing.x),
+      y: Math.round(this.actionRing.y),
+      radius: Number(this.actionRing.getData("radius") ?? 0)
+    };
+  }
+
   private interactionPromptDebug() {
     if (!this.interactionPrompt?.getData("visible")) return null;
     return {
@@ -2736,11 +2772,13 @@ export class ArcadeHeistScene extends Phaser.Scene {
       this.targetMarker = undefined;
       this.targetBeam?.destroy();
       this.targetBeam = undefined;
+      this.destroyActionRing();
       this.destroyRouteSignal();
       return;
     }
 
     this.updateTargetBeam(target);
+    this.updateActionRing(target);
 
     const targetKey = `${target.kind}:${target.id}`;
     const markerLabel = this.targetMarkerLabel(target);
@@ -2774,6 +2812,128 @@ export class ArcadeHeistScene extends Phaser.Scene {
     }
 
     this.targetMarker.setPosition(target.x, target.y);
+  }
+
+  private updateActionRing(target: ArcadeObjectiveTarget) {
+    const targetKey = `${target.kind}:${target.id}`;
+    const ringState = this.actionRingState(target);
+    if (
+      !this.actionRing ||
+      !this.actionRingOuter ||
+      !this.actionRingInner ||
+      !this.actionRingLabel ||
+      !this.actionRingCue ||
+      this.actionRing.getData("targetKey") !== targetKey
+    ) {
+      this.destroyActionRing();
+      this.createActionRing(target, ringState);
+    }
+
+    if (!this.actionRing || !this.actionRingOuter || !this.actionRingInner || !this.actionRingLabel || !this.actionRingCue) return;
+
+    this.actionRing.setPosition(target.x, target.y);
+    this.actionRingOuter.setRadius(ringState.radius);
+    this.actionRingOuter.setStrokeStyle(ringState.state === "ready" ? 5 : 3, ringState.color, ringState.state === "ready" ? 0.92 : 0.54);
+    this.actionRingOuter.setFillStyle(ringState.color, ringState.state === "ready" ? 0.12 : 0.05);
+    this.actionRingInner.setRadius(ringState.state === "ready" ? 24 : 18);
+    this.actionRingInner.setStrokeStyle(2, ringState.color, ringState.state === "ready" ? 0.78 : 0.38);
+    this.actionRingInner.setFillStyle(ringState.color, ringState.state === "ready" ? 0.16 : 0.06);
+    this.actionRingLabel.setText(ringState.label);
+    this.actionRingLabel.setColor(this.hexCss(ringState.color));
+    this.actionRingCue.setText(ringState.cue);
+    this.actionRingCue.setColor(ringState.state === "ready" ? "#ffffff" : "#d9f7ff");
+    this.actionRing.setAlpha(ringState.state === "ready" ? 1 : 0.78);
+    this.actionRing.setData("visible", true);
+    this.actionRing.setData("targetKey", targetKey);
+    this.actionRing.setData("kind", target.kind);
+    this.actionRing.setData("state", ringState.state);
+    this.actionRing.setData("label", ringState.label);
+    this.actionRing.setData("cue", ringState.cue);
+    this.actionRing.setData("radius", ringState.radius);
+  }
+
+  private createActionRing(target: ArcadeObjectiveTarget, ringState: ActionRingState) {
+    const outer = this.add.circle(0, 0, ringState.radius, ringState.color, 0.05).setStrokeStyle(3, ringState.color, 0.54);
+    const inner = this.add.circle(0, 0, 18, ringState.color, 0.06).setStrokeStyle(2, ringState.color, 0.38);
+    const label = this.add
+      .text(0, ringState.radius + 18, ringState.label, {
+        color: this.hexCss(ringState.color),
+        fontFamily: "Inter, Arial, sans-serif",
+        fontSize: "12px",
+        fontStyle: "900",
+        stroke: "#050811",
+        strokeThickness: 5
+      })
+      .setOrigin(0.5);
+    const cue = this.add
+      .text(0, ringState.radius + 34, ringState.cue, {
+        color: "#d9f7ff",
+        fontFamily: "Inter, Arial, sans-serif",
+        fontSize: "10px",
+        fontStyle: "900",
+        stroke: "#050811",
+        strokeThickness: 4
+      })
+      .setOrigin(0.5);
+
+    this.actionRingOuter = outer;
+    this.actionRingInner = inner;
+    this.actionRingLabel = label;
+    this.actionRingCue = cue;
+    this.actionRing = this.add.container(target.x, target.y, [outer, inner, label, cue]).setDepth(15);
+    this.actionRing.setData("targetKey", `${target.kind}:${target.id}`);
+    this.tweens.add({
+      targets: outer,
+      scale: { from: 0.96, to: 1.08 },
+      duration: 680,
+      yoyo: true,
+      repeat: -1,
+      ease: "Sine.easeInOut"
+    });
+  }
+
+  private destroyActionRing() {
+    this.actionRing?.destroy(true);
+    this.actionRing = undefined;
+    this.actionRingOuter = undefined;
+    this.actionRingInner = undefined;
+    this.actionRingLabel = undefined;
+    this.actionRingCue = undefined;
+  }
+
+  private actionRingState(target: ArcadeObjectiveTarget): ActionRingState {
+    const ready = this.actionRingReady(target);
+    if (target.kind === "escape") {
+      return {
+        color: 0x7effdf,
+        cue: ready ? "E / SPACE" : "APPROACH",
+        label: this.lootValue > 0 ? "CASHOUT" : "ESCAPE",
+        radius: EXIT_RADIUS,
+        state: ready ? "ready" : "approach"
+      };
+    }
+    if (target.kind === "carrier") {
+      return {
+        color: 0xff4f7b,
+        cue: ready ? "E / SPACE" : "CHASE",
+        label: "INTERCEPT",
+        radius: INTERCEPT_RADIUS,
+        state: ready ? "ready" : "approach"
+      };
+    }
+    return {
+      color: 0xffd56a,
+      cue: ready ? "E / SPACE" : "APPROACH",
+      label: "STEAL",
+      radius: PICKUP_RADIUS + 18,
+      state: ready ? "ready" : "approach"
+    };
+  }
+
+  private actionRingReady(target: ArcadeObjectiveTarget): boolean {
+    if (target.kind === "escape") return this.isNearExit() && (this.lootValue > 0 || this.timeLeftMs() <= 30_000);
+    if (target.kind === "carrier") return this.nearRivalCarrier()?.id === target.id;
+    return this.nearPlayerArtifact()?.id === target.id;
   }
 
   private updateTargetBeam(target: ArcadeObjectiveTarget) {
