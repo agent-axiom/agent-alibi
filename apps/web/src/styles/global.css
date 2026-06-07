@@ -1680,6 +1680,14 @@ p {
     linear-gradient(0deg, rgba(5, 8, 17, 0.88), transparent 29%, transparent 74%, rgba(55, 7, 20, 0.62));
 }
 
+.arcade-shell.afterburner-active .arcade-vignette {
+  background:
+    radial-gradient(circle at 50% 46%, rgba(126, 252, 255, 0.16), transparent 31%),
+    linear-gradient(90deg, rgba(3, 25, 32, 0.82), transparent 20%, transparent 74%, rgba(53, 34, 4, 0.78)),
+    linear-gradient(0deg, rgba(5, 8, 17, 0.84), transparent 28%, transparent 75%, rgba(5, 29, 34, 0.58));
+  animation: arcade-afterburner-vignette 0.82s ease-in-out infinite alternate;
+}
+
 .arcade-breach-pulse {
   position: absolute;
   inset: 0;
@@ -1804,6 +1812,11 @@ p {
   color: #7efcff;
   font-size: 0.7rem;
   text-shadow: 0 0 18px rgba(126, 252, 255, 0.42);
+}
+
+.arcade-shell.afterburner-active .arcade-cashout-surge {
+  border-color: rgba(255, 213, 106, 0.8);
+  box-shadow: 0 24px 58px rgba(0, 0, 0, 0.42), 0 0 34px rgba(255, 213, 106, 0.24), 0 0 58px rgba(126, 252, 255, 0.25);
 }
 
 .arcade-scan-lock-pulse {
@@ -1984,6 +1997,16 @@ p {
   100% {
     opacity: 0;
     transform: translateX(-50%) translateY(-8px) scale(0.98);
+  }
+}
+
+@keyframes arcade-afterburner-vignette {
+  0% {
+    opacity: 0.86;
+  }
+
+  100% {
+    opacity: 1;
   }
 }
 
