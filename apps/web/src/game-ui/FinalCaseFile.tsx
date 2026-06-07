@@ -150,20 +150,21 @@ export function FinalCaseFile({ summary, soundEnabled = false, onToggleSound, on
         </section>
         <pre>{summary.caseFile}</pre>
         <div className="final-actions">
+          <button className="final-run-it-back" onClick={onRematch}>
+            <RotateCcw aria-hidden="true" size={20} />
+            <span>Run It Back</span>
+            <small>{nextRunContracts[0]?.title ?? "New contract"}</small>
+          </button>
+          <button onClick={copyResult}>
+            <Copy aria-hidden="true" size={18} />
+            {copied ? "Copied" : "Copy Result"}
+          </button>
           {onToggleSound ? (
             <button onClick={onToggleSound} aria-label={soundEnabled ? "Sound On" : "Sound Off"} title={soundEnabled ? "Sound On" : "Sound Off"}>
               {soundEnabled ? <Volume2 aria-hidden="true" size={18} /> : <VolumeX aria-hidden="true" size={18} />}
               {soundEnabled ? "Sound On" : "Sound Off"}
             </button>
           ) : null}
-          <button onClick={copyResult}>
-            <Copy aria-hidden="true" size={18} />
-            {copied ? "Copied" : "Copy Result"}
-          </button>
-          <button onClick={onRematch}>
-            <RotateCcw aria-hidden="true" size={18} />
-            Rematch
-          </button>
           <button onClick={onHome}>
             <Home aria-hidden="true" size={18} />
             Home
