@@ -183,6 +183,8 @@ describe("buildArcadeMatchSummary", () => {
     expect(summary.caseFile).toContain("Carrier Intercepts: 1");
     expect(summary.caseFile).toContain("Recovered From Rivals: Moon Pearl");
     expect(summary.caseFile).toContain("Denial Swing: +3 recovered / +3 denied");
+    expect(summary.caseFile).toContain("Agent You escaped with 1 relic before lockdown.");
+    expect(summary.caseFile).not.toContain("1 relics");
   });
 
   it("separates pending carrier loot from cashed-out rival relics", () => {
