@@ -41,6 +41,8 @@ const SECURITY_SWEEP_WARNING_WIDTH = 112;
 const SECURITY_SWEEP_BEAM_WIDTH = 34;
 const SECURITY_SWEEP_HIT_ALARM_DELTA = 0.46;
 const SECURITY_SWEEP_HIT_COOLDOWN_MS = 1_350;
+const MOVEMENT_COACH_MAX_MS = 6_500;
+const MOVEMENT_COACH_DISMISS_DISTANCE = 48;
 
 const TEAM_COLORS: Record<TeamId, number> = {
   blue: 0x4cf4f0,
@@ -197,6 +199,12 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private shiftHeld = false;
   private keyboardImpulse?: MovementImpulse;
   private pointerTarget?: Phaser.Math.Vector2;
+  private movementCoach?: Phaser.GameObjects.Container;
+  private movementCoachRing?: Phaser.GameObjects.Arc;
+  private movementCoachLabel?: Phaser.GameObjects.Text;
+  private movementCoachStartX = 0;
+  private movementCoachStartY = 0;
+  private movementCoachDismissed = false;
   private elapsedMs = 0;
   private alarm = 1;
   private dashCooldownMs = 0;
@@ -408,6 +416,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       targetMarker: this.targetMarkerDebug(),
       actionRing: this.actionRingDebug(),
       greedRouteHint: this.greedRouteHintDebug(),
+      movementCoach: this.movementCoachDebug(),
       interactionPrompt: this.interactionPromptDebug(),
       hasTargetBeam: Boolean(this.targetBeam),
       routeGuide,
@@ -452,6 +461,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.pointerTarget = undefined;
     this.updateTargetMarker();
     this.updateGreedRouteHint();
+    this.updateMovementCoach();
     this.updateInteractionPrompt();
     this.updateCameraLookahead(16);
     this.emitHudIfNeeded(true);
@@ -550,6 +560,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.securitySweepHitCooldownMs = Math.max(0, this.securitySweepHitCooldownMs - delta);
 
     this.updatePlayer(delta);
+    this.updateMovementCoach();
     this.updateMotionTrail(delta);
     this.updateDashShockwave();
     this.updateAi(delta);
@@ -587,6 +598,12 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.shiftHeld = false;
     this.keyboardImpulse = undefined;
     this.pointerTarget = undefined;
+    this.movementCoach = undefined;
+    this.movementCoachRing = undefined;
+    this.movementCoachLabel = undefined;
+    this.movementCoachStartX = 0;
+    this.movementCoachStartY = 0;
+    this.movementCoachDismissed = false;
     this.elapsedMs = 0;
     this.alarm = 1;
     this.dashCooldownMs = 0;
@@ -693,9 +710,13 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.children.removeAll(true);
     this.drawWorld(config.state);
     this.createActors(config.state);
+    const playerOrigin = this.player as RuntimeAgent | undefined;
+    this.movementCoachStartX = playerOrigin?.x ?? 0;
+    this.movementCoachStartY = playerOrigin?.y ?? 0;
     this.resizeCamera();
     this.updateTargetMarker();
     this.updateGreedRouteHint();
+    this.updateMovementCoach();
     this.updateCameraLookahead(16);
     this.updateThreatHalo();
     this.updateCarrierCashoutRoute();
@@ -2695,6 +2716,101 @@ export class ArcadeHeistScene extends Phaser.Scene {
       x: Math.round(this.greedRouteHint.x),
       y: Math.round(this.greedRouteHint.y)
     };
+  }
+
+  private movementCoachDebug() {
+    if (!this.movementCoach?.getData("visible")) return null;
+    return {
+      visible: true,
+      label: String(this.movementCoach.getData("label") ?? ""),
+      x: Math.round(this.movementCoach.x),
+      y: Math.round(this.movementCoach.y)
+    };
+  }
+
+  private updateMovementCoach() {
+    if (!this.player) {
+      this.destroyMovementCoach();
+      return;
+    }
+
+    const distanceFromStart = Phaser.Math.Distance.Between(
+      this.movementCoachStartX,
+      this.movementCoachStartY,
+      this.player.x,
+      this.player.y
+    );
+    if (distanceFromStart >= MOVEMENT_COACH_DISMISS_DISTANCE) {
+      this.movementCoachDismissed = true;
+    }
+
+    const visible = !this.movementCoachDismissed && this.elapsedMs <= MOVEMENT_COACH_MAX_MS && this.artifactsStolen === 0;
+    if (!visible) {
+      this.destroyMovementCoach();
+      return;
+    }
+
+    if (!this.movementCoach || !this.movementCoachRing || !this.movementCoachLabel) {
+      this.createMovementCoach();
+    }
+
+    if (!this.movementCoach || !this.movementCoachRing || !this.movementCoachLabel) return;
+
+    const bob = Math.sin(this.elapsedMs / 260) * 5;
+    this.movementCoach.setPosition(this.player.x, this.player.y - 78 + bob);
+    this.movementCoach.setAlpha(0.82 + Math.sin(this.elapsedMs / 220) * 0.12);
+    this.movementCoach.setData("visible", true);
+    this.movementCoach.setData("label", "MOVE");
+  }
+
+  private createMovementCoach() {
+    const ring = this.add.circle(0, 0, 36, 0x7efcff, 0.05).setStrokeStyle(3, 0x7efcff, 0.62);
+    const arrowUp = this.add.triangle(0, -53, 0, -18, -13, 8, 13, 8, 0x7efcff, 0.88);
+    const arrowRight = this.add.triangle(52, 0, 18, 0, -8, -13, -8, 13, 0x7effdf, 0.78).setRotation(Math.PI / 2);
+    const arrowDown = this.add.triangle(0, 53, 0, 18, -13, -8, 13, -8, 0x7efcff, 0.72).setRotation(Math.PI);
+    const arrowLeft = this.add.triangle(-52, 0, -18, 0, 8, -13, 8, 13, 0x7effdf, 0.78).setRotation(-Math.PI / 2);
+    const label = this.add
+      .text(0, 0, "MOVE", {
+        color: "#f8fdff",
+        fontFamily: "Inter, Arial, sans-serif",
+        fontSize: "13px",
+        fontStyle: "950",
+        stroke: "#050811",
+        strokeThickness: 5
+      })
+      .setOrigin(0.5);
+
+    this.movementCoachRing = ring;
+    this.movementCoachLabel = label;
+    this.movementCoach = this.add
+      .container(this.player?.x ?? WORLD_WIDTH / 2, (this.player?.y ?? WORLD_HEIGHT / 2) - 78, [
+        ring,
+        arrowUp,
+        arrowRight,
+        arrowDown,
+        arrowLeft,
+        label
+      ])
+      .setDepth(22);
+    this.movementCoach.setData("visible", true);
+    this.movementCoach.setData("label", "MOVE");
+
+    this.tweens.add({
+      targets: ring,
+      scale: { from: 0.92, to: 1.16 },
+      alpha: { from: 0.5, to: 0.94 },
+      duration: 680,
+      yoyo: true,
+      repeat: -1,
+      ease: "Sine.easeInOut"
+    });
+  }
+
+  private destroyMovementCoach() {
+    this.movementCoach?.destroy(true);
+    this.movementCoach = undefined;
+    this.movementCoachRing = undefined;
+    this.movementCoachLabel = undefined;
   }
 
   private interactionPromptDebug() {

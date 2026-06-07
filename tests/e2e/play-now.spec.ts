@@ -402,6 +402,26 @@ test("in-world action ring switches from approach to ready prompts", async ({ pa
   );
 });
 
+test("opening movement coach disappears after the player moves", async ({ page }) => {
+  await startSoloArcade(page);
+  await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_STATE__ === "function");
+
+  const openingCoach = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().movementCoach);
+  expect(openingCoach).toEqual(
+    expect.objectContaining({
+      visible: true,
+      label: "MOVE"
+    })
+  );
+
+  await page.keyboard.down("ArrowRight");
+  await page.waitForTimeout(360);
+  await page.keyboard.up("ArrowRight");
+
+  const afterMoveCoach = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().movementCoach);
+  expect(afterMoveCoach).toBeNull();
+});
+
 test("start objective banner clears before it blocks the arena", async ({ page }) => {
   await startSoloArcade(page);
 
