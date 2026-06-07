@@ -19,6 +19,11 @@ const STINGER_NOTES: Record<MissionStingerId, Array<[number, number]>> = {
     [740, 80],
     [1180, 145]
   ],
+  "route-lock": [
+    [392, 0],
+    [587, 75],
+    [1047, 150]
+  ],
   "rival-wake": [
     [294, 0],
     [440, 80],
@@ -50,9 +55,10 @@ export function useMissionStingers({ enabled, hud, summary }: MissionStingerInpu
       phase: hud?.phase ?? "stealth",
       spotlight: hud?.spotlight ?? null,
       rivalStatus: hud?.rivalStatus ?? null,
+      routePulseTitle: hud?.routePulse?.title ?? null,
       summaryTitle: summary?.title ?? null
     }),
-    [hud?.lootValue, hud?.aiLootValue, hud?.phase, hud?.spotlight, hud?.rivalStatus, summary?.title]
+    [hud?.lootValue, hud?.aiLootValue, hud?.phase, hud?.spotlight, hud?.rivalStatus, hud?.routePulse?.title, summary?.title]
   );
 
   useEffect(() => {
