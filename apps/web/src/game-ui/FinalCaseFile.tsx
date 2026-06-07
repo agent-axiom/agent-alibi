@@ -1,5 +1,5 @@
 import { Copy, Home, RotateCcw, Volume2, VolumeX } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { MatchSummary, TeamScore } from "@agent-alibi/shared";
 
 type FinalCaseFileProps = {
@@ -16,8 +16,31 @@ export type NextRunContract = {
   detail: string;
 };
 
+export const LOCAL_BEST_CASE_STORAGE_KEY = "agent-alibi:best-case:v1";
+
+export type LocalBestCaseRecord = {
+  version: 1;
+  at: number;
+  score: number;
+  title: string;
+  runRating: string;
+  lootChain: number;
+  relicCount: number;
+};
+
+export type LocalBestCaseStatus = {
+  current: LocalBestCaseRecord;
+  previous: LocalBestCaseRecord | null;
+  best: LocalBestCaseRecord;
+  isNewBest: boolean;
+  title: string;
+  detail: string;
+  delta: string;
+};
+
 export function FinalCaseFile({ summary, soundEnabled = false, onToggleSound, onRematch, onHome }: FinalCaseFileProps) {
   const [copied, setCopied] = useState(false);
+  const [bestCase] = useState(() => buildLocalBestCaseStatus(summary, readLocalBestCaseRecord()));
   const blueScore = summary.teamScores.find((score) => score.teamId === "blue");
   const redScore = summary.teamScores.find((score) => score.teamId === "red");
   const winner = summary.winnerTeamId === "tie" ? "Tie" : summary.winnerTeamId === "blue" ? "Blue Crew" : "Red Crew";
@@ -27,6 +50,12 @@ export function FinalCaseFile({ summary, soundEnabled = false, onToggleSound, on
   const nextRunContracts = buildNextRunContracts(summary);
   const scoreMargin = buildScoreMarginLabel(summary.teamScores);
   const caseStamp = buildCaseStamp(summary);
+
+  useEffect(() => {
+    if (bestCase.isNewBest) {
+      writeLocalBestCaseRecord(bestCase.current);
+    }
+  }, [bestCase]);
 
   async function copyResult() {
     await navigator.clipboard?.writeText(buildCaseShareText(summary)).catch(() => undefined);
@@ -49,6 +78,11 @@ export function FinalCaseFile({ summary, soundEnabled = false, onToggleSound, on
           <strong>{caseStamp.title}</strong>
           <small>{caseStamp.result}</small>
           <p>{caseStamp.quote}</p>
+        </section>
+        <section className={`local-best-case ${bestCase.isNewBest ? "new" : "stored"}`} aria-label="Local best case">
+          <span>{bestCase.title}</span>
+          <strong>{bestCase.detail}</strong>
+          <small>{bestCase.delta}</small>
         </section>
         <section className="final-scoreboard" aria-label="Final scores">
           <div className="final-score">
@@ -197,6 +231,109 @@ export function buildRematchHook(summary: MatchSummary): string {
   }
 
   return "Next run: run it back and make the case file louder.";
+}
+
+export function buildLocalBestCaseRecord(summary: MatchSummary, at = Date.now()): LocalBestCaseRecord {
+  const blueScore = summary.teamScores.find((score) => score.teamId === "blue");
+  return {
+    version: 1,
+    at,
+    score: blueScore?.total ?? 0,
+    title: summary.title,
+    runRating: summary.runRating ?? "Unrated",
+    lootChain: summary.lootChain ?? 1,
+    relicCount: summary.stolenRelicNames?.length ?? 0
+  };
+}
+
+export function buildLocalBestCaseStatus(summary: MatchSummary, previous: LocalBestCaseRecord | null, at = Date.now()): LocalBestCaseStatus {
+  const current = buildLocalBestCaseRecord(summary, at);
+  const isNewBest = !previous || compareLocalBestCaseRecords(current, previous) >= 0;
+  const best = isNewBest ? current : previous;
+
+  return {
+    current,
+    previous,
+    best,
+    isNewBest,
+    title: isNewBest ? "New best case" : "Best case to beat",
+    detail: isNewBest ? formatLocalBestCaseDetail(current) : `Best ${previous.score} · current ${current.score}`,
+    delta: buildLocalBestDelta(current, previous, isNewBest)
+  };
+}
+
+export function parseLocalBestCaseRecord(raw: string | null): LocalBestCaseRecord | null {
+  if (!raw) return null;
+  try {
+    const value: unknown = JSON.parse(raw);
+    if (!isLocalBestCaseRecord(value)) return null;
+    return value;
+  } catch {
+    return null;
+  }
+}
+
+function readLocalBestCaseRecord(): LocalBestCaseRecord | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return parseLocalBestCaseRecord(window.localStorage.getItem(LOCAL_BEST_CASE_STORAGE_KEY));
+  } catch {
+    return null;
+  }
+}
+
+function writeLocalBestCaseRecord(record: LocalBestCaseRecord) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(LOCAL_BEST_CASE_STORAGE_KEY, JSON.stringify(record));
+  } catch {
+    // Ignore blocked storage; the final case file remains playable without persistence.
+  }
+}
+
+function isLocalBestCaseRecord(value: unknown): value is LocalBestCaseRecord {
+  if (!value || typeof value !== "object") return false;
+  const record = value as Record<string, unknown>;
+  return (
+    record.version === 1 &&
+    typeof record.at === "number" &&
+    typeof record.score === "number" &&
+    typeof record.title === "string" &&
+    typeof record.runRating === "string" &&
+    typeof record.lootChain === "number" &&
+    typeof record.relicCount === "number"
+  );
+}
+
+function compareLocalBestCaseRecords(left: LocalBestCaseRecord, right: LocalBestCaseRecord): number {
+  const scoreDelta = left.score - right.score;
+  if (scoreDelta !== 0) return scoreDelta;
+
+  const ratingDelta = localBestRatingValue(left.runRating) - localBestRatingValue(right.runRating);
+  if (ratingDelta !== 0) return ratingDelta;
+
+  const chainDelta = left.lootChain - right.lootChain;
+  if (chainDelta !== 0) return chainDelta;
+
+  return left.relicCount - right.relicCount;
+}
+
+function localBestRatingValue(rating: string): number {
+  if (rating === "S-Rank") return 4;
+  if (rating === "A-Rank") return 3;
+  if (rating === "B-Rank") return 2;
+  if (rating === "C-Rank") return 1;
+  return 0;
+}
+
+function formatLocalBestCaseDetail(record: LocalBestCaseRecord): string {
+  return `Score ${record.score} · ${record.runRating} · chain x${record.lootChain}`;
+}
+
+function buildLocalBestDelta(current: LocalBestCaseRecord, previous: LocalBestCaseRecord | null, isNewBest: boolean): string {
+  if (!previous) return "First record saved";
+  if (isNewBest) return `+${Math.max(0, current.score - previous.score)} over previous`;
+  return `${previous.score - current.score + 1} points to beat`;
 }
 
 export function buildNextRunContracts(summary: MatchSummary): NextRunContract[] {
