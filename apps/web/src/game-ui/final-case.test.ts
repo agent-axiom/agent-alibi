@@ -99,6 +99,17 @@ describe("buildCaseStamp", () => {
       quote: "GremlinBot promised loyalty, then escaped alone with Moon Pearl"
     });
   });
+
+  it("leads the share stamp with an afterburner cashout highlight", () => {
+    expect(
+      buildCaseStamp(
+        summary({
+          afterburnerExitBonus: 1,
+          highlightLines: ["Stole Moon Pearl + Argent Crown"]
+        })
+      ).quote
+    ).toBe("Afterburner cashout +1 · Stole Moon Pearl + Argent Crown");
+  });
 });
 
 describe("buildLocalBestCaseStatus", () => {

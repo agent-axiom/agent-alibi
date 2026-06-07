@@ -470,6 +470,11 @@ export function buildCaseShareText(summary: MatchSummary): string {
 export function buildCaseStamp(summary: MatchSummary) {
   const winner = summary.winnerTeamId === "tie" ? "Tie run" : summary.winnerTeamId === "blue" ? "Blue Crew wins" : "Red Crew wins";
   const resultParts = [winner];
+  const baseQuote = summary.highlightLines?.[0] ?? buildRematchHook(summary);
+  const quote =
+    summary.afterburnerExitBonus && summary.afterburnerExitBonus > 0
+      ? `Afterburner cashout +${summary.afterburnerExitBonus}${baseQuote ? ` · ${baseQuote}` : ""}`
+      : baseQuote;
 
   if (summary.runRating) {
     resultParts.push(summary.runRating);
@@ -483,7 +488,7 @@ export function buildCaseStamp(summary: MatchSummary) {
     kicker: "Agent Alibi Case File",
     title: summary.title,
     result: resultParts.join(" · "),
-    quote: summary.highlightLines?.[0] ?? buildRematchHook(summary)
+    quote
   };
 }
 
