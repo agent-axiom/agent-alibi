@@ -118,6 +118,21 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(objectiveCompass.getByText(/follow cyan ring/i)).toBeVisible();
   const scorePopup = page.getByLabel(/score popup/i);
   await expect(scorePopup.getByText(/\+3 moon pearl/i)).toBeVisible();
+  const cashoutSurge = page.getByLabel(/cashout surge/i);
+  await expect(cashoutSurge.getByText(/run to lift/i)).toBeVisible();
+  await expect(cashoutSurge.getByText(/bank \+5/i)).toBeVisible();
+  await expect(cashoutSurge.getByText(/\d+s before scans/i)).toBeVisible();
+  await expect(cashoutSurge.getByText(/cashout or greed/i)).toBeVisible();
+  const cashoutSurgeState = await page.evaluate(() => {
+    const surge = document.querySelector(`[aria-label="Cashout surge"]`);
+    const objective = document.querySelector(`[aria-label="Current objective"]`);
+    return {
+      pointerEvents: surge ? getComputedStyle(surge).pointerEvents : null,
+      objectiveCut: objective ? objective.scrollHeight > objective.clientHeight + 2 : true,
+      present: Boolean(surge)
+    };
+  });
+  expect(cashoutSurgeState).toEqual({ pointerEvents: "none", objectiveCut: false, present: true });
   await expect(page.locator(".arcade-shell")).not.toHaveClass(/compact-opening/);
   await expect(openingContract).toBeHidden();
   await expect(page.getByLabel(/live agents/i)).toBeVisible();

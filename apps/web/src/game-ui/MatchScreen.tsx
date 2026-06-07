@@ -56,6 +56,13 @@ export function MatchScreen({ match, soundEnabled = false, onToggleSound }: Matc
     const visibleRivalBark = countdownPulseActive ? null : (hud?.rivalBark ?? null);
     const breachAlert = visibleRivalBark?.agentName === "Red Crew" && /breach live/i.test(visibleRivalBark.line);
     const stealComplete = (hud?.lootValue ?? 0) > 0 || (hud?.artifactsStolen ?? 0) > 0;
+    const cashoutSurge =
+      carriedLoot && hud?.escapePayout && hud.scorePopup?.tone === "loot"
+        ? {
+            cashout: hud.escapePayout.cashout,
+            seconds: extractStatusSeconds(hud.rivalStatus)
+          }
+        : null;
     const cashoutCurrent = Boolean(hud?.canEscape) || countdownPulseActive;
     const heatCurrent = threatCueActive && !cashoutCurrent;
     const contractCurrent = !stealComplete ? "steal" : cashoutCurrent ? "cashout" : heatCurrent ? "heat" : "steal";
@@ -107,6 +114,13 @@ export function MatchScreen({ match, soundEnabled = false, onToggleSound }: Matc
         </Suspense>
         <div className="arcade-vignette" />
         {breachAlert ? <div className="arcade-breach-pulse" aria-label="Breach alert pulse" /> : null}
+        {cashoutSurge ? (
+          <div className="arcade-cashout-surge" aria-label="Cashout surge" aria-live="polite">
+            <span>Run to lift</span>
+            <strong>Bank +{cashoutSurge.cashout}</strong>
+            <small>{cashoutSurge.seconds}s before scans · cashout or greed</small>
+          </div>
+        ) : null}
         {scanLockActive ? (
           <div className="arcade-scan-lock-pulse" aria-label="Scan lock pulse">
             <span>Scan lock</span>
@@ -568,4 +582,9 @@ function formatClock(ms: number): string {
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
   return `${minutes}:${seconds.toString().padStart(2, "0")}`;
+}
+
+function extractStatusSeconds(status: string | undefined): number {
+  const match = status?.match(/(\d+)s/);
+  return match ? Number(match[1]) : 0;
 }
