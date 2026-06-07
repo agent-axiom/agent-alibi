@@ -427,6 +427,7 @@ test("stealing a relic gives the player a short cashout speed surge", async ({ p
     })
   );
   expect(surge?.multiplier).toBeGreaterThan(1.3);
+  await expect(page.locator(".arcade-shell")).toHaveClass(/afterburner-active/);
   const cashoutSurge = page.getByLabel(/cashout surge/i);
   await expect(cashoutSurge.getByText(/afterburner x2\.05/i)).toBeVisible();
   await expect(cashoutSurge.getByText(/\d+s boost/i)).toBeVisible();
