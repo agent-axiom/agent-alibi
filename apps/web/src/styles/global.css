@@ -736,6 +736,46 @@ p {
   line-height: 1.15;
 }
 
+.next-run-contracts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 10px;
+}
+
+.next-run-contract {
+  min-height: 112px;
+  display: grid;
+  align-content: center;
+  gap: 7px;
+  border: 2px solid #171717;
+  border-radius: 8px;
+  padding: 14px;
+  background: #fffaf2;
+  color: #171717;
+  box-shadow: 0 8px 0 rgba(132, 165, 157, 0.32);
+}
+
+.next-run-contract span {
+  color: #0f7b75;
+  font-size: 0.74rem;
+  font-weight: 950;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.next-run-contract strong {
+  overflow-wrap: anywhere;
+  font-size: clamp(1.05rem, 2vw, 1.42rem);
+  line-height: 1.05;
+  text-transform: uppercase;
+}
+
+.next-run-contract small {
+  color: #51453f;
+  font-weight: 850;
+  line-height: 1.22;
+}
+
 .final-rating {
   border-color: #ffd56a;
   background: #171717;
@@ -863,7 +903,8 @@ p {
 }
 
 .final-shell .case-highlight,
-.final-shell .rematch-hook {
+.final-shell .rematch-hook,
+.final-shell .next-run-contract {
   border-color: rgba(76, 244, 240, 0.4);
   background:
     linear-gradient(180deg, rgba(10, 14, 28, 0.98), rgba(8, 10, 20, 0.98)),
@@ -873,6 +914,18 @@ p {
 
 .final-shell .rematch-hook {
   border-left-color: #ffd56a;
+}
+
+.final-shell .next-run-contract span {
+  color: #7effdf;
+}
+
+.final-shell .next-run-contract strong {
+  color: #ffffff;
+}
+
+.final-shell .next-run-contract small {
+  color: #bceff2;
 }
 
 .final-shell .case-file pre {

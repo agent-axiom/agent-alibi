@@ -10,6 +10,12 @@ type FinalCaseFileProps = {
   onHome: () => void;
 };
 
+export type NextRunContract = {
+  label: string;
+  title: string;
+  detail: string;
+};
+
 export function FinalCaseFile({ summary, soundEnabled = false, onToggleSound, onRematch, onHome }: FinalCaseFileProps) {
   const [copied, setCopied] = useState(false);
   const blueScore = summary.teamScores.find((score) => score.teamId === "blue");
@@ -18,6 +24,7 @@ export function FinalCaseFile({ summary, soundEnabled = false, onToggleSound, on
   const escapeBonus = blueScore?.escape ?? 0;
   const finalPopupDetail = (blueScore?.loot ?? 0) > 0 ? `Cashout ${(blueScore?.loot ?? 0) + escapeBonus}` : "No relics banked";
   const rematchHook = buildRematchHook(summary);
+  const nextRunContracts = buildNextRunContracts(summary);
   const scoreMargin = buildScoreMarginLabel(summary.teamScores);
   const caseStamp = buildCaseStamp(summary);
 
@@ -132,6 +139,15 @@ export function FinalCaseFile({ summary, soundEnabled = false, onToggleSound, on
         <section className="rematch-hook" aria-label="Rematch hook">
           <strong>{rematchHook}</strong>
         </section>
+        <section className="next-run-contracts" aria-label="Next run contracts">
+          {nextRunContracts.map((contract) => (
+            <div className="next-run-contract" key={`${contract.label}-${contract.title}`}>
+              <span>{contract.label}</span>
+              <strong>{contract.title}</strong>
+              <small>{contract.detail}</small>
+            </div>
+          ))}
+        </section>
         <pre>{summary.caseFile}</pre>
         <div className="final-actions">
           {onToggleSound ? (
@@ -180,6 +196,112 @@ export function buildRematchHook(summary: MatchSummary): string {
   }
 
   return "Next run: run it back and make the case file louder.";
+}
+
+export function buildNextRunContracts(summary: MatchSummary): NextRunContract[] {
+  const blueScore = summary.teamScores.find((score) => score.teamId === "blue");
+  const redScore = summary.teamScores.find((score) => score.teamId === "red");
+  const redWon = summary.winnerTeamId === "red" || (redScore?.total ?? 0) > (blueScore?.total ?? 0);
+  const emptyEscape = (blueScore?.escape ?? 0) > 0 && (blueScore?.loot ?? 0) <= 0;
+  const redHasRelics = (summary.rivalRelicNames?.length ?? 0) > 0 || (summary.pendingRivalRelicNames?.length ?? 0) > 0;
+
+  if (redWon || redHasRelics) {
+    return [
+      {
+        label: "Carrier hunt",
+        title: "Deny Red loot",
+        detail: "Intercept the carrier before the Atrium Lift."
+      },
+      {
+        label: "Tempo",
+        title: "Score first",
+        detail: "Steal Moon Pearl before rival routes wake."
+      },
+      {
+        label: "Cashout",
+        title: "Bank the swing",
+        detail: "Escape with recovered loot before lockdown."
+      }
+    ];
+  }
+
+  if (emptyEscape) {
+    return [
+      {
+        label: "Relic first",
+        title: "Steal before lift",
+        detail: "Grab Moon Pearl before calling the escape."
+      },
+      {
+        label: "Value",
+        title: "Bank one relic",
+        detail: "Turn the escape bonus into a real cashout."
+      },
+      {
+        label: "Route",
+        title: "Follow gold",
+        detail: "Use the target beam until the first score lands."
+      }
+    ];
+  }
+
+  if (summary.runRating === "S-Rank" && summary.greedRoute === "successful" && (summary.lootChain ?? 1) > 1) {
+    return [
+      {
+        label: "Speedrun",
+        title: "Beat your case",
+        detail: "Cashout faster without losing the loot chain."
+      },
+      {
+        label: "Clean play",
+        title: "No scan burns",
+        detail: "Jam or dodge every rival scan."
+      },
+      {
+        label: "Encore",
+        title: "Greed route encore",
+        detail: "Press G after Moon Pearl and bank the chain again."
+      }
+    ];
+  }
+
+  if (summary.runRating && summary.runRating !== "S-Rank") {
+    return [
+      {
+        label: "Rank push",
+        title: "Chase S-Rank",
+        detail: "Cashout faster and keep the alarm low."
+      },
+      {
+        label: "Clean exit",
+        title: "Avoid scan burns",
+        detail: "Use alibi pulse before the meter spikes."
+      },
+      {
+        label: "Risk",
+        title: "Try greed route",
+        detail: "Press G after Moon Pearl for a louder case."
+      }
+    ];
+  }
+
+  return [
+    {
+      label: "Tempo",
+      title: "Score first",
+      detail: "Turn the opening route into immediate loot."
+    },
+    {
+      label: "Cashout",
+      title: "Run to lift",
+      detail: "Bank the relic before Red finds an angle."
+    },
+    {
+      label: "Style",
+      title: "Make it louder",
+      detail: "Chain one more relic or deny a carrier."
+    }
+  ];
 }
 
 export function buildCaseShareText(summary: MatchSummary): string {
