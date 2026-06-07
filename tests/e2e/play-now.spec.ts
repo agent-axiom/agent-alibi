@@ -93,6 +93,14 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(page.getByText(/press e \/ space to steal/i)).toBeVisible();
   await expect(page.getByLabel(/active action/i).getByText(/e \/ space/i)).toBeVisible();
   await expect(page.getByLabel(/active action/i).getByText(/steal moon pearl \+3/i)).toBeVisible();
+  const stealPrompt = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().interactionPrompt);
+  expect(stealPrompt).toEqual(
+    expect.objectContaining({
+      visible: true,
+      key: "E / Space",
+      label: "Steal Moon Pearl +3"
+    })
+  );
   await page.keyboard.press("KeyE");
   await expect(objectiveBanner.getByText(/escape with 3 loot/i)).toBeVisible();
   await expect(objectiveBanner.getByText(/cashout 5 or risk greed route/i)).toBeVisible();
