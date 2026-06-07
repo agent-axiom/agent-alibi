@@ -234,6 +234,10 @@ export function buildRematchHook(summary: MatchSummary): string {
     return "Next run: deny the carrier before Red reaches the Atrium Lift.";
   }
 
+  if (summary.carrierIntercepts && summary.carrierIntercepts > 0) {
+    return "Next run: bait another Red carrier run, then deny the lift again.";
+  }
+
   if ((blueScore?.escape ?? 0) > 0 && (blueScore?.loot ?? 0) <= 0) {
     return "Next run: steal one relic before you call the lift.";
   }

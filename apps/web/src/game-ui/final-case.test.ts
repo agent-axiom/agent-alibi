@@ -41,6 +41,19 @@ describe("buildRematchHook", () => {
     ).toBe("Next run: deny the carrier before Red reaches the Atrium Lift.");
   });
 
+  it("turns a won carrier intercept into a denial encore prompt", () => {
+    expect(
+      buildRematchHook(
+        summary({
+          carrierIntercepts: 1,
+          interceptedRelicNames: ["Moon Pearl"],
+          lootChain: 1,
+          runRating: "S-Rank"
+        })
+      )
+    ).toBe("Next run: bait another Red carrier run, then deny the lift again.");
+  });
+
   it("turns a non-perfect blue win into an S-Rank chase prompt", () => {
     expect(buildRematchHook(summary({ runRating: "A-Rank", styleBonus: 2 }))).toBe("Next run: chase S-Rank with a faster, lower-alarm cashout.");
   });
