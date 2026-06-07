@@ -28,7 +28,8 @@ export function App() {
     isArcade: Boolean(localMatch.arcade?.enabled),
     alarm: arcadeHud?.alarm ?? localMatch.state?.alarm,
     timeLeftMs: arcadeHud?.timeLeftMs,
-    boostActive: Boolean(arcadeHud?.lootSpeedSurge)
+    boostActive: Boolean(arcadeHud?.lootSpeedSurge),
+    rivalPressureActive: Boolean((arcadeHud?.aiLootValue ?? 0) > 0 || arcadeHud?.rivalIntercept || arcadeHud?.lastRivalSteal)
   });
   const music = useDynamicMusic(musicTrack, soundEnabled);
   useMissionStingers({

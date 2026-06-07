@@ -7,6 +7,7 @@ export type MusicSelectionInput = {
   alarm?: number;
   timeLeftMs?: number;
   boostActive?: boolean;
+  rivalPressureActive?: boolean;
 };
 
 const LOCKDOWN_TIME_MS = 30_000;
@@ -31,7 +32,7 @@ export function selectMusicTrack(input: MusicSelectionInput): MusicTrackId | nul
     return "lockdown";
   }
 
-  if (input.boostActive) {
+  if (input.boostActive || input.rivalPressureActive) {
     return "alarm";
   }
 
