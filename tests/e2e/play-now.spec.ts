@@ -426,6 +426,7 @@ test("stealing a relic gives the player a short cashout speed surge", async ({ p
   const cashoutSurge = page.getByLabel(/cashout surge/i);
   await expect(cashoutSurge.getByText(/afterburner x2\.05/i)).toBeVisible();
   await expect(cashoutSurge.getByText(/\d+s boost/i)).toBeVisible();
+  await expect(cashoutSurge.getByText(/afterburner exit \+1/i)).toBeVisible();
   await page.waitForTimeout(160);
   const surgeCamera = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().camera);
   expect(surgeCamera?.zoom).toBeGreaterThan((beforeSurgeCamera?.zoom ?? 0) + 0.02);

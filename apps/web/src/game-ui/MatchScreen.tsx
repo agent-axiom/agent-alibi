@@ -120,9 +120,12 @@ export function MatchScreen({ match, soundEnabled = false, onToggleSound }: Matc
             <span>Run to lift</span>
             <strong>Bank +{cashoutSurge.cashout}</strong>
             {cashoutSurge.afterburner ? (
-              <small className="arcade-cashout-afterburner">
-                Afterburner x{cashoutSurge.afterburner.multiplier.toFixed(2)} · {cashoutSurge.afterburner.secondsLeft}s boost
-              </small>
+              <>
+                <small className="arcade-cashout-afterburner">
+                  Afterburner x{cashoutSurge.afterburner.multiplier.toFixed(2)} · {cashoutSurge.afterburner.secondsLeft}s boost
+                </small>
+                <small className="arcade-cashout-afterburner">Afterburner exit +1</small>
+              </>
             ) : null}
             <small>{cashoutSurge.seconds}s before scans · cashout or greed</small>
           </div>
