@@ -54,6 +54,24 @@ describe("buildArcadeMatchSummary", () => {
     expect(summary.caseFile).toContain("Clean exit bonus: +3");
   });
 
+  it("adds an afterburner exit bonus for cashout during boost", () => {
+    const summary = buildArcadeMatchSummary({
+      outcome: "escaped",
+      playerName: "Agent You",
+      lootValue: 3,
+      artifactsStolen: 1,
+      aiLootValue: 0,
+      alarm: 2,
+      elapsedMs: 42_000,
+      afterburnerExit: true
+    });
+
+    expect(summary.afterburnerExitBonus).toBe(1);
+    expect(summary.teamScores.find((score) => score.teamId === "blue")?.total).toBe(9);
+    expect(summary.highlightLines).toContain("Afterburner exit +1");
+    expect(summary.caseFile).toContain("Afterburner Exit Bonus: +1");
+  });
+
   it("records a successful greed route in the shareable case file", () => {
     const summary = buildArcadeMatchSummary({
       outcome: "escaped",

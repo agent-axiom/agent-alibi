@@ -100,6 +100,13 @@ export function FinalCaseFile({ summary, soundEnabled = false, onToggleSound, on
               <small>{summary.styleBonus ? `Clean exit bonus +${summary.styleBonus}` : "No clean bonus"}</small>
             </div>
           ) : null}
+          {summary.afterburnerExitBonus && summary.afterburnerExitBonus > 0 ? (
+            <div className="final-score final-afterburner">
+              <span>Afterburner Exit</span>
+              <strong>+{summary.afterburnerExitBonus}</strong>
+              <small>Boost cashout</small>
+            </div>
+          ) : null}
           {summary.lootChain && summary.lootChain > 1 ? (
             <div className="final-score final-chain">
               <span>Loot Chain</span>

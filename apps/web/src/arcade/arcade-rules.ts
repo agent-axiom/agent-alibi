@@ -17,6 +17,7 @@ export type ArcadeMissionResult = {
   scanBurns?: number;
   carrierIntercepts?: number;
   interceptedRelicNames?: string[];
+  afterburnerExit?: boolean;
 };
 
 export type ArcadeRunRating = {
@@ -37,12 +38,13 @@ export function buildArcadeMatchSummary(result: ArcadeMissionResult): MatchSumma
   const scanBurns = result.scanBurns ?? 0;
   const carrierIntercepts = result.carrierIntercepts ?? 0;
   const interceptedRelicNames = result.interceptedRelicNames ?? [];
+  const afterburnerExitBonus = escaped && result.afterburnerExit ? 1 : 0;
   const blueScore: TeamScore = {
     teamId: "blue",
     loot: result.lootValue,
     escape: escaped ? 2 : 0,
     penalties: bluePenalty,
-    total: result.lootValue + (escaped ? 2 : 0) + bluePenalty + styleBonus
+    total: result.lootValue + (escaped ? 2 : 0) + bluePenalty + styleBonus + afterburnerExitBonus
   };
   const redScore: TeamScore = {
     teamId: "red",
@@ -57,6 +59,7 @@ export function buildArcadeMatchSummary(result: ArcadeMissionResult): MatchSumma
     result,
     title,
     styleBonus,
+    afterburnerExitBonus,
     stolenRelicNames,
     interceptedRelicNames,
     pendingRivalRelicNames
@@ -71,6 +74,7 @@ export function buildArcadeMatchSummary(result: ArcadeMissionResult): MatchSumma
     title,
     runRating,
     styleBonus,
+    afterburnerExitBonus,
     lootChain,
     greedRoute,
     stolenRelicNames,
@@ -81,7 +85,7 @@ export function buildArcadeMatchSummary(result: ArcadeMissionResult): MatchSumma
     carrierIntercepts,
     interceptedRelicNames,
     highlightLines,
-    caseFile: buildCaseFile(result, title, blueScore, redScore, runRating, styleBonus)
+    caseFile: buildCaseFile(result, title, blueScore, redScore, runRating, styleBonus, afterburnerExitBonus)
   };
 }
 
@@ -124,6 +128,7 @@ function buildHighlightLines(
   result: ArcadeMissionResult,
   title: string,
   styleBonus: number,
+  afterburnerExitBonus: number,
   stolenRelicNames: string[],
   interceptedRelicNames: string[],
   pendingRivalRelicNames: string[]
@@ -159,7 +164,10 @@ function buildHighlightLines(
   if (styleBonus > 0) {
     lines.push(`Clean exit bonus +${styleBonus}`);
   }
-  return lines.slice(0, 4);
+  if (afterburnerExitBonus > 0) {
+    lines.push(`Afterburner exit +${afterburnerExitBonus}`);
+  }
+  return lines.slice(0, 5);
 }
 
 function isSpecialCaseTitle(title: string): boolean {
@@ -176,7 +184,8 @@ function buildCaseFile(
   blueScore: TeamScore,
   redScore: TeamScore,
   runRating: string,
-  styleBonus: number
+  styleBonus: number,
+  afterburnerExitBonus: number
 ): string {
   const elapsedSeconds = Math.round(result.elapsedMs / 1000);
   const outcomeLine =
@@ -202,6 +211,7 @@ function buildCaseFile(
     `Red Crew: ${redScore.total} (${redScore.loot} rival loot)`,
     `Run Rating: ${runRating}`,
     styleBonus > 0 ? `Clean exit bonus: +${styleBonus}` : "Clean exit bonus: +0",
+    afterburnerExitBonus > 0 ? `Afterburner Exit Bonus: +${afterburnerExitBonus}` : "Afterburner Exit Bonus: +0",
     `Loot Chain: x${Math.max(1, result.artifactsStolen)}`,
     `Greed Route: ${result.artifactsStolen > 1 ? "successful" : "skipped"}`,
     `Relics Stolen: ${result.stolenRelicNames?.length ? result.stolenRelicNames.join(", ") : "none"}`,
