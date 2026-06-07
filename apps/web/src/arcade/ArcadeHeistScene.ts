@@ -54,6 +54,9 @@ const EXTRACTION_SEQUENCE_MS = 920;
 const EXTRACTION_SEQUENCE_RING_COUNT = 5;
 const AMBUSH_NEAR_MISS_ACTIVE_MS = 1_400;
 const AMBUSH_NEAR_MISS_COOLDOWN_MS = 2_400;
+const HUNTER_LOCK_BREAK_ACTIVE_MS = 1_400;
+const HUNTER_LOCK_BREAK_SUPPRESS_MS = 1_700;
+const HUNTER_LOCK_BREAK_COOLDOWN_MS = 2_400;
 
 const TEAM_COLORS: Record<TeamId, number> = {
   blue: 0x4cf4f0,
@@ -202,6 +205,14 @@ type HunterLockOnDebug = {
   coneWidth: number;
 };
 
+type HunterLockBreakDebug = {
+  active: boolean;
+  count: number;
+  label: string;
+  detail?: string;
+  activeMs?: number;
+};
+
 type AmbushNearMissDebug = {
   active: boolean;
   count: number;
@@ -333,6 +344,10 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private ambushNearMissCount = 0;
   private ambushNearMissUntilMs = 0;
   private ambushNearMissCooldownMs = 0;
+  private hunterLockBreakCount = 0;
+  private hunterLockBreakUntilMs = 0;
+  private hunterLockBreakCooldownMs = 0;
+  private hunterLockSuppressedUntilMs = 0;
   private interceptedRelicNames: string[] = [];
   private interceptedLootValue = 0;
   private lastRivalSteal: string | null = null;
@@ -535,6 +550,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       rivalAmbushVector: this.rivalAmbushVectorDebug(),
       rivalHunter: this.rivalHunterDebug(),
       hunterLockOn: this.hunterLockOnDebug(),
+      hunterLockBreak: this.hunterLockBreakDebug(),
       ambushNearMiss: this.ambushNearMissDebug(),
       routeSignal: this.routeSignalDebug(),
       threatHalo: this.threatHaloDebug(),
@@ -704,6 +720,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.alibiPulseCooldownMs = Math.max(0, this.alibiPulseCooldownMs - delta);
     this.securitySweepHitCooldownMs = Math.max(0, this.securitySweepHitCooldownMs - delta);
     this.ambushNearMissCooldownMs = Math.max(0, this.ambushNearMissCooldownMs - delta);
+    this.hunterLockBreakCooldownMs = Math.max(0, this.hunterLockBreakCooldownMs - delta);
 
     this.updatePlayer(delta);
     this.updateMovementCoach();
@@ -794,6 +811,10 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.ambushNearMissCount = 0;
     this.ambushNearMissUntilMs = 0;
     this.ambushNearMissCooldownMs = 0;
+    this.hunterLockBreakCount = 0;
+    this.hunterLockBreakUntilMs = 0;
+    this.hunterLockBreakCooldownMs = 0;
+    this.hunterLockSuppressedUntilMs = 0;
     this.interceptedRelicNames = [];
     this.interceptedLootValue = 0;
     this.lastRivalSteal = null;
@@ -1203,6 +1224,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
         this.addDashShockwave(this.player.x, this.player.y);
         this.cameraKick("dash");
         this.rewardAmbushNearMiss();
+        this.rewardHunterLockBreak();
       }
       this.moveAgent(this.player, vector.x * speed * (delta / 1000), vector.y * speed * (delta / 1000));
       this.player.ship.rotation = Phaser.Math.Angle.Between(0, 0, vector.x, vector.y) + Math.PI / 2;
@@ -2736,7 +2758,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
       !hunter ||
       hunter.carriedRelics.length > 0 ||
       this.lootValue <= 0 ||
-      this.extractionSequenceActive()
+      this.extractionSequenceActive() ||
+      this.elapsedMs < this.hunterLockSuppressedUntilMs
     ) {
       this.clearHunterLockOn();
       return;
@@ -2833,6 +2856,42 @@ export class ArcadeHeistScene extends Phaser.Scene {
       beamCount: Number(this.hunterLockOn.getData("beamCount") ?? 0),
       pipCount: Number(this.hunterLockOn.getData("pipCount") ?? 0),
       coneWidth: Number(this.hunterLockOn.getData("coneWidth") ?? 0)
+    };
+  }
+
+  private rewardHunterLockBreak() {
+    if (!this.player || this.hunterLockBreakCooldownMs > 0) return;
+
+    const lockOn = this.hunterLockOnDebug();
+    if (!lockOn.visible || lockOn.status !== "danger") return;
+
+    this.hunterLockBreakCount += 1;
+    this.hunterLockBreakUntilMs = this.elapsedMs + HUNTER_LOCK_BREAK_ACTIVE_MS;
+    this.hunterLockSuppressedUntilMs = this.elapsedMs + HUNTER_LOCK_BREAK_SUPPRESS_MS;
+    this.hunterLockBreakCooldownMs = HUNTER_LOCK_BREAK_COOLDOWN_MS;
+    this.clearHunterLockOn();
+    this.flashSpotlight("Lock broken");
+    this.flashScorePopup({
+      tone: "bonus",
+      label: "Lock broken",
+      detail: "Dash broke Rook's scan"
+    });
+    this.flashArenaCallout("dodge", "LOCK BROKEN", this.player.x, this.player.y - 48, 0x7effdf);
+    this.feedLine("Lock broken. Your dash cut Rook's scan.");
+    this.impactPulse("dodge", this.player.x, this.player.y);
+  }
+
+  private hunterLockBreakDebug(): HunterLockBreakDebug {
+    if (this.elapsedMs >= this.hunterLockBreakUntilMs) {
+      return { active: false, count: this.hunterLockBreakCount, label: "" };
+    }
+
+    return {
+      active: true,
+      count: this.hunterLockBreakCount,
+      label: "Lock broken",
+      detail: "Dash broke Rook's scan",
+      activeMs: Math.max(0, Math.round(this.hunterLockBreakUntilMs - this.elapsedMs))
     };
   }
 

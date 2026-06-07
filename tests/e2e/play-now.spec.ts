@@ -740,6 +740,49 @@ test("hunter lock-on telegraphs Rook's pursuit", async ({ page }) => {
   expect(dangerChase?.distanceMeters).toBeLessThan(dangerStart?.distanceMeters ?? 0);
 });
 
+test("dash breaks an active Rook lock-on", async ({ page }) => {
+  await startSoloArcade(page);
+  await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_STATE__ === "function");
+
+  await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget());
+  await page.keyboard.press("KeyE");
+  await expect(page.getByLabel(/mission radio/i).getByText(/rook locked onto your heat signature/i)).toBeVisible();
+
+  await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.forceRivalsActive?.());
+  const lockBeforeDash = await page.evaluate(() => (window.__AGENT_ALIBI_ARCADE_STATE__?.() as any)?.hunterLockOn);
+  expect(lockBeforeDash).toEqual(
+    expect.objectContaining({
+      visible: true,
+      status: "danger",
+      agentName: "Rook"
+    })
+  );
+
+  await page.keyboard.down("Shift");
+  await page.keyboard.down("ArrowRight");
+  await page.waitForTimeout(140);
+  await page.keyboard.up("ArrowRight");
+  await page.keyboard.up("Shift");
+
+  await expect(page.getByLabel(/score popup/i).getByText(/lock broken/i)).toBeVisible();
+  const broken = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.() as any);
+  expect(broken.hunterLockBreak).toEqual(
+    expect.objectContaining({
+      active: true,
+      count: 1,
+      label: "Lock broken",
+      detail: "Dash broke Rook's scan"
+    })
+  );
+  expect(broken.hunterLockOn).toEqual(
+    expect.objectContaining({
+      visible: false,
+      status: "standby"
+    })
+  );
+  expect(broken.lastImpact?.kind).toBe("dodge");
+});
+
 test("first score triggers a visible rival breach cut-in", async ({ page }) => {
   await startSoloArcade(page);
   await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget === "function");
