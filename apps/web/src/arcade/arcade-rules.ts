@@ -175,6 +175,10 @@ function isSpecialCaseTitle(title: string): boolean {
   return title === "Carrier Denied" || title === "Lift Denied";
 }
 
+function formatRelicCount(count: number): string {
+  return count + " relic" + (count === 1 ? "" : "s");
+}
+
 function cashoutBankedValue(result: Pick<ArcadeMissionResult, "outcome" | "lootValue">): number {
   return result.outcome === "escaped" ? result.lootValue + 2 : 0;
 }
@@ -196,7 +200,7 @@ function buildCaseFile(
   const outcomeLine =
     result.outcome === "escaped"
       ? result.lootValue > 0
-        ? `${result.playerName} escaped with ${result.artifactsStolen} relics before lockdown.`
+        ? result.playerName + " escaped with " + formatRelicCount(result.artifactsStolen) + " before lockdown."
         : `${result.playerName} escaped empty-handed before lockdown.`
       : result.outcome === "sealed"
         ? "Vault sealed before the crew could reach the exit."
