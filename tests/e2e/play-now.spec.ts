@@ -7,6 +7,31 @@ async function startSoloArcade(page: Page) {
   await expect(page.getByLabel(/playable moon vault arcade scene/i)).toBeVisible();
 }
 
+test("home screen surfaces the saved best case target", async ({ page }) => {
+  await page.goto("/");
+  await page.evaluate(() => {
+    localStorage.setItem(
+      "agent-alibi:best-case:v1",
+      JSON.stringify({
+        version: 1,
+        at: 123,
+        score: 12,
+        title: "Profitable Disaster",
+        runRating: "S-Rank",
+        lootChain: 2,
+        relicCount: 2
+      })
+    );
+  });
+  await page.reload();
+
+  const savedBest = page.getByLabel(/saved best case/i);
+  await expect(savedBest.getByText(/best case/i)).toBeVisible();
+  await expect(savedBest.getByText(/profitable disaster/i)).toBeVisible();
+  await expect(savedBest.getByText(/score 12 · s-rank · chain x2/i)).toBeVisible();
+  await expect(savedBest.getByText(/beat your case/i)).toBeVisible();
+});
+
 test("solo match starts and reaches final case file", async ({ page }) => {
   await startSoloArcade(page);
 

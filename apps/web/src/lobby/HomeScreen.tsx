@@ -1,5 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import { Volume2, VolumeX } from "lucide-react";
+import { useState } from "react";
+import { LOCAL_BEST_CASE_STORAGE_KEY, parseLocalBestCaseRecord, type LocalBestCaseRecord } from "../game-ui/FinalCaseFile";
 
 type HomeAction = {
   label: string;
@@ -15,6 +17,7 @@ type HomeScreenProps = {
 
 export function HomeScreen({ actions, soundEnabled, onToggleSound }: HomeScreenProps) {
   const SoundIcon = soundEnabled ? Volume2 : VolumeX;
+  const [savedBestCase] = useState(readSavedBestCase);
 
   return (
     <main className="home-shell">
@@ -39,6 +42,14 @@ export function HomeScreen({ actions, soundEnabled, onToggleSound }: HomeScreenP
             Pick a plan, watch agents lie through lasers, steal lunar relics, and escape before the vault seals.
           </p>
         </div>
+        {savedBestCase ? (
+          <section className="home-best-case" aria-label="Saved best case">
+            <span>Best case</span>
+            <strong>{savedBestCase.title}</strong>
+            <small>{formatSavedBestCase(savedBestCase)}</small>
+            <em>Beat your case</em>
+          </section>
+        ) : null}
         <div className="home-actions">
           {actions.map((action) => {
             const Icon = action.icon;
@@ -53,4 +64,17 @@ export function HomeScreen({ actions, soundEnabled, onToggleSound }: HomeScreenP
       </section>
     </main>
   );
+}
+
+function readSavedBestCase(): LocalBestCaseRecord | null {
+  if (typeof window === "undefined") return null;
+  try {
+    return parseLocalBestCaseRecord(window.localStorage.getItem(LOCAL_BEST_CASE_STORAGE_KEY));
+  } catch {
+    return null;
+  }
+}
+
+function formatSavedBestCase(record: LocalBestCaseRecord): string {
+  return `Score ${record.score} · ${record.runRating} · chain x${record.lootChain}`;
 }

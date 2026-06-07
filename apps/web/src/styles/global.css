@@ -291,6 +291,49 @@ p {
   font-size: clamp(1.05rem, 1.8vw, 1.35rem);
 }
 
+.home-best-case {
+  width: min(520px, 100%);
+  display: grid;
+  gap: 7px;
+  border: 1px solid rgba(255, 213, 106, 0.58);
+  border-radius: 8px;
+  padding: 13px 15px;
+  background:
+    linear-gradient(135deg, rgba(15, 58, 54, 0.74), rgba(7, 16, 28, 0.86)),
+    linear-gradient(90deg, rgba(255, 213, 106, 0.14), transparent);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.24), 0 0 24px rgba(255, 213, 106, 0.1);
+}
+
+.home-best-case span,
+.home-best-case small,
+.home-best-case em {
+  font-size: 0.74rem;
+  font-style: normal;
+  font-weight: 950;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.home-best-case span {
+  color: #ffd56a;
+}
+
+.home-best-case strong {
+  overflow-wrap: anywhere;
+  color: #ffffff;
+  font-size: clamp(1.02rem, 2vw, 1.34rem);
+  line-height: 1.05;
+  text-transform: uppercase;
+}
+
+.home-best-case small {
+  color: #d8fcff;
+}
+
+.home-best-case em {
+  color: #7effdf;
+}
+
 .home-shell .home-actions {
   width: min(520px, 100%);
   display: grid;
