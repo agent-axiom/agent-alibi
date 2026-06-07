@@ -66,6 +66,27 @@ p {
     linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.22));
 }
 
+.final-shell.afterburner-finish {
+  background:
+    linear-gradient(180deg, rgba(4, 13, 20, 0.98), rgba(8, 15, 31, 0.98)),
+    repeating-linear-gradient(90deg, rgba(126, 255, 223, 0.1) 0 1px, transparent 1px 62px),
+    repeating-linear-gradient(0deg, rgba(255, 213, 106, 0.08) 0 1px, transparent 1px 52px),
+    #050811;
+}
+
+.final-shell.afterburner-finish::after {
+  content: "";
+  position: absolute;
+  inset: -20%;
+  pointer-events: none;
+  background:
+    linear-gradient(112deg, transparent 0 43%, rgba(126, 255, 223, 0.18) 48%, rgba(255, 213, 106, 0.12) 51%, transparent 57%),
+    repeating-linear-gradient(112deg, transparent 0 22px, rgba(126, 255, 223, 0.08) 22px 24px);
+  opacity: 0;
+  transform: translateX(-18%);
+  animation: final-afterburner-sweep 1.8s ease-out both;
+}
+
 .final-shell > * {
   position: relative;
   z-index: 1;
@@ -996,6 +1017,12 @@ p {
 
 .final-shell .final-score small {
   color: #bceff2;
+}
+
+.final-shell.afterburner-finish .case-stamp,
+.final-shell.afterburner-finish .final-afterburner {
+  border-color: rgba(126, 255, 223, 0.9);
+  box-shadow: 0 8px 0 rgba(126, 255, 223, 0.22), 0 0 42px rgba(126, 255, 223, 0.22), 0 0 18px rgba(255, 213, 106, 0.16);
 }
 
 .final-shell .final-margin,
@@ -2468,6 +2495,52 @@ p {
 
 .final-score-popup {
   top: 24px;
+}
+
+.final-shell.afterburner-finish .final-score-popup {
+  border-color: rgba(126, 255, 223, 0.92);
+  box-shadow: 0 22px 54px rgba(0, 0, 0, 0.42), 0 0 38px rgba(126, 255, 223, 0.34), 0 0 18px rgba(255, 213, 106, 0.24);
+  animation: final-afterburner-popup-hit 1.8s ease both;
+}
+
+@keyframes final-afterburner-sweep {
+  0% {
+    opacity: 0;
+    transform: translateX(-24%);
+  }
+
+  18%,
+  58% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateX(18%);
+  }
+}
+
+@keyframes final-afterburner-popup-hit {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(14px) scale(0.92);
+  }
+
+  12% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1.08);
+  }
+
+  38%,
+  78% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-8px) scale(0.99);
+  }
 }
 
 .arcade-rival-bark {

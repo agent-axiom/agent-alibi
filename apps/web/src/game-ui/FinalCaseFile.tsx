@@ -53,6 +53,7 @@ export function FinalCaseFile({ summary, soundEnabled = false, onToggleSound, on
   const nextRunContracts = buildNextRunContracts(summary);
   const scoreMargin = buildScoreMarginLabel(summary.teamScores);
   const caseStamp = buildCaseStamp(summary);
+  const afterburnerFinish = Boolean(summary.afterburnerExitBonus && summary.afterburnerExitBonus > 0);
 
   useEffect(() => {
     if (bestCase.isNewBest) {
@@ -66,7 +67,7 @@ export function FinalCaseFile({ summary, soundEnabled = false, onToggleSound, on
   }
 
   return (
-    <main className="final-shell">
+    <main className={`final-shell ${afterburnerFinish ? "afterburner-finish" : ""}`}>
       {escapeBonus > 0 ? (
         <div className="arcade-score-popup bonus final-score-popup" aria-label="Score popup" aria-live="polite">
           <strong>+{escapeBonus} Escape bonus</strong>
