@@ -340,8 +340,9 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(nextRunContracts.getByText(/beat your case/i)).toBeVisible();
   await expect(nextRunContracts.getByText(/clean play/i)).toBeVisible();
   await expect(nextRunContracts.getByText(/no scan burns/i)).toBeVisible();
-  await expect(nextRunContracts.getByText("Encore", { exact: true })).toBeVisible();
-  await expect(nextRunContracts.getByText(/greed route encore/i)).toBeVisible();
+  await expect(nextRunContracts.getByText("Boost", { exact: true })).toBeVisible();
+  await expect(nextRunContracts.getByText(/afterburner encore/i)).toBeVisible();
+  await expect(nextRunContracts.getByText(/cashout before the boost dies/i)).toBeVisible();
   const finalSoundOn = page.getByRole("button", { name: /sound on/i });
   await expect(finalSoundOn).toBeVisible();
   await finalSoundOn.click();
