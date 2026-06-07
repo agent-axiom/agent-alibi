@@ -693,6 +693,53 @@ test("rival agents stay visually staged until the breach starts", async ({ page 
   expect(hunterChase?.distanceMeters).toBeLessThan(hunterStart?.distanceMeters ?? 0);
 });
 
+test("hunter lock-on telegraphs Rook's pursuit", async ({ page }) => {
+  await startSoloArcade(page);
+  await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_STATE__ === "function");
+
+  const staged = await page.evaluate(() => (window.__AGENT_ALIBI_ARCADE_STATE__?.() as any)?.hunterLockOn);
+  expect(staged).toEqual({ visible: false, label: "", agentName: "", targetLabel: "", status: "standby", distanceMeters: 0, beamCount: 0, pipCount: 0, coneWidth: 0 });
+
+  await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget());
+  await page.keyboard.press("KeyE");
+  await expect(page.getByLabel(/mission radio/i).getByText(/rook locked onto your heat signature/i)).toBeVisible();
+
+  const warming = await page.evaluate(() => (window.__AGENT_ALIBI_ARCADE_STATE__?.() as any)?.hunterLockOn);
+  expect(warming).toEqual(
+    expect.objectContaining({
+      visible: true,
+      label: "HUNTER LOCK",
+      agentName: "Rook",
+      targetLabel: "YOU",
+      status: "warming",
+      distanceMeters: expect.any(Number),
+      beamCount: 2,
+      pipCount: expect.any(Number)
+    })
+  );
+  expect(warming?.distanceMeters).toBeGreaterThan(0);
+  expect(warming?.pipCount).toBeGreaterThan(0);
+  expect(warming?.coneWidth).toBeGreaterThan(40);
+
+  await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.forceRivalsActive?.());
+  const dangerStart = await page.evaluate(() => (window.__AGENT_ALIBI_ARCADE_STATE__?.() as any)?.hunterLockOn);
+  await page.waitForTimeout(700);
+  const dangerChase = await page.evaluate(() => (window.__AGENT_ALIBI_ARCADE_STATE__?.() as any)?.hunterLockOn);
+
+  expect(dangerStart).toEqual(
+    expect.objectContaining({
+      visible: true,
+      label: "HUNTER LOCK",
+      agentName: "Rook",
+      targetLabel: "YOU",
+      status: "danger",
+      beamCount: 3
+    })
+  );
+  expect(dangerChase?.status).toBe("danger");
+  expect(dangerChase?.distanceMeters).toBeLessThan(dangerStart?.distanceMeters ?? 0);
+});
+
 test("first score triggers a visible rival breach cut-in", async ({ page }) => {
   await startSoloArcade(page);
   await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget === "function");
