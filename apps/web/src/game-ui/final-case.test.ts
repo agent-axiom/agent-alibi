@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { MatchSummary } from "@agent-alibi/shared";
-import { buildCaseShareText, buildCaseStamp, buildRematchHook, buildScoreMarginLabel } from "./FinalCaseFile";
+import { buildCaseShareText, buildCaseStamp, buildNextRunContracts, buildRematchHook, buildScoreMarginLabel } from "./FinalCaseFile";
 
 function summary(overrides: Partial<MatchSummary> = {}): MatchSummary {
   return {
@@ -89,6 +89,38 @@ describe("buildCaseStamp", () => {
       result: "Blue Crew wins · S-Rank · Loot chain x2",
       quote: "GremlinBot promised loyalty, then escaped alone with Moon Pearl"
     });
+  });
+});
+
+describe("buildNextRunContracts", () => {
+  it("turns an S-Rank greed route into three replay goals", () => {
+    expect(
+      buildNextRunContracts(
+        summary({
+          runRating: "S-Rank",
+          lootChain: 2,
+          greedRoute: "successful",
+          scanBurns: 0,
+          stolenRelicNames: ["Moon Pearl", "Argent Crown"]
+        })
+      )
+    ).toEqual([
+      {
+        label: "Speedrun",
+        title: "Beat your case",
+        detail: "Cashout faster without losing the loot chain."
+      },
+      {
+        label: "Clean play",
+        title: "No scan burns",
+        detail: "Jam or dodge every rival scan."
+      },
+      {
+        label: "Encore",
+        title: "Greed route encore",
+        detail: "Press G after Moon Pearl and bank the chain again."
+      }
+    ]);
   });
 });
 

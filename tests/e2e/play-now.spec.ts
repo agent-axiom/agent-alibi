@@ -274,6 +274,13 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(page.getByText(/cashout banked: \+8/i)).toBeVisible();
   await expect(page.getByLabel(/rematch hook/i).getByText(/run it back and make the case file louder/i)).toBeVisible();
   await expect(page.getByText(/relics stolen: moon pearl, argent crown/i)).toBeVisible();
+  const nextRunContracts = page.getByLabel(/next run contracts/i);
+  await expect(nextRunContracts.getByText(/speedrun/i)).toBeVisible();
+  await expect(nextRunContracts.getByText(/beat your case/i)).toBeVisible();
+  await expect(nextRunContracts.getByText(/clean play/i)).toBeVisible();
+  await expect(nextRunContracts.getByText(/no scan burns/i)).toBeVisible();
+  await expect(nextRunContracts.getByText("Encore", { exact: true })).toBeVisible();
+  await expect(nextRunContracts.getByText(/greed route encore/i)).toBeVisible();
   const finalSoundOn = page.getByRole("button", { name: /sound on/i });
   await expect(finalSoundOn).toBeVisible();
   await finalSoundOn.click();
