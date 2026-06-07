@@ -67,7 +67,11 @@ export function MatchScreen({ match, soundEnabled = false, onToggleSound }: Matc
     const afterburnerActive = Boolean(hud?.lootSpeedSurge);
     const rivalPressureActive = Boolean(redLoot > 0 || hud?.rivalIntercept || hud?.lastRivalSteal);
     const carrierPressureActive = Boolean(hud?.rivalIntercept);
-    const carrierContractLabel = hud?.rivalIntercept ? `Intercept ${hud.rivalIntercept.agentName} +${hud.rivalIntercept.value}` : "Intercept carrier";
+    const carrierContractLabel = hud?.rivalIntercept
+      ? hud.rivalIntercept.urgency === "critical"
+        ? "Stop " + hud.rivalIntercept.agentName + " cashout +" + hud.rivalIntercept.value
+        : "Intercept " + hud.rivalIntercept.agentName + " +" + hud.rivalIntercept.value
+      : "Intercept carrier";
     const cashoutCurrent = Boolean(hud?.canEscape) || countdownPulseActive;
     const heatCurrent = (carrierPressureActive || threatCueActive) && !cashoutCurrent;
     const contractCurrent = carrierPressureActive
