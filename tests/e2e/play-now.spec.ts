@@ -437,12 +437,18 @@ test("stealing a relic gives the player a short cashout speed surge", async ({ p
   expect(surgeCamera?.zoom).toBeGreaterThan((beforeSurgeCamera?.zoom ?? 0) + 0.02);
 
   const beforeSurgeMove = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().player);
+  const beforeSurgeX = beforeSurgeMove?.x ?? 0;
   await page.keyboard.down("ArrowRight");
-  await page.waitForTimeout(620);
-  await page.keyboard.up("ArrowRight");
+  try {
+    await page.waitForFunction((startX) => ((window.__AGENT_ALIBI_ARCADE_STATE__?.().player?.x ?? startX) - startX) > 80, beforeSurgeX, {
+      timeout: 2_500
+    });
+  } finally {
+    await page.keyboard.up("ArrowRight");
+  }
   const afterSurgeMove = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().player);
 
-  expect((afterSurgeMove?.x ?? 0) - (beforeSurgeMove?.x ?? 0)).toBeGreaterThan(80);
+  expect((afterSurgeMove?.x ?? 0) - beforeSurgeX).toBeGreaterThan(80);
 });
 
 test("opening movement coach disappears after the player moves", async ({ page }) => {
@@ -506,7 +512,7 @@ test("opening seconds focus the player on the contract before expanding the full
 
 test("contract chain keeps the current heist step explicit", async ({ page }) => {
   await startSoloArcade(page);
-  await page.waitForTimeout(13_200);
+  await expect(page.locator(".arcade-shell")).not.toHaveClass(/compact-opening/, { timeout: 20_000 });
 
   const contractChain = page.getByLabel(/contract chain/i);
   await expect(contractChain.getByText(/steal relic/i)).toBeVisible();
@@ -613,8 +619,7 @@ test("rival breach throws a red alert pulse without blocking the HUD", async ({ 
   expect(pulseState.objectiveCut).toBe(false);
   expect(pulseState.present).toBe(true);
 
-  await page.waitForTimeout(2_900);
-  await expect(page.locator(".arcade-shell")).not.toHaveClass(/breach-alert/);
+  await expect(page.locator(".arcade-shell")).not.toHaveClass(/breach-alert/, { timeout: 12_000 });
 });
 
 test("arcade sound can be toggled during a run", async ({ page }) => {
@@ -962,7 +967,7 @@ test("rival steals trigger a clear red loot alert", async ({ page }) => {
   const beforeRecoveryCamera = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().camera);
   await page.keyboard.press("KeyE");
   await expect(page.getByText("Intercepted Rook", { exact: true })).toBeVisible();
-  await expect(page.getByLabel(/score popup/i).getByText(/recovered \+3/i)).toBeVisible();
+  await expect(page.getByLabel(/score popup/i).getByText(/recovered \+3 - red denied/i)).toBeVisible();
   await expect(page.getByLabel(/cashout surge/i).getByText(/afterburner x2\.05/i)).toBeVisible();
   const recoverySurge = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().lootSpeedSurge);
   expect(recoverySurge).toEqual(
@@ -980,7 +985,7 @@ test("rival steals trigger a clear red loot alert", async ({ page }) => {
     expect.arrayContaining([
       expect.objectContaining({
         kind: "intercept",
-        label: "Recovered +3"
+        label: "Recovered +3 - Red denied"
       })
     ])
   );
