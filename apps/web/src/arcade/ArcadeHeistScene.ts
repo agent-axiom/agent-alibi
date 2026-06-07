@@ -3489,7 +3489,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       this.scorePopup = {
         tone: "bonus",
         label: "+2 Escape bonus",
-        detail: `Cashout ${this.lootValue + 2}`
+        detail: afterburnerExit ? `Cashout ${this.lootValue + 2} · Afterburner +1` : `Cashout ${this.lootValue + 2}`
       };
       this.scorePopupUntilMs = this.elapsedMs + 1_800;
     }

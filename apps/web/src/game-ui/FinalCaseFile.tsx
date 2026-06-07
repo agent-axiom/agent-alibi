@@ -45,7 +45,10 @@ export function FinalCaseFile({ summary, soundEnabled = false, onToggleSound, on
   const redScore = summary.teamScores.find((score) => score.teamId === "red");
   const winner = summary.winnerTeamId === "tie" ? "Tie" : summary.winnerTeamId === "blue" ? "Blue Crew" : "Red Crew";
   const escapeBonus = blueScore?.escape ?? 0;
-  const finalPopupDetail = (blueScore?.loot ?? 0) > 0 ? `Cashout ${(blueScore?.loot ?? 0) + escapeBonus}` : "No relics banked";
+  const finalPopupDetail =
+    (blueScore?.loot ?? 0) > 0
+      ? `Cashout ${(blueScore?.loot ?? 0) + escapeBonus}${summary.afterburnerExitBonus ? ` · Afterburner +${summary.afterburnerExitBonus}` : ""}`
+      : "No relics banked";
   const rematchHook = buildRematchHook(summary);
   const nextRunContracts = buildNextRunContracts(summary);
   const scoreMargin = buildScoreMarginLabel(summary.teamScores);
