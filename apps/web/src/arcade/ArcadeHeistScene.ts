@@ -80,6 +80,10 @@ type RuntimeAgent = {
   ship: Phaser.GameObjects.Container;
   carrierBadge: Phaser.GameObjects.Container;
   carrierBadgeLabel: Phaser.GameObjects.Text;
+  barkBubble: Phaser.GameObjects.Container;
+  barkBubblePlate: Phaser.GameObjects.Rectangle;
+  barkBubbleText: Phaser.GameObjects.Text;
+  barkBubbleUntilMs: number;
 };
 
 type ArcadeObjectiveTarget =
@@ -401,7 +405,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
         visualLabel: agent.label.text,
         alpha: Number(agent.body.alpha.toFixed(2)),
         x: Math.round(agent.x),
-        y: Math.round(agent.y)
+        y: Math.round(agent.y),
+        barkBubble: this.rivalBarkBubbleDebug(agent)
       })),
       lastRivalSteal: this.lastRivalSteal,
       rivalIntercept: this.rivalIntercept(),
@@ -527,6 +532,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.updateCarrierCashoutRoute();
     this.updateRivalIntentRoutes();
     this.updateSecuritySweep(delta);
+    this.updateRivalBarkBubbles();
     this.updateEscapePayoutBadge();
     this.updateAlarm(delta);
     this.emitHudIfNeeded(false);
@@ -883,7 +889,23 @@ export class ArcadeHeistScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
     const carrierBadge = this.add.container(0, 0, [badgePlate, badgeGem, carrierBadgeLabel]).setVisible(false);
-    const body = this.add.container(x, y, [shadow, ship, label, carrierBadge]);
+    const barkBubblePlate = this.add.rectangle(0, -86, 224, 52, 0x050811, 0.88).setStrokeStyle(2, controlled ? 0xffd56a : TEAM_COLORS[player.teamId], 0.84);
+    const barkBubbleText = this.add
+      .text(0, -87, "", {
+        align: "center",
+        color: "#f8fdff",
+        fontFamily: "Inter, Arial, sans-serif",
+        fontSize: "12px",
+        fontStyle: "900",
+        lineSpacing: -2,
+        stroke: "#050811",
+        strokeThickness: 4,
+        wordWrap: { width: 198, useAdvancedWrap: true }
+      })
+      .setOrigin(0.5);
+    const barkBubble = this.add.container(0, 0, [barkBubblePlate, barkBubbleText]).setVisible(false).setAlpha(0);
+    barkBubble.setData("text", "");
+    const body = this.add.container(x, y, [shadow, ship, label, carrierBadge, barkBubble]);
     body.setDepth(controlled ? 20 : 12);
 
     return {
@@ -900,7 +922,11 @@ export class ArcadeHeistScene extends Phaser.Scene {
       label,
       ship,
       carrierBadge,
-      carrierBadgeLabel
+      carrierBadgeLabel,
+      barkBubble,
+      barkBubblePlate,
+      barkBubbleText,
+      barkBubbleUntilMs: 0
     };
   }
 
@@ -1216,7 +1242,35 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private flashRivalBark(bark: ArcadeRivalBark) {
     this.rivalBark = bark;
     this.rivalBarkUntilMs = this.elapsedMs + 2_600;
+    const agent = this.aiAgents.find((candidate) => candidate.name === bark.agentName);
+    if (agent) {
+      this.showRivalBarkBubble(agent, bark.line);
+    }
     this.emitHudIfNeeded(true);
+  }
+
+  private showRivalBarkBubble(agent: RuntimeAgent, line: string) {
+    agent.barkBubbleText.setText(line);
+    agent.barkBubble.setVisible(true).setAlpha(1);
+    agent.barkBubble.setData("text", line);
+    agent.barkBubble.setData("visible", true);
+    agent.barkBubbleUntilMs = this.elapsedMs + 2_600;
+    this.tweens.killTweensOf(agent.barkBubble);
+    this.tweens.add({
+      targets: agent.barkBubble,
+      y: { from: 4, to: 0 },
+      alpha: { from: 0, to: 1 },
+      duration: 120,
+      ease: "Quad.easeOut"
+    });
+  }
+
+  private updateRivalBarkBubbles() {
+    for (const agent of this.aiAgents) {
+      if (!agent.barkBubble.visible || this.elapsedMs < agent.barkBubbleUntilMs) continue;
+      agent.barkBubble.setVisible(false).setAlpha(0);
+      agent.barkBubble.setData("visible", false);
+    }
   }
 
   private flashRoutePulse(pulse: ArcadeRoutePulse) {
@@ -2520,6 +2574,14 @@ export class ArcadeHeistScene extends Phaser.Scene {
       burstCount: this.motionTrailBurstCount,
       pointCount: this.motionTrailPoints.length,
       activeMs: Math.max(0, Math.round(this.motionTrailActiveUntilMs - this.elapsedMs))
+    };
+  }
+
+  private rivalBarkBubbleDebug(agent: RuntimeAgent) {
+    return {
+      visible: Boolean(agent.barkBubble.getData("visible") && agent.barkBubble.visible),
+      text: String(agent.barkBubble.getData("text") ?? ""),
+      activeMs: Math.max(0, Math.round(agent.barkBubbleUntilMs - this.elapsedMs))
     };
   }
 

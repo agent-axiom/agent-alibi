@@ -702,6 +702,13 @@ test("rival steals trigger a clear red loot alert", async ({ page }) => {
   await expect(rivalComms.getByText(/rook/i)).toBeVisible();
   await expect(rivalComms.getByText(/moon pearl secured/i)).toBeVisible();
   await expect(rivalComms.getByText(/mapped the exit/i)).toBeVisible();
+  const rivalBubble = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().rivals.find((rival) => rival.name === "Rook")?.barkBubble);
+  expect(rivalBubble).toEqual(
+    expect.objectContaining({
+      visible: true,
+      text: expect.stringMatching(/mapped the exit/i)
+    })
+  );
   const missionBeat = page.getByLabel(/mission beat/i);
   await expect(missionBeat.getByText(/carrier run/i)).toBeVisible();
   await expect(missionBeat.getByText(/rook has moon pearl/i)).toBeVisible();
