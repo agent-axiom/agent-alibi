@@ -49,6 +49,8 @@ const LOOT_SPEED_SURGE_MULTIPLIER = 2.05;
 const LOOT_SPEED_SURGE_CAMERA_ZOOM = 1.08;
 const VAULT_RUSH_MS = 3_400;
 const VAULT_RUSH_DASH_COOLDOWN_MS = 520;
+const EXTRACTION_SEQUENCE_MS = 920;
+const EXTRACTION_SEQUENCE_RING_COUNT = 5;
 
 const TEAM_COLORS: Record<TeamId, number> = {
   blue: 0x4cf4f0,
@@ -126,6 +128,7 @@ type RivalCarrierRun = {
 type ImpactKind = "steal" | "intercept" | "alibi" | "escape" | "lockdown" | "cashout" | "laser" | "dodge";
 type CameraKickKind = ImpactKind | "dash";
 type ArenaCalloutKind = ImpactKind | "rival-steal";
+type MissionOutcome = "escaped" | "sealed" | "caught";
 
 type ImpactBurstDebug = {
   active: boolean;
@@ -148,6 +151,19 @@ type VaultRushDebug = {
   pulseCount: number;
   laneWidth: number;
   distanceMeters: number;
+};
+
+type ExtractionSequenceDebug = {
+  active: true;
+  label: "EXTRACTION LIVE";
+  outcome: MissionOutcome;
+  cashoutValue: number;
+  ageMs: number;
+  remainingMs: number;
+  ringCount: number;
+  beamVisible: boolean;
+  x: number;
+  y: number;
 };
 
 type RuntimeArenaCallout = {
@@ -337,6 +353,10 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private impactBurstStartedAtMs = 0;
   private impactBurstActiveUntilMs = 0;
   private impactBurstSeed = 0;
+  private extractionBeam?: Phaser.GameObjects.Graphics;
+  private extractionOutcome: MissionOutcome | null = null;
+  private extractionStartedAtMs = 0;
+  private extractionActiveUntilMs = 0;
   private impactCount = 0;
   private lastImpact: { kind: ImpactKind; count: number; atMs: number } | null = null;
   private cameraKickCount = 0;
@@ -475,6 +495,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       motionTrail: this.motionTrailDebug(),
       dashShockwave: this.dashShockwaveDebug(),
       impactBurst: this.impactBurstDebug(),
+      extractionSequence: this.extractionSequenceDebug(),
       arenaLabels: this.arenaLabelsDebug(),
       routeMode: this.routeMode,
       nearestRival,
@@ -611,6 +632,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.updateMotionTrail(delta);
     this.updateDashShockwave();
     this.updateImpactBurst();
+    this.updateExtractionSequence();
+    if (this.finished) return;
     this.updateAi(delta);
     this.updateCarrierBadges();
     this.updateRivalPressureFeed();
@@ -629,7 +652,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.updateAlarm(delta);
     this.emitHudIfNeeded(false);
 
-    if (this.elapsedMs >= ARCADE_MISSION_DURATION_MS) {
+    if (this.elapsedMs >= ARCADE_MISSION_DURATION_MS && !this.extractionSequenceActive()) {
       this.finish(this.lootValue > 0 && this.isNearExit() ? "escaped" : "sealed");
     }
   }
@@ -754,6 +777,10 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.impactBurstStartedAtMs = 0;
     this.impactBurstActiveUntilMs = 0;
     this.impactBurstSeed = 0;
+    this.extractionBeam = undefined;
+    this.extractionOutcome = null;
+    this.extractionStartedAtMs = 0;
+    this.extractionActiveUntilMs = 0;
     this.impactCount = 0;
     this.lastImpact = null;
     this.cameraKickCount = 0;
@@ -1063,7 +1090,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
   }
 
   private updatePlayer(delta: number) {
-    if (!this.player) return;
+    if (!this.player || this.extractionSequenceActive()) return;
 
     const held = this.readHeldMovementVector();
     this.keyboardImpulse = nextMovementImpulse(this.keyboardImpulse, this.readTappedMovementVector(), delta);
@@ -1600,7 +1627,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
   }
 
   private tryInteract() {
-    if (!this.player) return;
+    if (!this.player || this.extractionSequenceActive()) return;
     const rivalCarrier = this.nearRivalCarrier();
     if (rivalCarrier) {
       this.interceptRivalCarrier(rivalCarrier);
@@ -1611,7 +1638,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
 
     if (this.isNearExit()) {
       if (this.lootValue > 0 || this.timeLeftMs() <= 30_000) {
-        this.finish("escaped");
+        this.startExtractionSequence("escaped");
       } else {
         this.feedLine("The lift rejects an empty-handed alibi.");
       }
@@ -3617,20 +3644,131 @@ export class ArcadeHeistScene extends Phaser.Scene {
     }
   }
 
+  private startExtractionSequence(outcome: MissionOutcome) {
+    if (!this.player || this.finished || this.extractionSequenceActive()) return;
+
+    const target = this.escapeZone ?? this.rooms.get("atrium");
+    const cashoutValue = this.lootValue + 2;
+    const afterburnerExit = outcome === "escaped" && this.lootValue > 0 && this.lootSpeedSurgeActive();
+
+    this.extractionOutcome = outcome;
+    this.extractionStartedAtMs = this.elapsedMs;
+    this.extractionActiveUntilMs = this.elapsedMs + EXTRACTION_SEQUENCE_MS;
+    this.pointerTarget = undefined;
+    this.heldDirections.clear();
+    this.shiftHeld = false;
+    this.keyboardImpulse = undefined;
+    this.dashCooldownMs = 0;
+    this.scorePopup = {
+      tone: "bonus",
+      label: "+2 Escape bonus",
+      detail: afterburnerExit ? "Cashout " + cashoutValue + " · Afterburner +1" : "Cashout " + cashoutValue
+    };
+    this.scorePopupUntilMs = this.extractionActiveUntilMs + 1_200;
+    this.flashSpotlight(outcome === "escaped" ? "Extraction live" : "Vault sealing");
+    this.flashArenaCallout("escape", "CASHOUT +" + cashoutValue, target?.x ?? this.player.x, target?.y ?? this.player.y, 0x7effdf);
+    this.impactPulse(outcome === "escaped" ? "escape" : "lockdown", target?.x ?? this.player.x, target?.y ?? this.player.y);
+    this.updateExtractionSequence();
+    this.emitHudIfNeeded(true);
+  }
+
+  private updateExtractionSequence() {
+    if (!this.extractionOutcome) {
+      this.extractionBeam?.clear();
+      this.extractionBeam?.setData("visible", false);
+      return;
+    }
+
+    if (!this.extractionSequenceActive()) {
+      this.extractionBeam?.clear();
+      this.extractionBeam?.setData("visible", false);
+      const outcome = this.extractionOutcome;
+      this.finish(outcome);
+      return;
+    }
+
+    this.renderExtractionSequence();
+  }
+
+  private renderExtractionSequence() {
+    const target = this.escapeZone ?? this.rooms.get("atrium");
+    if (!target) return;
+
+    if (!this.extractionBeam) {
+      this.extractionBeam = this.add.graphics().setDepth(24);
+    }
+
+    const x = target.x;
+    const y = target.y;
+    const ageMs = Math.max(0, this.elapsedMs - this.extractionStartedAtMs);
+    const progress = Phaser.Math.Clamp(ageMs / EXTRACTION_SEQUENCE_MS, 0, 1);
+    const eased = Phaser.Math.Easing.Cubic.Out(progress);
+    const beamHeight = 330 + eased * 110;
+    const beamAlpha = 0.1 + (1 - progress) * 0.12;
+
+    this.extractionBeam.clear();
+    this.extractionBeam.fillStyle(0x7effdf, beamAlpha);
+    this.extractionBeam.fillTriangle(x - 64, y + 62, x + 64, y + 62, x + 24, y - beamHeight);
+    this.extractionBeam.fillStyle(0xffffff, 0.08 + (1 - progress) * 0.08);
+    this.extractionBeam.fillTriangle(x - 26, y + 54, x + 26, y + 54, x, y - beamHeight - 28);
+    this.extractionBeam.lineStyle(5, 0x7effdf, 0.5 + (1 - progress) * 0.28);
+    this.extractionBeam.strokeCircle(x, y, EXIT_RADIUS + 8);
+
+    for (let index = 0; index < EXTRACTION_SEQUENCE_RING_COUNT; index += 1) {
+      const ringProgress = Phaser.Math.Clamp(eased - index * 0.075, 0, 1);
+      const radius = EXIT_RADIUS + 18 + ringProgress * (58 + index * 13);
+      const alpha = Math.max(0, (1 - progress) * (0.62 - index * 0.07));
+      this.extractionBeam.lineStyle(Math.max(1, 5 - index * 0.6), index % 2 === 0 ? 0x7effdf : 0xffffff, alpha);
+      this.extractionBeam.strokeCircle(x, y, radius);
+    }
+
+    for (let index = 0; index < 8; index += 1) {
+      const angle = (index / 8) * Math.PI * 2 + this.elapsedMs / 240;
+      const orbit = EXIT_RADIUS + 26 + Math.sin(this.elapsedMs / 180 + index) * 10;
+      this.extractionBeam.fillStyle(index % 2 === 0 ? 0x7effdf : 0xffd56a, 0.5 + (1 - progress) * 0.25);
+      this.extractionBeam.fillCircle(x + Math.cos(angle) * orbit, y + Math.sin(angle) * orbit, 4.5);
+    }
+
+    this.extractionBeam.setData("visible", true);
+    this.extractionBeam.setData("ringCount", EXTRACTION_SEQUENCE_RING_COUNT);
+  }
+
+  private extractionSequenceActive() {
+    return Boolean(this.extractionOutcome) && this.elapsedMs < this.extractionActiveUntilMs;
+  }
+
+  private extractionSequenceDebug(): ExtractionSequenceDebug | null {
+    if (!this.extractionOutcome || !this.extractionSequenceActive()) return null;
+    const target = this.escapeZone ?? this.rooms.get("atrium");
+    const ageMs = Math.max(0, Math.round(this.elapsedMs - this.extractionStartedAtMs));
+    return {
+      active: true,
+      label: "EXTRACTION LIVE",
+      outcome: this.extractionOutcome,
+      cashoutValue: this.lootValue + 2,
+      ageMs,
+      remainingMs: Math.max(0, Math.round(this.extractionActiveUntilMs - this.elapsedMs)),
+      ringCount: EXTRACTION_SEQUENCE_RING_COUNT,
+      beamVisible: Boolean(this.extractionBeam?.getData("visible")),
+      x: Math.round(target?.x ?? this.player?.x ?? WORLD_WIDTH / 2),
+      y: Math.round(target?.y ?? this.player?.y ?? WORLD_HEIGHT / 2)
+    };
+  }
   private pendingRivalRelicNames(): string[] {
     return this.aiAgents.flatMap((agent) => agent.carriedRelics.map((relic) => relic.name));
   }
 
-  private finish(outcome: "escaped" | "sealed" | "caught") {
+  private finish(outcome: MissionOutcome) {
     if (!this.config || this.finished) return;
     const afterburnerExit = outcome === "escaped" && this.lootValue > 0 && this.lootSpeedSurgeActive();
+    const extractionAlreadyPlayed = this.extractionOutcome === outcome;
     this.finished = true;
-    if (outcome === "escaped") {
+    if (outcome === "escaped" && !extractionAlreadyPlayed) {
       this.impactPulse("escape");
       this.scorePopup = {
         tone: "bonus",
         label: "+2 Escape bonus",
-        detail: afterburnerExit ? `Cashout ${this.lootValue + 2} · Afterburner +1` : `Cashout ${this.lootValue + 2}`
+        detail: afterburnerExit ? "Cashout " + (this.lootValue + 2) + " · Afterburner +1" : "Cashout " + (this.lootValue + 2)
       };
       this.scorePopupUntilMs = this.elapsedMs + 1_800;
     }
