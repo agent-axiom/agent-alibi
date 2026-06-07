@@ -6,6 +6,7 @@ export type MusicSelectionInput = {
   isArcade?: boolean;
   alarm?: number;
   timeLeftMs?: number;
+  boostActive?: boolean;
 };
 
 const LOCKDOWN_TIME_MS = 30_000;
@@ -28,6 +29,10 @@ export function selectMusicTrack(input: MusicSelectionInput): MusicTrackId | nul
 
   if (alarm >= 5 || timeLeftMs <= LOCKDOWN_TIME_MS) {
     return "lockdown";
+  }
+
+  if (input.boostActive) {
+    return "alarm";
   }
 
   if (alarm >= 3) {
