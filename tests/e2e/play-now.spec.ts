@@ -920,7 +920,7 @@ test("rival steals trigger a clear red loot alert", async ({ page }) => {
   await expect(missionBeat.getByText(/rook has moon pearl/i)).toBeVisible();
   await expect(missionBeat.getByText(/chase the gold-red carrier blip/i)).toBeVisible();
   const contractChain = page.getByLabel(/contract chain/i);
-  await expect(contractChain.getByText(/intercept carrier/i)).toBeVisible();
+  await expect(contractChain.getByText(/intercept rook \+3/i)).toBeVisible();
   const threatVector = page.getByLabel(/threat vector/i);
   await expect(threatVector.getByText(/carrier (?:n|ne|e|se|s|sw|w|nw|here) \d+m/i)).toBeVisible();
   await expect(threatVector.getByText(/rook with moon pearl \+3/i)).toBeVisible();
