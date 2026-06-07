@@ -295,6 +295,58 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(page.getByLabel(/final scores/i)).toBeHidden();
 });
 
+test("in-world action ring switches from approach to ready prompts", async ({ page }) => {
+  await startSoloArcade(page);
+  await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_STATE__ === "function");
+
+  const openingRing = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().actionRing);
+  expect(openingRing).toEqual(
+    expect.objectContaining({
+      visible: true,
+      kind: "artifact",
+      state: "approach",
+      label: "STEAL",
+      cue: "APPROACH"
+    })
+  );
+
+  await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget());
+  const readyStealRing = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().actionRing);
+  expect(readyStealRing).toEqual(
+    expect.objectContaining({
+      visible: true,
+      kind: "artifact",
+      state: "ready",
+      label: "STEAL",
+      cue: "E / SPACE"
+    })
+  );
+
+  await page.keyboard.press("KeyE");
+  const cashoutApproachRing = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().actionRing);
+  expect(cashoutApproachRing).toEqual(
+    expect.objectContaining({
+      visible: true,
+      kind: "escape",
+      state: "approach",
+      label: "CASHOUT",
+      cue: "APPROACH"
+    })
+  );
+
+  await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget());
+  const cashoutReadyRing = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().actionRing);
+  expect(cashoutReadyRing).toEqual(
+    expect.objectContaining({
+      visible: true,
+      kind: "escape",
+      state: "ready",
+      label: "CASHOUT",
+      cue: "E / SPACE"
+    })
+  );
+});
+
 test("start objective banner clears before it blocks the arena", async ({ page }) => {
   await startSoloArcade(page);
 
