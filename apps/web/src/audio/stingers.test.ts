@@ -55,4 +55,13 @@ describe("selectMissionStinger", () => {
       )
     ).toBe("rival-wake");
   });
+
+  it("plays a route-lock stinger when a route pulse appears", () => {
+    expect(
+      selectMissionStinger(
+        { lootValue: 3, aiLootValue: 0, phase: "stealth", spotlight: null, summaryTitle: null, routePulseTitle: null },
+        { lootValue: 3, aiLootValue: 0, phase: "stealth", spotlight: null, summaryTitle: null, routePulseTitle: "Greed route locked" }
+      )
+    ).toBe("route-lock");
+  });
 });
