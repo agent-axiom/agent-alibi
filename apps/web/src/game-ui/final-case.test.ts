@@ -155,6 +155,26 @@ describe("buildLocalBestCaseStatus", () => {
     });
   });
 
+  it("keeps the afterburner cashout marker in a new local best record", () => {
+    const status = buildLocalBestCaseStatus(
+      summary({
+        runRating: "S-Rank",
+        lootChain: 2,
+        afterburnerExitBonus: 1,
+        stolenRelicNames: ["Moon Pearl", "Argent Crown"],
+        teamScores: [
+          { teamId: "blue", loot: 6, escape: 2, penalties: 0, total: 12 },
+          { teamId: "red", loot: 0, escape: 0, penalties: 0, total: 0 }
+        ]
+      }),
+      null,
+      321
+    );
+
+    expect(status.current).toMatchObject({ afterburnerExitBonus: 1 });
+    expect(status.detail).toBe("Score 12 · S-Rank · chain x2 · boost +1");
+  });
+
   it("keeps a stronger stored case as the target to beat", () => {
     const previous = buildLocalBestCaseRecord(
       summary({

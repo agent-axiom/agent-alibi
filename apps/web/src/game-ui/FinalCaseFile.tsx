@@ -26,6 +26,7 @@ export type LocalBestCaseRecord = {
   runRating: string;
   lootChain: number;
   relicCount: number;
+  afterburnerExitBonus?: number;
 };
 
 export type LocalBestCaseStatus = {
@@ -246,6 +247,7 @@ export function buildRematchHook(summary: MatchSummary): string {
 
 export function buildLocalBestCaseRecord(summary: MatchSummary, at = Date.now()): LocalBestCaseRecord {
   const blueScore = summary.teamScores.find((score) => score.teamId === "blue");
+  const afterburnerExitBonus = summary.afterburnerExitBonus && summary.afterburnerExitBonus > 0 ? summary.afterburnerExitBonus : undefined;
   return {
     version: 1,
     at,
@@ -253,7 +255,8 @@ export function buildLocalBestCaseRecord(summary: MatchSummary, at = Date.now())
     title: summary.title,
     runRating: summary.runRating ?? "Unrated",
     lootChain: summary.lootChain ?? 1,
-    relicCount: summary.stolenRelicNames?.length ?? 0
+    relicCount: summary.stolenRelicNames?.length ?? 0,
+    ...(afterburnerExitBonus ? { afterburnerExitBonus } : {})
   };
 }
 
@@ -312,7 +315,8 @@ function isLocalBestCaseRecord(value: unknown): value is LocalBestCaseRecord {
     typeof record.title === "string" &&
     typeof record.runRating === "string" &&
     typeof record.lootChain === "number" &&
-    typeof record.relicCount === "number"
+    typeof record.relicCount === "number" &&
+    (record.afterburnerExitBonus === undefined || typeof record.afterburnerExitBonus === "number")
   );
 }
 
@@ -337,8 +341,9 @@ function localBestRatingValue(rating: string): number {
   return 0;
 }
 
-function formatLocalBestCaseDetail(record: LocalBestCaseRecord): string {
-  return `Score ${record.score} · ${record.runRating} · chain x${record.lootChain}`;
+export function formatLocalBestCaseDetail(record: LocalBestCaseRecord): string {
+  const boostDetail = record.afterburnerExitBonus && record.afterburnerExitBonus > 0 ? ` · boost +${record.afterburnerExitBonus}` : "";
+  return `Score ${record.score} · ${record.runRating} · chain x${record.lootChain}${boostDetail}`;
 }
 
 function buildLocalBestDelta(current: LocalBestCaseRecord, previous: LocalBestCaseRecord | null, isNewBest: boolean): string {
