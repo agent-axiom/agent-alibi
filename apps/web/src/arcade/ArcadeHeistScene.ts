@@ -51,6 +51,8 @@ const VAULT_RUSH_MS = 3_400;
 const VAULT_RUSH_DASH_COOLDOWN_MS = 520;
 const EXTRACTION_SEQUENCE_MS = 920;
 const EXTRACTION_SEQUENCE_RING_COUNT = 5;
+const AMBUSH_NEAR_MISS_ACTIVE_MS = 1_400;
+const AMBUSH_NEAR_MISS_COOLDOWN_MS = 2_400;
 
 const TEAM_COLORS: Record<TeamId, number> = {
   blue: 0x4cf4f0,
@@ -175,6 +177,14 @@ type RivalAmbushVectorDebug = {
   pulseCount: number;
 };
 
+type AmbushNearMissDebug = {
+  active: boolean;
+  count: number;
+  label: string;
+  detail?: string;
+  activeMs?: number;
+};
+
 type RuntimeArenaCallout = {
   id: number;
   kind: ArenaCalloutKind;
@@ -294,6 +304,9 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private vaultRushSource: string | null = null;
   private scanBurns = 0;
   private carrierIntercepts = 0;
+  private ambushNearMissCount = 0;
+  private ambushNearMissUntilMs = 0;
+  private ambushNearMissCooldownMs = 0;
   private interceptedRelicNames: string[] = [];
   private interceptedLootValue = 0;
   private lastRivalSteal: string | null = null;
@@ -493,6 +506,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       hasTargetBeam: Boolean(this.targetBeam),
       routeGuide,
       rivalAmbushVector: this.rivalAmbushVectorDebug(),
+      ambushNearMiss: this.ambushNearMissDebug(),
       routeSignal: this.routeSignalDebug(),
       threatHalo: this.threatHaloDebug(),
       carrierCashoutRoute: this.carrierCashoutRouteDebug(),
@@ -636,6 +650,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.dashCooldownMs = Math.max(0, this.dashCooldownMs - delta);
     this.alibiPulseCooldownMs = Math.max(0, this.alibiPulseCooldownMs - delta);
     this.securitySweepHitCooldownMs = Math.max(0, this.securitySweepHitCooldownMs - delta);
+    this.ambushNearMissCooldownMs = Math.max(0, this.ambushNearMissCooldownMs - delta);
 
     this.updatePlayer(delta);
     this.updateMovementCoach();
@@ -721,6 +736,9 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.vaultRushSource = null;
     this.scanBurns = 0;
     this.carrierIntercepts = 0;
+    this.ambushNearMissCount = 0;
+    this.ambushNearMissUntilMs = 0;
+    this.ambushNearMissCooldownMs = 0;
     this.interceptedRelicNames = [];
     this.interceptedLootValue = 0;
     this.lastRivalSteal = null;
@@ -1127,6 +1145,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
         this.addTrail(this.player.x, this.player.y, vector);
         this.addDashShockwave(this.player.x, this.player.y);
         this.cameraKick("dash");
+        this.rewardAmbushNearMiss();
       }
       this.moveAgent(this.player, vector.x * speed * (delta / 1000), vector.y * speed * (delta / 1000));
       this.player.ship.rotation = Phaser.Math.Angle.Between(0, 0, vector.x, vector.y) + Math.PI / 2;
@@ -3478,6 +3497,36 @@ export class ArcadeHeistScene extends Phaser.Scene {
     };
   }
 
+  private rewardAmbushNearMiss() {
+    if (!this.player || this.ambushNearMissCooldownMs > 0 || !this.rivalAmbushVectorDebug().visible) return;
+
+    this.ambushNearMissCount += 1;
+    this.ambushNearMissUntilMs = this.elapsedMs + AMBUSH_NEAR_MISS_ACTIVE_MS;
+    this.ambushNearMissCooldownMs = AMBUSH_NEAR_MISS_COOLDOWN_MS;
+    this.flashSpotlight("Near miss");
+    this.flashScorePopup({
+      tone: "bonus",
+      label: "Near miss",
+      detail: "Ambush dashed"
+    });
+    this.flashArenaCallout("dodge", "NEAR MISS", this.player.x, this.player.y - 36, 0x7effdf);
+    this.feedLine("Near miss. You dashed through the rival ambush line.");
+    this.impactPulse("dodge", this.player.x, this.player.y);
+  }
+
+  private ambushNearMissDebug(): AmbushNearMissDebug {
+    if (this.elapsedMs >= this.ambushNearMissUntilMs) {
+      return { active: false, count: this.ambushNearMissCount, label: "" };
+    }
+
+    return {
+      active: true,
+      count: this.ambushNearMissCount,
+      label: "Near miss",
+      detail: "Ambush dashed",
+      activeMs: Math.max(0, Math.round(this.ambushNearMissUntilMs - this.elapsedMs))
+    };
+  }
   private drawRivalAmbushVector(target: ArcadeObjectiveTarget, distance: number) {
     if (!this.player || !this.targetBeam || target.kind !== "escape" || this.lootValue <= 0 || !this.aiReleased || this.extractionSequenceActive()) {
       return;

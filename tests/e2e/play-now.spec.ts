@@ -651,6 +651,25 @@ test("rival agents stay visually staged until the breach starts", async ({ page 
   expect(breached?.rivalAmbushVector?.threatCount).toBeGreaterThanOrEqual(3);
   expect(breached?.rivalAmbushVector?.laneWidth).toBeGreaterThan(breached?.routeGuide?.laneWidth ?? 0);
   expect(breached?.rivalAmbushVector?.pulseCount).toBeGreaterThan(0);
+  expect(breached?.ambushNearMiss).toEqual({ active: false, count: 0, label: "" });
+
+  await page.keyboard.down("Shift");
+  await page.keyboard.down("ArrowRight");
+  await page.waitForTimeout(140);
+  await page.keyboard.up("ArrowRight");
+  await page.keyboard.up("Shift");
+
+  await expect(page.getByLabel(/score popup/i).getByText(/near miss/i)).toBeVisible();
+  const nearMiss = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());
+  expect(nearMiss?.ambushNearMiss).toEqual(
+    expect.objectContaining({
+      active: true,
+      count: 1,
+      label: "Near miss",
+      detail: "Ambush dashed"
+    })
+  );
+  expect(nearMiss?.lastImpact?.kind).toBe("dodge");
 });
 
 test("first score triggers a visible rival breach cut-in", async ({ page }) => {
