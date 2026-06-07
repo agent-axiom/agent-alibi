@@ -17,6 +17,7 @@ export type NextRunContract = {
 };
 
 export const LOCAL_BEST_CASE_STORAGE_KEY = "agent-alibi:best-case:v1";
+export const PUBLIC_PLAY_URL = "https://agent-axiom.github.io/agent-alibi/";
 
 export type LocalBestCaseRecord = {
   version: 1;
@@ -494,6 +495,7 @@ export function buildCaseShareText(summary: MatchSummary): string {
   }
 
   lines.push("", "NEXT RUN", buildRematchHook(summary));
+  lines.push("", "PLAY", PUBLIC_PLAY_URL);
   return lines.join("\n");
 }
 
