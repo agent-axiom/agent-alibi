@@ -312,6 +312,28 @@ describe("buildNextRunContracts", () => {
       detail: "Steal, trigger afterburner, and cashout before the boost dies."
     });
   });
+
+  it("turns a carrier-denied win into denial encore goals", () => {
+    const contracts = buildNextRunContracts(
+      summary({
+        carrierIntercepts: 1,
+        interceptedRelicNames: ["Moon Pearl"],
+        runRating: "S-Rank",
+        lootChain: 1
+      })
+    );
+
+    expect(contracts[0]).toEqual({
+      label: "Denial",
+      title: "Deny the lift again",
+      detail: "Bait Red into carrying loot, then intercept before Atrium Lift."
+    });
+    expect(contracts).toContainEqual({
+      label: "Cashout",
+      title: "Bank recovered loot",
+      detail: "Turn the stolen carrier relic into your own clean exit."
+    });
+  });
 });
 
 describe("buildScoreMarginLabel", () => {
