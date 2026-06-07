@@ -19,6 +19,7 @@ import {
 } from "./arcade-types";
 import { buildActiveActionHint, buildArcadeGuidance, buildObjectiveCompass, buildRivalPressure, type RivalPressure } from "./guidance";
 import { buildMissionBeat } from "./mission-beats";
+import { buildDirectorCue } from "./director-cue";
 import { nextMovementImpulse, selectMovementVector, type MovementImpulse, type MovementVector } from "./movement";
 import { buildObjectiveDirectionLabel } from "./navigation";
 import { buildRivalBarkLine } from "./rival-barks";
@@ -1842,6 +1843,16 @@ export class ArcadeHeistScene extends Phaser.Scene {
         nearestRivalName: nearestRival?.name ?? null,
         phase: this.phase(),
         timeLeftMs: this.timeLeftMs()
+      }),
+      directorCue: buildDirectorCue({
+        phase: this.phase(),
+        lootValue: this.lootValue,
+        rivalLootValue: this.aiLootValue,
+        cashoutValue: escapePayout?.cashout ?? null,
+        canEscape,
+        targetArtifactName: targetArtifact?.name ?? null,
+        targetArtifactValue: targetArtifact?.value ?? null,
+        rivalCarrier: rivalIntercept
       }),
       threatCue: this.threatCue(rivalIntercept, alibiPulseReady, nearestRival),
       objectiveBanner: this.objectiveBanner,

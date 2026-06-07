@@ -6,6 +6,7 @@ import { buildArcadeMatchSummary, type ArcadeMissionResult } from "../arcade/arc
 import { ARCADE_MISSION_DURATION_MS, type ArcadeController, type ArcadeHudState } from "../arcade/arcade-types";
 import { buildObjectiveCompass } from "../arcade/guidance";
 import { buildMissionBeat } from "../arcade/mission-beats";
+import { buildDirectorCue } from "../arcade/director-cue";
 import { buildActionCards, type ActionCard } from "../game-ui/action-cards";
 
 type BriefingMessage = {
@@ -303,6 +304,16 @@ function makeInitialArcadeHud(state: GameState): ArcadeHudState {
       rivalCarrier: null,
       alibiPulseReady: false,
       nearestRivalName: null
+    }),
+    directorCue: buildDirectorCue({
+      phase: "stealth",
+      lootValue: 0,
+      rivalLootValue: 0,
+      cashoutValue: null,
+      canEscape: false,
+      targetArtifactName: "Moon Pearl",
+      targetArtifactValue: 3,
+      rivalCarrier: null
     }),
     threatCue: null,
     objectiveBanner: null,

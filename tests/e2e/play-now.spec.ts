@@ -105,6 +105,10 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(missionBeat.getByText(/first objective/i)).toBeVisible();
   await expect(missionBeat.getByText(/steal moon pearl/i)).toBeVisible();
   await expect(missionBeat.getByText(/move with wasd \/ arrows/i)).toBeVisible();
+  const directorCue = page.getByLabel(/heist director cue/i);
+  await expect(directorCue.getByText(/director cue/i)).toBeVisible();
+  await expect(directorCue.getByText(/first hit: moon pearl/i)).toBeVisible();
+  await expect(directorCue.getByText(/first score unlocks the cashout route/i)).toBeVisible();
   await expect(currentObjective.getByText(/steal the moon pearl \+3/i)).toBeVisible();
   await expect(page.getByLabel(/mission loop/i)).toBeHidden();
   await expect(page.getByText(/target (?:n|ne|e|se|s|sw|w|nw|here) \d+m/i)).toBeHidden();

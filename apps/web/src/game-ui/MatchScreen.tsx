@@ -315,6 +315,14 @@ export function MatchScreen({ match, soundEnabled = false, onToggleSound }: Matc
               <strong>{hud.missionBeat.title}</strong>
               <p>{hud.missionBeat.detail}</p>
               <small>{hud.missionBeat.action}</small>
+              {hud.directorCue ? (
+                <div className={"arcade-director-cue " + hud.directorCue.tone} aria-label="Heist director cue">
+                  <span>{hud.directorCue.label}</span>
+                  <strong>{hud.directorCue.title}</strong>
+                  <p>{hud.directorCue.detail}</p>
+                  <em>{hud.directorCue.reward}</em>
+                </div>
+              ) : null}
             </div>
           ) : null}
           {hud?.threatCue ? (
