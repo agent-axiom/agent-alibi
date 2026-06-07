@@ -33,6 +33,31 @@ test("home screen surfaces the saved best case target", async ({ page }) => {
   await expect(savedBest.getByText(/beat your case/i)).toBeVisible();
 });
 
+test("home screen turns a carrier-denial best case into a denial replay target", async ({ page }) => {
+  await page.goto("/");
+  await page.evaluate(() => {
+    localStorage.setItem(
+      "agent-alibi:best-case:v1",
+      JSON.stringify({
+        version: 1,
+        at: 456,
+        score: 8,
+        title: "Carrier Denied",
+        runRating: "S-Rank",
+        lootChain: 1,
+        relicCount: 1,
+        carrierIntercepts: 1
+      })
+    );
+  });
+  await page.reload();
+
+  const savedBest = page.getByLabel(/saved best case/i);
+  await expect(savedBest.getByText(/carrier denied/i)).toBeVisible();
+  await expect(savedBest.getByText(/score 8 · s-rank · chain x1 · denial x1/i)).toBeVisible();
+  await expect(savedBest.getByText(/repeat denial run/i)).toBeVisible();
+});
+
 test("sound preference survives a reload", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: /sound off/i }).click();
