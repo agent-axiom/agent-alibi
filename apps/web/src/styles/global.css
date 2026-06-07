@@ -1517,6 +1517,56 @@ p {
   box-shadow: 0 22px 52px rgba(0, 0, 0, 0.38), 0 0 46px rgba(189, 169, 255, 0.24);
 }
 
+.arcade-cashout-surge {
+  position: absolute;
+  top: clamp(106px, 16vh, 142px);
+  left: 50%;
+  z-index: 5;
+  width: min(390px, calc(100vw - 34px));
+  display: grid;
+  gap: 5px;
+  justify-items: center;
+  border: 1px solid rgba(126, 255, 223, 0.72);
+  border-radius: 8px;
+  padding: 11px 16px;
+  background:
+    linear-gradient(135deg, rgba(5, 29, 34, 0.94), rgba(37, 27, 6, 0.9)),
+    radial-gradient(circle at 50% 0%, rgba(126, 255, 223, 0.28), transparent 62%);
+  box-shadow: 0 22px 52px rgba(0, 0, 0, 0.38), 0 0 44px rgba(126, 255, 223, 0.26);
+  color: #d8fff4;
+  pointer-events: none;
+  text-align: center;
+  text-transform: uppercase;
+  transform: translateX(-50%);
+  animation: arcade-cashout-surge-pop 1.8s ease both;
+}
+
+.arcade-cashout-surge span,
+.arcade-cashout-surge strong,
+.arcade-cashout-surge small {
+  display: block;
+  overflow-wrap: anywhere;
+  line-height: 1;
+}
+
+.arcade-cashout-surge span {
+  color: #7effdf;
+  font-size: 0.74rem;
+  font-weight: 950;
+}
+
+.arcade-cashout-surge strong {
+  color: #fffaf2;
+  font-size: clamp(1.05rem, 2.2vw, 1.45rem);
+  font-weight: 950;
+}
+
+.arcade-cashout-surge small {
+  color: #ffd56a;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
 .arcade-scan-lock-pulse {
   position: absolute;
   top: clamp(214px, 31vh, 312px);
@@ -1670,6 +1720,24 @@ p {
 
   14%,
   76% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-8px) scale(0.98);
+  }
+}
+
+@keyframes arcade-cashout-surge-pop {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-12px) scale(0.96);
+  }
+
+  14%,
+  78% {
     opacity: 1;
     transform: translateX(-50%) translateY(0) scale(1);
   }
