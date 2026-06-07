@@ -234,6 +234,10 @@ export function buildRematchHook(summary: MatchSummary): string {
     return "Next run: steal one relic before you call the lift.";
   }
 
+  if (summary.afterburnerExitBonus && summary.afterburnerExitBonus > 0) {
+    return "Next run: hit afterburner again and cashout before the boost dies.";
+  }
+
   if (summary.runRating && summary.runRating !== "S-Rank") {
     return "Next run: chase S-Rank with a faster, lower-alarm cashout.";
   }

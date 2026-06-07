@@ -45,6 +45,19 @@ describe("buildRematchHook", () => {
     expect(buildRematchHook(summary({ runRating: "A-Rank", styleBonus: 2 }))).toBe("Next run: chase S-Rank with a faster, lower-alarm cashout.");
   });
 
+  it("turns an afterburner cashout into a boost encore rematch prompt", () => {
+    expect(
+      buildRematchHook(
+        summary({
+          afterburnerExitBonus: 1,
+          lootChain: 2,
+          runRating: "S-Rank",
+          greedRoute: "successful"
+        })
+      )
+    ).toBe("Next run: hit afterburner again and cashout before the boost dies.");
+  });
+
   it("turns an empty escape into a relic-first rematch prompt", () => {
     expect(
       buildRematchHook(
