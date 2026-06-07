@@ -13,10 +13,12 @@ import { useOnlineRoom } from "./socket/useOnlineRoom";
 
 type AppScreen = "home" | "match" | "room";
 
+const SOUND_PREFERENCE_STORAGE_KEY = "agent-alibi:sound-enabled:v1";
+
 export function App() {
   const [screen, setScreen] = useState<AppScreen>("home");
   const [onlineSelectedActionId, setOnlineSelectedActionId] = useState<string | null>(null);
-  const [soundEnabled, setSoundEnabled] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(readStoredSoundPreference);
   const localMatch = useLocalMatch();
   const onlineRoom = useOnlineRoom();
   const arcadeHud = localMatch.arcade?.hud;
@@ -35,16 +37,21 @@ export function App() {
   });
 
   async function enableSound() {
-    setSoundEnabled(true);
+    updateSoundPreference(true);
     await music.unlock();
   }
 
   function toggleSound() {
     const nextEnabled = !soundEnabled;
-    setSoundEnabled(nextEnabled);
+    updateSoundPreference(nextEnabled);
     if (nextEnabled) {
       void music.unlock();
     }
+  }
+
+  function updateSoundPreference(nextEnabled: boolean) {
+    setSoundEnabled(nextEnabled);
+    writeStoredSoundPreference(nextEnabled);
   }
 
   function startSolo() {
@@ -156,4 +163,22 @@ export function App() {
   }
 
   return <MatchScreen match={localMatch} soundEnabled={soundEnabled} onToggleSound={toggleSound} />;
+}
+
+function readStoredSoundPreference(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return window.localStorage.getItem(SOUND_PREFERENCE_STORAGE_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
+
+function writeStoredSoundPreference(enabled: boolean) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(SOUND_PREFERENCE_STORAGE_KEY, enabled ? "true" : "false");
+  } catch {
+    // Sound remains controllable even when storage is blocked.
+  }
 }
