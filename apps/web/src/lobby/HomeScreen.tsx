@@ -1,7 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import { Volume2, VolumeX } from "lucide-react";
 import { useState } from "react";
-import { LOCAL_BEST_CASE_STORAGE_KEY, parseLocalBestCaseRecord, type LocalBestCaseRecord } from "../game-ui/FinalCaseFile";
+import { formatLocalBestCaseDetail, LOCAL_BEST_CASE_STORAGE_KEY, parseLocalBestCaseRecord, type LocalBestCaseRecord } from "../game-ui/FinalCaseFile";
 
 type HomeAction = {
   label: string;
@@ -46,7 +46,7 @@ export function HomeScreen({ actions, soundEnabled, onToggleSound }: HomeScreenP
           <section className="home-best-case" aria-label="Saved best case">
             <span>Best case</span>
             <strong>{savedBestCase.title}</strong>
-            <small>{formatSavedBestCase(savedBestCase)}</small>
+            <small>{formatLocalBestCaseDetail(savedBestCase)}</small>
             <em>Beat your case</em>
           </section>
         ) : null}
@@ -73,8 +73,4 @@ function readSavedBestCase(): LocalBestCaseRecord | null {
   } catch {
     return null;
   }
-}
-
-function formatSavedBestCase(record: LocalBestCaseRecord): string {
-  return `Score ${record.score} · ${record.runRating} · chain x${record.lootChain}`;
 }
