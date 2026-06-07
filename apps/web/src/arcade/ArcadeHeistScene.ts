@@ -1572,6 +1572,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     });
     this.flashArenaCallout("intercept", `Recovered +${recoveredValue}`, rival.x, rival.y, 0xffd56a);
     this.impactPulse("intercept");
+    this.triggerLootSpeedSurge(recoveredNames.at(-1) ?? "Recovered relic");
     this.flashRivalBark({
       tone: "panic",
       agentName: rival.name,

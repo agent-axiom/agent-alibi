@@ -946,9 +946,22 @@ test("rival steals trigger a clear red loot alert", async ({ page }) => {
   await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.forceRivalPressure(6));
   await expect(page.getByText(/press e \/ space to intercept/i)).toBeVisible();
   await expect(page.getByLabel(/active action/i).getByText(/recover moon pearl \+3/i)).toBeVisible();
+  const beforeRecoveryCamera = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().camera);
   await page.keyboard.press("KeyE");
   await expect(page.getByText("Intercepted Rook", { exact: true })).toBeVisible();
   await expect(page.getByLabel(/score popup/i).getByText(/recovered \+3/i)).toBeVisible();
+  await expect(page.getByLabel(/cashout surge/i).getByText(/afterburner x2\.05/i)).toBeVisible();
+  const recoverySurge = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().lootSpeedSurge);
+  expect(recoverySurge).toEqual(
+    expect.objectContaining({
+      active: true,
+      label: "AFTERBURNER",
+      source: "Moon Pearl"
+    })
+  );
+  await page.waitForTimeout(160);
+  const recoveryCamera = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().camera);
+  expect(recoveryCamera?.zoom).toBeGreaterThan((beforeRecoveryCamera?.zoom ?? 0) + 0.02);
   const interceptCallouts = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().arenaCallouts);
   expect(interceptCallouts).toEqual(
     expect.arrayContaining([
