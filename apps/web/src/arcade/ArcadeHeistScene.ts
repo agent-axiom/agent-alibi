@@ -21,6 +21,7 @@ import { buildActiveActionHint, buildArcadeGuidance, buildObjectiveCompass, buil
 import { buildMissionBeat } from "./mission-beats";
 import { nextMovementImpulse, selectMovementVector, type MovementImpulse, type MovementVector } from "./movement";
 import { buildObjectiveDirectionLabel } from "./navigation";
+import { buildRivalBarkLine } from "./rival-barks";
 import { buildRivalScanStatus, updateRivalScan as advanceRivalScan, type RivalScanState } from "./rival-scan";
 
 const WORLD_WIDTH = 1680;
@@ -1135,7 +1136,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.flashRivalBark({
       tone: "taunt",
       agentName: actorLabel,
-      line: `${artifact.name} is mine. Catch the carrier if you can.`
+      line: buildRivalBarkLine(actorLabel, "steal", artifact.name)
     });
     this.flashArenaCallout("rival-steal", `${actorLabel} stole +${artifact.value}`, artifact.x, artifact.y, TEAM_COLORS[actor.teamId]);
     this.feedLine(`${actorLabel} stole ${artifact.name}.`);
@@ -1169,7 +1170,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.flashRivalBark({
       tone: "taunt",
       agentName: rival.name,
-      line: `Cashed out ${this.relicListLabel(cashed)}. Too slow.`
+      line: buildRivalBarkLine(rival.name, "cashout", this.relicListLabel(cashed))
     });
     this.feedLine(`${rival.name} cashed out ${this.relicListLabel(cashed)} at the Atrium Lift.`);
     this.updateCarrierBadges();
@@ -1374,7 +1375,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.flashRivalBark({
       tone: "panic",
       agentName: rival.name,
-      line: "That was almost elegant. Almost."
+      line: buildRivalBarkLine(rival.name, "intercept", this.relicListLabel(recovered))
     });
     this.feedLine(`Intercepted ${rival.name}. Recovered ${this.relicListLabel(recovered)}.`);
     this.addInterceptVisual(rival.x, rival.y);
