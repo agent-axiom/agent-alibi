@@ -26,6 +26,10 @@ describe("selectMusicTrack", () => {
     expect(selectMusicTrack({ screen: "match", isArcade: true, alarm: 1, timeLeftMs: 88_000, rivalPressureActive: true })).toBe("alarm");
   });
 
+  it("uses lockdown music for a critical rival carrier cashout", () => {
+    expect(selectMusicTrack({ screen: "match", isArcade: true, alarm: 1, timeLeftMs: 82_000, rivalPressureActive: true, rivalCarrierCritical: true })).toBe("lockdown");
+  });
+
   it("uses lockdown music for the final seconds or maximum alarm", () => {
     expect(selectMusicTrack({ screen: "match", isArcade: true, alarm: 2, timeLeftMs: 24_000 })).toBe("lockdown");
     expect(selectMusicTrack({ screen: "match", isArcade: true, alarm: 5, timeLeftMs: 80_000 })).toBe("lockdown");
