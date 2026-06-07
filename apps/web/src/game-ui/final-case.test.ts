@@ -230,7 +230,7 @@ describe("buildNextRunContracts", () => {
       })
     );
 
-    expect(contracts.at(-1)).toEqual({
+    expect(contracts[0]).toEqual({
       label: "Boost",
       title: "Afterburner encore",
       detail: "Steal, trigger afterburner, and cashout before the boost dies."

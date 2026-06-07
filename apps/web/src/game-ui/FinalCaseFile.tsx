@@ -395,18 +395,25 @@ export function buildNextRunContracts(summary: MatchSummary): NextRunContract[] 
   }
 
   if (summary.runRating === "S-Rank" && summary.greedRoute === "successful" && (summary.lootChain ?? 1) > 1) {
-    const encoreContract =
-      summary.afterburnerExitBonus && summary.afterburnerExitBonus > 0
-        ? {
+    if (summary.afterburnerExitBonus && summary.afterburnerExitBonus > 0) {
+      return [
+        {
             label: "Boost",
             title: "Afterburner encore",
             detail: "Steal, trigger afterburner, and cashout before the boost dies."
-          }
-        : {
-            label: "Encore",
-            title: "Greed route encore",
-            detail: "Press G after Moon Pearl and bank the chain again."
-          };
+        },
+        {
+          label: "Speedrun",
+          title: "Beat your case",
+          detail: "Cashout faster without losing the loot chain."
+        },
+        {
+          label: "Clean play",
+          title: "No scan burns",
+          detail: "Jam or dodge every rival scan."
+        }
+      ];
+    }
 
     return [
       {
@@ -419,7 +426,11 @@ export function buildNextRunContracts(summary: MatchSummary): NextRunContract[] 
         title: "No scan burns",
         detail: "Jam or dodge every rival scan."
       },
-      encoreContract
+      {
+        label: "Encore",
+        title: "Greed route encore",
+        detail: "Press G after Moon Pearl and bank the chain again."
+      }
     ];
   }
 
