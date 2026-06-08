@@ -52,6 +52,8 @@ const MOVEMENT_COACH_MAX_MS = 6_500;
 const MOVEMENT_COACH_DISMISS_DISTANCE = 32;
 const LOOT_SPEED_SURGE_MS = 6_000;
 const LOOT_SPEED_SURGE_MULTIPLIER = 2.05;
+const GHOST_STEP_SURGE_MS = 2_400;
+const GHOST_STEP_SURGE_MULTIPLIER = 1.65;
 const LOOT_SPEED_SURGE_CAMERA_ZOOM = 1.08;
 const VAULT_RUSH_MS = 3_400;
 const VAULT_RUSH_DASH_COOLDOWN_MS = 520;
@@ -139,6 +141,7 @@ type RivalCarrierRun = {
 };
 
 type ImpactKind = "steal" | "intercept" | "alibi" | "escape" | "lockdown" | "cashout" | "laser" | "dodge";
+type SpeedSurgeMode = "afterburner" | "ghost-step";
 type CameraKickKind = ImpactKind | "dash";
 type ArenaCalloutKind = ImpactKind | "rival-steal";
 type MissionOutcome = "escaped" | "sealed" | "caught";
@@ -356,6 +359,9 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private alibiPulsesUsed = 0;
   private lootSpeedSurgeUntilMs = 0;
   private lootSpeedSurgeSource: string | null = null;
+  private lootSpeedSurgeMode: SpeedSurgeMode = "afterburner";
+  private lootSpeedSurgeMultiplierValue = 1;
+  private lootSpeedSurgeExitBonus = false;
   private vaultRushUntilMs = 0;
   private vaultRushSource: string | null = null;
   private scanBurns = 0;
@@ -847,6 +853,9 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.alibiPulsesUsed = 0;
     this.lootSpeedSurgeUntilMs = 0;
     this.lootSpeedSurgeSource = null;
+    this.lootSpeedSurgeMode = "afterburner";
+    this.lootSpeedSurgeMultiplierValue = 1;
+    this.lootSpeedSurgeExitBonus = false;
     this.vaultRushUntilMs = 0;
     this.vaultRushSource = null;
     this.scanBurns = 0;
@@ -1631,6 +1640,9 @@ export class ArcadeHeistScene extends Phaser.Scene {
     if (!this.player) return;
     this.lootSpeedSurgeUntilMs = this.elapsedMs + LOOT_SPEED_SURGE_MS;
     this.lootSpeedSurgeSource = source;
+    this.lootSpeedSurgeMode = "afterburner";
+    this.lootSpeedSurgeMultiplierValue = LOOT_SPEED_SURGE_MULTIPLIER;
+    this.lootSpeedSurgeExitBonus = true;
     this.triggerVaultRush(source);
     const target = this.currentObjectiveTarget();
     const direction = target
@@ -1639,6 +1651,24 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.addTrail(this.player.x, this.player.y, direction);
     this.addDashShockwave(this.player.x, this.player.y);
     this.flashArenaCallout("steal", "AFTERBURNER", this.player.x, this.player.y - 54, 0x7effdf);
+    this.emitHudIfNeeded(true);
+  }
+
+  private triggerGhostStep(source: string) {
+    if (!this.player) return;
+    if (this.lootSpeedSurgeActive() && this.lootSpeedSurgeExitBonus) return;
+    this.lootSpeedSurgeUntilMs = Math.max(this.lootSpeedSurgeUntilMs, this.elapsedMs + GHOST_STEP_SURGE_MS);
+    this.lootSpeedSurgeSource = source;
+    this.lootSpeedSurgeMode = "ghost-step";
+    this.lootSpeedSurgeMultiplierValue = GHOST_STEP_SURGE_MULTIPLIER;
+    this.lootSpeedSurgeExitBonus = false;
+    const target = this.currentObjectiveTarget();
+    const direction = target
+      ? new Phaser.Math.Vector2(target.x - this.player.x, target.y - this.player.y)
+      : new Phaser.Math.Vector2(0, -1);
+    this.addTrail(this.player.x, this.player.y, direction);
+    this.addDashShockwave(this.player.x, this.player.y);
+    this.flashArenaCallout("dodge", "GHOST STEP", this.player.x, this.player.y - 54, 0x7effdf);
     this.emitHudIfNeeded(true);
   }
 
@@ -1661,16 +1691,21 @@ export class ArcadeHeistScene extends Phaser.Scene {
   }
 
   private lootSpeedSurgeMultiplier() {
-    return this.lootSpeedSurgeActive() ? LOOT_SPEED_SURGE_MULTIPLIER : 1;
+    return this.lootSpeedSurgeActive() ? this.lootSpeedSurgeMultiplierValue : 1;
+  }
+
+  private afterburnerExitActive() {
+    return this.lootSpeedSurgeActive() && this.lootSpeedSurgeExitBonus;
   }
 
   private lootSpeedSurgeDebug() {
     if (!this.lootSpeedSurgeActive()) return null;
     return {
       active: true,
-      label: "AFTERBURNER",
-      multiplier: LOOT_SPEED_SURGE_MULTIPLIER,
+      label: this.lootSpeedSurgeMode === "ghost-step" ? "GHOST STEP" : "AFTERBURNER",
+      multiplier: this.lootSpeedSurgeMultiplierValue,
       source: this.lootSpeedSurgeSource,
+      exitBonus: this.lootSpeedSurgeExitBonus,
       activeMs: Math.max(0, Math.round(this.lootSpeedSurgeUntilMs - this.elapsedMs))
     };
   }
@@ -1695,10 +1730,11 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private lootSpeedSurgeHud() {
     if (!this.lootSpeedSurgeActive()) return null;
     return {
-      label: "Afterburner" as const,
-      multiplier: LOOT_SPEED_SURGE_MULTIPLIER,
+      label: this.lootSpeedSurgeMode === "ghost-step" ? "Ghost Step" as const : "Afterburner" as const,
+      multiplier: this.lootSpeedSurgeMultiplierValue,
       secondsLeft: Math.max(1, Math.ceil((this.lootSpeedSurgeUntilMs - this.elapsedMs) / 1000)),
-      source: this.lootSpeedSurgeSource
+      source: this.lootSpeedSurgeSource,
+      exitBonus: this.lootSpeedSurgeExitBonus
     };
   }
 
@@ -3294,7 +3330,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
       detail: "Laser sweep avoided"
     });
     this.flashArenaCallout("dodge", "Clean dodge", this.player.x, this.player.y, 0x7effdf);
-    this.feedLine("Clean dodge. Security sweep avoided.");
+    this.triggerGhostStep("Clean dodge");
+    this.feedLine("Clean dodge. Ghost Step speed burst armed.");
     this.impactPulse("dodge");
   }
 
@@ -4080,7 +4117,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
       detail: "Ambush dashed"
     });
     this.flashArenaCallout("dodge", "NEAR MISS", this.player.x, this.player.y - 36, 0x7effdf);
-    this.feedLine("Near miss. You dashed through the rival ambush line.");
+    this.triggerGhostStep("Near miss");
+    this.feedLine("Near miss. Ghost Step burst clears the ambush line.");
     this.impactPulse("dodge", this.player.x, this.player.y);
   }
 
@@ -4362,7 +4400,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     const target = this.escapeZone ?? this.rooms.get("atrium");
     const lockBreakCashoutBonus = outcome === "escaped" ? this.currentLockBreakCashoutBonus() : 0;
     const cashoutValue = this.lootValue + 2 + lockBreakCashoutBonus;
-    const afterburnerExit = outcome === "escaped" && this.lootValue > 0 && this.lootSpeedSurgeActive();
+    const afterburnerExit = outcome === "escaped" && this.lootValue > 0 && this.afterburnerExitActive();
     if (lockBreakCashoutBonus > 0) {
       this.lockBreakCashoutBonusClaimed = lockBreakCashoutBonus;
     }
@@ -4485,7 +4523,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
 
   private finish(outcome: MissionOutcome) {
     if (!this.config || this.finished) return;
-    const afterburnerExit = outcome === "escaped" && this.lootValue > 0 && this.lootSpeedSurgeActive();
+    const afterburnerExit = outcome === "escaped" && this.lootValue > 0 && this.afterburnerExitActive();
     const lockBreakCashoutBonus = outcome === "escaped" ? this.lockBreakCashoutBonusClaimed : 0;
     const extractionAlreadyPlayed = this.extractionOutcome === outcome;
     this.finished = true;

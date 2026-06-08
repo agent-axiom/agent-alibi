@@ -1725,6 +1725,14 @@ p {
   animation: arcade-afterburner-vignette 0.82s ease-in-out infinite alternate;
 }
 
+.arcade-shell.ghost-step-active .arcade-vignette {
+  background:
+    radial-gradient(circle at 50% 46%, rgba(126, 252, 255, 0.18), transparent 29%),
+    linear-gradient(90deg, rgba(3, 25, 32, 0.82), transparent 20%, transparent 74%, rgba(5, 29, 34, 0.76)),
+    linear-gradient(0deg, rgba(5, 8, 17, 0.84), transparent 28%, transparent 75%, rgba(4, 48, 54, 0.54));
+  animation: arcade-afterburner-vignette 0.68s ease-in-out infinite alternate;
+}
+
 .arcade-breach-pulse {
   position: absolute;
   inset: 0;
@@ -2092,6 +2100,56 @@ p {
   }
 }
 
+.arcade-ghost-step {
+  position: absolute;
+  top: clamp(152px, 21vh, 204px);
+  left: 50%;
+  z-index: 6;
+  width: min(390px, calc(100vw - 34px));
+  display: grid;
+  gap: 5px;
+  justify-items: center;
+  border: 1px solid rgba(126, 255, 223, 0.82);
+  border-radius: 8px;
+  padding: 11px 15px;
+  background:
+    linear-gradient(135deg, rgba(4, 35, 38, 0.94), rgba(10, 23, 38, 0.9)),
+    radial-gradient(circle at 50% 0%, rgba(126, 255, 223, 0.32), transparent 62%);
+  box-shadow: 0 24px 58px rgba(0, 0, 0, 0.42), 0 0 48px rgba(126, 255, 223, 0.32);
+  color: #d8fff4;
+  pointer-events: none;
+  text-align: center;
+  text-transform: uppercase;
+  transform: translateX(-50%);
+  animation: arcade-ghost-step-hit 0.9s ease both;
+}
+
+.arcade-ghost-step span,
+.arcade-ghost-step strong,
+.arcade-ghost-step small {
+  display: block;
+  overflow-wrap: anywhere;
+  line-height: 1;
+}
+
+.arcade-ghost-step span {
+  color: #7effdf;
+  font-size: 0.76rem;
+  font-weight: 950;
+}
+
+.arcade-ghost-step strong {
+  color: #ffffff;
+  font-size: clamp(1.05rem, 2.4vw, 1.48rem);
+  font-weight: 950;
+}
+
+.arcade-ghost-step small {
+  color: #ffd56a;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
 .arcade-cashout-payoff {
   position: absolute;
   top: clamp(124px, 18vh, 172px);
@@ -2140,6 +2198,19 @@ p {
   color: #ffd56a;
   font-size: 0.74rem;
   font-weight: 900;
+}
+
+@keyframes arcade-ghost-step-hit {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(16px) scale(0.92);
+  }
+
+  24%,
+  100% {
+    opacity: 0.98;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
 }
 
 @keyframes arcade-cashout-payoff-hit {
