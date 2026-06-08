@@ -352,6 +352,9 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private aiReleased = false;
   private aiWakeHoldMs = 0;
   private aiActionHoldMs = 0;
+  private greedHeatTriggered = false;
+  private greedHeatUntilMs = 0;
+  private rivalLootDelayUntilMs = 0;
   private rivalHunterId: string | null = null;
   private lastRivalPressureLevel: RivalPressure["level"] = "standby";
   private rivalScanState: RivalScanState = { chargeMs: 0, cooldownMs: 0 };
@@ -414,6 +417,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private securitySweepHitCount = 0;
   private securitySweepDodgeCount = 0;
   private securitySweepOverrideUntilMs = 0;
+  private securitySweepDelayUntilMs = 0;
   private securitySweepOverrideX: number | null = null;
   private securitySweepWasInWarning = false;
   private securitySweepWarningHadHit = false;
@@ -599,6 +603,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
       routePulse: this.routePulse,
       alibiPayoff: this.alibiPayoff,
       routeMode: this.routeMode,
+      greedHeatActive: this.elapsedMs < this.greedHeatUntilMs,
+      rivalLootDelayMs: Math.max(0, Math.round(this.rivalLootDelayUntilMs - this.elapsedMs)),
       nearestRival,
       rivalsReleased: this.aiReleased,
       rivalsActive: this.rivalsAreActive(),
@@ -846,6 +852,9 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.aiReleased = false;
     this.aiWakeHoldMs = 0;
     this.aiActionHoldMs = 0;
+    this.greedHeatTriggered = false;
+    this.greedHeatUntilMs = 0;
+    this.rivalLootDelayUntilMs = 0;
     this.rivalHunterId = null;
     this.lastRivalPressureLevel = "standby";
     this.rivalScanState = { chargeMs: 0, cooldownMs: 0 };
@@ -906,6 +915,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.securitySweepHitCount = 0;
     this.securitySweepDodgeCount = 0;
     this.securitySweepOverrideUntilMs = 0;
+    this.securitySweepDelayUntilMs = 0;
     this.securitySweepOverrideX = null;
     this.securitySweepWasInWarning = false;
     this.securitySweepWarningHadHit = false;
@@ -1846,6 +1856,27 @@ export class ArcadeHeistScene extends Phaser.Scene {
     });
   }
 
+  private triggerGreedHeat(targetArtifact: RuntimeArtifact) {
+    if (this.greedHeatTriggered) return;
+    this.greedHeatTriggered = true;
+    this.greedHeatUntilMs = this.elapsedMs + 3_200;
+    if (!this.aiReleased) {
+      this.releaseRivals({ announce: false, holdMs: 0 });
+    } else {
+      this.aiWakeHoldMs = 0;
+    }
+    this.aiActionHoldMs = 0;
+    this.securitySweepDelayUntilMs = Math.max(this.securitySweepDelayUntilMs, this.elapsedMs + 8_500);
+    this.rivalLootDelayUntilMs = Math.max(this.rivalLootDelayUntilMs, this.elapsedMs + 10_000);
+    this.feedLine("Greed heat. Red saw the " + targetArtifact.name + " detour.");
+    this.flashRivalBark({
+      tone: "panic",
+      agentName: "Red Crew",
+      line: "Greed heat. Rook is hunting now."
+    });
+    this.emitHudIfNeeded(true);
+  }
+
   private releaseRivals({ announce, holdMs }: { announce: boolean; holdMs: number }) {
     if (this.aiReleased) return;
     this.aiReleased = true;
@@ -1928,6 +1959,12 @@ export class ArcadeHeistScene extends Phaser.Scene {
       return;
     }
 
+    const artifact = this.nearPlayerArtifact();
+    if (this.routeMode === "greed" && artifact) {
+      this.stealArtifact(artifact, this.player, "You");
+      return;
+    }
+
     if (this.tryAlibiPulse()) return;
 
     if (this.isNearExit()) {
@@ -1935,7 +1972,6 @@ export class ArcadeHeistScene extends Phaser.Scene {
       return;
     }
 
-    const artifact = this.nearPlayerArtifact();
     if (artifact) {
       this.stealArtifact(artifact, this.player, "You");
       return;
@@ -2060,6 +2096,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
   }
 
   private aiStealNearby(agent: RuntimeAgent) {
+    if (!this.isRivalHunter(agent) && this.elapsedMs < this.rivalLootDelayUntilMs) return;
     const artifact = this.artifacts.find(
       (candidate) =>
         !candidate.takenBy &&
@@ -2173,7 +2210,13 @@ export class ArcadeHeistScene extends Phaser.Scene {
     });
     const greedPromptActive = this.routeMode === "greed" && Boolean(targetArtifact);
     const alibiPulseReady = !rivalCarrier && !cashoutReady && canUseAlibiPulse(rivalPressure.level, this.alibiPulseCooldownMs);
-    const prompt = rivalCarrier ? "Press E / Space to intercept" : alibiPulseReady ? "Press E / Space to jam rival scan" : greedPromptActive && nearArtifact ? "Press E / Space to steal" : guidance.prompt;
+    const prompt = rivalCarrier
+      ? "Press E / Space to intercept"
+      : greedPromptActive && nearArtifact
+        ? "Press E / Space to steal"
+        : alibiPulseReady
+          ? "Press E / Space to jam rival scan"
+          : guidance.prompt;
     const greedStatus = this.greedStatus(guidance.greedStatus);
     const rivalIntercept = this.rivalIntercept();
     const routeChoiceRelic = greedStatus
@@ -2190,11 +2233,14 @@ export class ArcadeHeistScene extends Phaser.Scene {
             distanceMeters: targetDistanceMeters
           })
         : null;
+    const routeOwnsCompass = greedPromptActive && objectiveTarget?.kind === "artifact";
+    const cashoutOwnsCompass = canEscape && objectiveTarget?.kind === "escape";
+    const scanOwnsCompass = alibiPulseReady && !routeOwnsCompass && !cashoutOwnsCompass;
     const objectiveCompass = buildObjectiveCompass({
-      kind: alibiPulseReady ? "scan" : (objectiveTarget?.kind ?? "artifact"),
-      targetLabel: alibiPulseReady ? `${nearestRival?.name ?? "Rival"} scan` : this.objectiveCompassTargetLabel(objectiveTarget, targetArtifactLabel),
-      directionLabel: alibiPulseReady ? this.rivalDirectionLabel(nearestRival, rivalPressure) : targetDirectionLabel,
-      distanceMeters: alibiPulseReady ? (nearestRival?.distanceMeters ?? null) : targetDistanceMeters,
+      kind: scanOwnsCompass ? "scan" : (objectiveTarget?.kind ?? "artifact"),
+      targetLabel: scanOwnsCompass ? `${nearestRival?.name ?? "Rival"} scan` : this.objectiveCompassTargetLabel(objectiveTarget, targetArtifactLabel),
+      directionLabel: scanOwnsCompass ? this.rivalDirectionLabel(nearestRival, rivalPressure) : targetDirectionLabel,
+      distanceMeters: scanOwnsCompass ? (nearestRival?.distanceMeters ?? null) : targetDistanceMeters,
       cashoutValue: escapePayout?.cashout ?? null,
       rivalLead: objectiveTarget?.kind === "artifact" ? Math.max(0, this.aiLootValue - this.lootValue) : null,
       swingValue: objectiveTarget?.kind === "artifact" && targetArtifact ? this.lootValue + targetArtifact.value + 2 : null,
@@ -2212,7 +2258,15 @@ export class ArcadeHeistScene extends Phaser.Scene {
       totalArtifacts: this.artifacts.length,
       canEscape,
       dashReady: this.dashCooldownMs <= 0,
-      objective: rivalCarrier ? `Intercept ${rivalCarrier.name}'s carrier run` : alibiPulseReady ? "Jam the rival scan" : greedPromptActive ? `Greed route: steal ${this.artifactTargetLabel(targetArtifact!)}` : guidance.objective,
+      objective: rivalCarrier
+        ? `Intercept ${rivalCarrier.name}'s carrier run`
+        : greedPromptActive
+          ? `Greed route: steal ${this.artifactTargetLabel(targetArtifact!)}`
+          : canEscape && this.lootValue > 0
+            ? guidance.objective
+            : alibiPulseReady
+              ? "Jam the rival scan"
+              : guidance.objective,
       prompt,
       objectiveCompass,
       activeAction: buildActiveActionHint({
@@ -2575,6 +2629,16 @@ export class ArcadeHeistScene extends Phaser.Scene {
       };
     }
 
+    if (this.elapsedMs < this.greedHeatUntilMs) {
+      return {
+        tone: "danger",
+        label: "Rival Objective",
+        title: "Greed heat live",
+        detail: "Rook hunts your detour now",
+        action: "Steal fast or cashout"
+      };
+    }
+
     const hunter = this.rivalHunterDebug();
     if (hunter.visible) {
       const raiders = this.aiAgents
@@ -2716,6 +2780,9 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.updateGreedRouteHint();
     const targetArtifact = this.primaryTargetArtifact();
     const escapePayout = this.escapePayout(true);
+    if (this.routeMode === "greed" && targetArtifact) {
+      this.triggerGreedHeat(targetArtifact);
+    }
     this.flashObjectiveBanner(
       this.routeMode === "greed" && targetArtifact
         ? {
@@ -2755,17 +2822,6 @@ export class ArcadeHeistScene extends Phaser.Scene {
       };
     }
 
-    const carrier = this.nearestRivalCarrierRun();
-    if (carrier) {
-      return {
-        kind: "carrier",
-        id: carrier.agent.id,
-        label: `${carrier.agent.name} carrier`,
-        x: carrier.agent.x,
-        y: carrier.agent.y
-      };
-    }
-
     const artifact = this.primaryTargetArtifact();
 
     if (this.routeMode === "greed" && this.canGreedRoute() && artifact) {
@@ -2775,6 +2831,17 @@ export class ArcadeHeistScene extends Phaser.Scene {
         label: this.artifactTargetLabel(artifact),
         x: artifact.x,
         y: artifact.y
+      };
+    }
+
+    const carrier = this.nearestRivalCarrierRun();
+    if (carrier && this.shouldPrioritizeCarrierObjective(carrier)) {
+      return {
+        kind: "carrier",
+        id: carrier.agent.id,
+        label: `${carrier.agent.name} carrier`,
+        x: carrier.agent.x,
+        y: carrier.agent.y
       };
     }
 
@@ -2810,6 +2877,12 @@ export class ArcadeHeistScene extends Phaser.Scene {
         !artifact.takenBy &&
         Phaser.Math.Distance.Between(this.player!.x, this.player!.y, artifact.x, artifact.y) <= PICKUP_RADIUS + 18
     );
+  }
+
+  private shouldPrioritizeCarrierObjective(carrier: RivalCarrierRun): boolean {
+    if (this.lootValue <= 0) return true;
+    const redPotential = this.aiLootValue + this.aiPendingLootValue();
+    return redPotential >= this.currentCashoutValue() || carrier.relic.value >= this.currentCashoutValue();
   }
 
   private nearestRivalCarrierRun(): RivalCarrierRun | undefined {
@@ -3283,7 +3356,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
   }
 
   private securitySweepActive() {
-    return this.securitySweepOverrideUntilMs > this.elapsedMs || (this.aiReleased && this.aiWakeHoldMs <= 0);
+    return this.securitySweepOverrideUntilMs > this.elapsedMs || (this.aiReleased && this.aiWakeHoldMs <= 0 && this.elapsedMs >= this.securitySweepDelayUntilMs);
   }
 
   private securitySweepX() {
