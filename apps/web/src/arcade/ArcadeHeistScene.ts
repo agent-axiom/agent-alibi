@@ -155,7 +155,7 @@ type ImpactBurstDebug = {
 
 type VaultRushDebug = {
   active: true;
-  label: "VAULT RUSH";
+  label: "VAULT RUSH" | "BREAKOUT RUSH";
   source: string | null;
   targetKind: ArcadeObjectiveTarget["kind"] | null;
   secondsLeft: number;
@@ -1471,7 +1471,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
   }
 
   private updateCameraZoom(delta: number) {
-    const rushZoom = this.vaultRushActive() ? 1.035 : 1;
+    const rushZoom = this.breakoutRushActive() ? 1.065 : this.vaultRushActive() ? 1.035 : 1;
     const targetZoom = this.cameraBaseZoom() * (this.lootSpeedSurgeActive() ? LOOT_SPEED_SURGE_CAMERA_ZOOM : 1) * rushZoom;
     const ease = Phaser.Math.Clamp(delta / 130, 0.08, 0.46);
     this.cameras.main.setZoom(Phaser.Math.Linear(this.cameras.main.zoom, targetZoom, ease));
@@ -1646,6 +1646,10 @@ export class ArcadeHeistScene extends Phaser.Scene {
     return this.elapsedMs < this.vaultRushUntilMs;
   }
 
+  private breakoutRushActive() {
+    return this.vaultRushActive() && this.vaultRushSource === "Rook lock break";
+  }
+
   private lootSpeedSurgeActive() {
     return this.elapsedMs < this.lootSpeedSurgeUntilMs;
   }
@@ -1671,7 +1675,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     const spec = this.vaultRushLaneSpec(target, distance);
     return {
       active: true,
-      label: "VAULT RUSH",
+      label: this.breakoutRushActive() ? "BREAKOUT RUSH" : "VAULT RUSH",
       source: this.vaultRushSource,
       targetKind: target?.kind ?? null,
       secondsLeft: Math.max(1, Math.ceil((this.vaultRushUntilMs - this.elapsedMs) / 1000)),
@@ -2688,6 +2692,16 @@ export class ArcadeHeistScene extends Phaser.Scene {
   }
 
   private currentObjectiveTarget(): ArcadeObjectiveTarget | undefined {
+    if (this.lockBreakCashoutArmed() && this.escapeZone) {
+      return {
+        kind: "escape",
+        id: "escape",
+        label: "Atrium Lift",
+        x: this.escapeZone.x,
+        y: this.escapeZone.y
+      };
+    }
+
     const carrier = this.nearestRivalCarrierRun();
     if (carrier) {
       return {
@@ -3054,6 +3068,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.flashArenaCallout("dodge", "LOCK BROKEN", this.player.x, this.player.y - 48, 0x7effdf);
     if (this.lootValue > 0) {
       this.lockBreakCashoutArmedUntilMs = this.elapsedMs + LOCK_BREAK_CASHOUT_WINDOW_MS;
+      this.triggerVaultRush("Rook lock break");
       this.flashObjectiveBanner(this.buildEscapeBanner(this.canGreedRoute()), 2_100);
       this.feedLine("Breakout cashout armed. Bank before Rook reacquires.");
     } else {
