@@ -125,6 +125,13 @@ export function FinalCaseFile({ summary, soundEnabled = false, onToggleSound, on
               <small>Rook lock broken</small>
             </div>
           ) : null}
+          {summary.comebackRoutesArmed && summary.comebackRoutesArmed > 0 ? (
+            <div className="final-score final-comeback">
+              <span>Comeback Cashout</span>
+              <strong>x{summary.comebackRoutesArmed}</strong>
+              <small>Beat Red from behind</small>
+            </div>
+          ) : null}
           {summary.lootChain && summary.lootChain > 1 ? (
             <div className="final-score final-chain">
               <span>Loot Chain</span>
@@ -556,10 +563,17 @@ export function buildCaseShareText(summary: MatchSummary): string {
 
 function buildShareHighlightLines(summary: MatchSummary): string[] {
   const baseLines = summary.highlightLines ?? [];
-  if (!summary.carrierIntercepts || summary.carrierIntercepts <= 0) return baseLines;
+  if (summary.carrierIntercepts && summary.carrierIntercepts > 0) {
+    const deniedLine = `Red denied: ${summary.interceptedRelicNames?.length ? summary.interceptedRelicNames.join(" + ") : "recovered loot"}`;
+    return [deniedLine, ...baseLines.filter((line) => line.toLowerCase() !== deniedLine.toLowerCase())];
+  }
 
-  const deniedLine = `Red denied: ${summary.interceptedRelicNames?.length ? summary.interceptedRelicNames.join(" + ") : "recovered loot"}`;
-  return [deniedLine, ...baseLines.filter((line) => line.toLowerCase() !== deniedLine.toLowerCase())];
+  if (summary.comebackRoutesArmed && summary.comebackRoutesArmed > 0) {
+    const comebackLine = "Comeback cashout beat Red from behind";
+    return [comebackLine, ...baseLines.filter((line) => line.toLowerCase() !== comebackLine.toLowerCase())];
+  }
+
+  return baseLines;
 }
 
 export function buildCaseStamp(summary: MatchSummary) {
@@ -569,13 +583,16 @@ export function buildCaseStamp(summary: MatchSummary) {
     summary.carrierIntercepts && summary.carrierIntercepts > 0
       ? `Red denied: ${summary.interceptedRelicNames?.length ? summary.interceptedRelicNames.join(" + ") : "recovered loot"}`
       : null;
-  const baseQuote = deniedCarrierQuote ?? summary.highlightLines?.[0] ?? buildRematchHook(summary);
+  const comebackQuote = summary.comebackRoutesArmed && summary.comebackRoutesArmed > 0 ? "Comeback cashout beat Red from behind" : null;
+  const baseQuote = deniedCarrierQuote ?? comebackQuote ?? summary.highlightLines?.[0] ?? buildRematchHook(summary);
   const quote =
-    summary.lockBreakCashoutBonus && summary.lockBreakCashoutBonus > 0
-      ? `Breakout cashout +${summary.lockBreakCashoutBonus}${baseQuote ? ` · ${baseQuote}` : ""}`
-      : summary.afterburnerExitBonus && summary.afterburnerExitBonus > 0
-        ? `Afterburner cashout +${summary.afterburnerExitBonus}${baseQuote ? ` · ${baseQuote}` : ""}`
-        : baseQuote;
+    deniedCarrierQuote || comebackQuote
+      ? baseQuote
+      : summary.lockBreakCashoutBonus && summary.lockBreakCashoutBonus > 0
+        ? `Breakout cashout +${summary.lockBreakCashoutBonus}${baseQuote ? ` · ${baseQuote}` : ""}`
+        : summary.afterburnerExitBonus && summary.afterburnerExitBonus > 0
+          ? `Afterburner cashout +${summary.afterburnerExitBonus}${baseQuote ? ` · ${baseQuote}` : ""}`
+          : baseQuote;
 
   if (summary.runRating) {
     resultParts.push(summary.runRating);

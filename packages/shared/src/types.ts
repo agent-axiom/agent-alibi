@@ -105,6 +105,7 @@ export type MatchSummary = {
   styleBonus?: number;
   afterburnerExitBonus?: number;
   lockBreakCashoutBonus?: number;
+  comebackRoutesArmed?: number;
   lootChain?: number;
   greedRoute?: "successful" | "skipped";
   stolenRelicNames?: string[];

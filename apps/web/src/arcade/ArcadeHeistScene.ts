@@ -363,6 +363,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private hunterLockSuppressedUntilMs = 0;
   private lockBreakCashoutArmedUntilMs = 0;
   private lockBreakCashoutBonusClaimed = 0;
+  private comebackRoutesArmed = 0;
   private interceptedRelicNames: string[] = [];
   private interceptedLootValue = 0;
   private lastRivalSteal: string | null = null;
@@ -846,6 +847,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.hunterLockSuppressedUntilMs = 0;
     this.lockBreakCashoutArmedUntilMs = 0;
     this.lockBreakCashoutBonusClaimed = 0;
+    this.comebackRoutesArmed = 0;
     this.interceptedRelicNames = [];
     this.interceptedLootValue = 0;
     this.lastRivalSteal = null;
@@ -1512,6 +1514,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       this.flashObjectiveBanner(this.buildEscapeBanner(this.artifactsStolen === 1));
       const comebackCashoutValue = this.currentCashoutValue();
       if (comebackWasBehind && comebackCashoutValue > comebackRivalLootValue) {
+        this.comebackRoutesArmed += 1;
         this.flashRoutePulse({
           mode: "comeback",
           title: "Comeback live",
@@ -4396,7 +4399,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
       interceptedRelicNames: this.interceptedRelicNames,
       interceptedLootValue: this.interceptedLootValue,
       afterburnerExit,
-      lockBreakCashoutBonus
+      lockBreakCashoutBonus,
+      comebackRoutesArmed: this.comebackRoutesArmed
     });
   }
 

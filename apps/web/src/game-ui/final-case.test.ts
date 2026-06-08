@@ -120,6 +120,19 @@ describe("buildCaseShareText", () => {
     expect(text).toContain("https://agent-axiom.github.io/agent-alibi/");
   });
 
+  it("leads copied comeback results with the comeback cashout", () => {
+    const text = buildCaseShareText(
+      summary({
+        comebackRoutesArmed: 1,
+        highlightLines: ["Case title: Comeback Cashout", "Comeback cashout beat Red from behind", "Stole Argent Crown"]
+      })
+    );
+
+    expect(text).toContain("CASE HIGHLIGHTS");
+    expect(text).toContain("01. Comeback cashout beat Red from behind");
+    expect(text).toContain("02. Case title: Comeback Cashout");
+  });
+
   it("leads copied carrier-intercept results with the denied Red loot", () => {
     const text = buildCaseShareText(
       summary({
@@ -164,6 +177,18 @@ describe("buildCaseStamp", () => {
         })
       ).quote
     ).toBe("Afterburner cashout +1 · Stole Moon Pearl + Argent Crown");
+  });
+
+  it("leads share stamps with comeback cashout when Red was beaten from behind", () => {
+    expect(
+      buildCaseStamp(
+        summary({
+          comebackRoutesArmed: 1,
+          afterburnerExitBonus: 1,
+          highlightLines: ["Case title: Comeback Cashout", "Stole Argent Crown"]
+        })
+      ).quote
+    ).toBe("Comeback cashout beat Red from behind");
   });
 
   it("leads share stamps with breakout cashout when the lock-break bonus lands", () => {
