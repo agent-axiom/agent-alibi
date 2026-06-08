@@ -287,8 +287,21 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   const escapeZoneBadge = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().escapeZoneBadge);
   expect(escapeZoneBadge).toEqual({ visible: true, label: "Cashout +5" });
   await page.keyboard.press("KeyG");
+  await expect(page.getByLabel(/mission radio/i).getByText(/greed heat/i)).toBeVisible();
   await expect(objectiveBanner.getByText(/greed route armed/i)).toBeVisible();
   await expect(objectiveBanner.getByText(/steal argent crown before escape/i)).toBeVisible();
+  const greedHeat = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());
+  expect(greedHeat?.routeMode).toBe("greed");
+  expect(greedHeat?.rivalsReleased).toBe(true);
+  expect(greedHeat?.rivalsActive).toBe(true);
+  expect(greedHeat?.rivalWakeHoldMs).toBe(0);
+  expect(greedHeat?.rivalHunter).toEqual(
+    expect.objectContaining({
+      visible: true,
+      status: "hunting",
+      targetLabel: "YOU"
+    })
+  );
   await expect(page.locator(".arcade-shell")).toHaveClass(/route-pulse-active/);
   const routePulse = page.getByLabel(/route pulse/i);
   await expect(routePulse.getByText(/greed route locked/i)).toBeVisible();
