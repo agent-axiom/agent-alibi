@@ -4440,6 +4440,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       alibiPulsesUsed: this.alibiPulsesUsed,
       scanBurns: this.scanBurns,
       carrierIntercepts: this.carrierIntercepts,
+      ambushNearMisses: this.ambushNearMissCount,
       interceptedRelicNames: this.interceptedRelicNames,
       interceptedLootValue: this.interceptedLootValue,
       afterburnerExit,

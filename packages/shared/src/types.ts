@@ -114,6 +114,7 @@ export type MatchSummary = {
   alibiPulsesUsed?: number;
   scanBurns?: number;
   carrierIntercepts?: number;
+  ambushNearMisses?: number;
   interceptedRelicNames?: string[];
   highlightLines?: string[];
   caseFile: string;

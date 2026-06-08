@@ -1,5 +1,13 @@
 import { expect, test, type Page } from "@playwright/test";
 
+const FINAL_CASE_TIMEOUT_MS = 15_000;
+
+async function expectFinalCaseFile(page: Page) {
+  await expect(page.locator(".case-file pre").getByText(/agent alibi case file/i)).toBeVisible({
+    timeout: FINAL_CASE_TIMEOUT_MS
+  });
+}
+
 async function startSoloArcade(page: Page) {
   await page.goto("/");
   await page.getByRole("button", { name: /play now vs ai/i }).click();
@@ -362,7 +370,7 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(scorePopup.getByText(/\+2 escape bonus/i)).toBeVisible();
   await expect(scorePopup.getByText(/afterburner \+1/i)).toBeVisible();
 
-  await expect(page.locator(".case-file pre").getByText(/agent alibi case file/i)).toBeVisible();
+  await expectFinalCaseFile(page);
   await expect(page.locator(".final-shell")).toHaveClass(/afterburner-finish/);
   const shareStamp = page.getByLabel(/share case stamp/i);
   await expect(shareStamp.getByText(/agent alibi case file/i)).toBeVisible();
@@ -441,7 +449,7 @@ test("copy result exposes manual case file when clipboard is blocked", async ({ 
   await startSoloArcade(page);
   await page.waitForFunction(() => typeof window.__AGENT_ALIBI_FINISH_ARCADE__ === "function");
   await page.evaluate(() => window.__AGENT_ALIBI_FINISH_ARCADE__?.());
-  await expect(page.locator(".case-file pre").getByText(/agent alibi case file/i)).toBeVisible();
+  await expectFinalCaseFile(page);
 
   await page.getByRole("button", { name: /copy result/i }).click();
 
@@ -764,6 +772,15 @@ test("rival agents stay visually staged until the breach starts", async ({ page 
   expect(hunterStart?.status).toBe("hunting");
   expect(hunterChase?.status).toBe("hunting");
   expect(hunterChase?.distanceMeters).toBeLessThan(hunterStart?.distanceMeters ?? 0);
+
+  await page.evaluate(() => window.__AGENT_ALIBI_FINISH_ARCADE__?.());
+  const finalScores = page.getByLabel(/final scores/i);
+  const ambushCard = finalScores.locator(".final-ambush");
+  await expect(ambushCard.getByText(/ambush dodges/i)).toBeVisible();
+  await expect(ambushCard.getByText(/x1/i)).toBeVisible();
+  await expect(ambushCard.getByText(/rival ambush dashed/i)).toBeVisible();
+  await expect(page.getByLabel(/case highlights/i).getByText(/dashed through rival ambush x1/i)).toBeVisible();
+  await expect(page.getByText(/ambush dodges: 1/i)).toBeVisible();
 });
 
 test("hunter lock-on telegraphs Rook's pursuit", async ({ page }) => {
@@ -910,7 +927,8 @@ test("breaking Rook lock turns a fast cashout into a combo payoff", async ({ pag
     })
   );
 
-  await expect(page.locator(".case-file pre").getByText(/agent alibi case file/i)).toBeVisible();
+  await page.evaluate(() => window.__AGENT_ALIBI_FINISH_ARCADE__?.());
+  await expectFinalCaseFile(page);
   const finalScores = page.getByLabel(/final scores/i);
   await expect(finalScores.getByText(/breakout cashout/i)).toBeVisible();
   await expect(finalScores.getByText(/\+2/i)).toBeVisible();

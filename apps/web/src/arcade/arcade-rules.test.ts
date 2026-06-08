@@ -92,6 +92,25 @@ describe("buildArcadeMatchSummary", () => {
     expect(summary.caseFile).toContain("Breakout Cashout Bonus: +2");
   });
 
+  it("keeps breakout cashout in top highlights when ambush also lands", () => {
+    const summary = buildArcadeMatchSummary({
+      outcome: "escaped",
+      playerName: "Agent You",
+      lootValue: 3,
+      artifactsStolen: 1,
+      aiLootValue: 0,
+      alarm: 2,
+      elapsedMs: 42_000,
+      lockBreakCashoutBonus: 2,
+      ambushNearMisses: 1,
+      stolenRelicNames: ["Moon Pearl"],
+      pendingRivalRelicNames: ["Crystal Ledger"],
+      afterburnerExit: true
+    });
+
+    expect(summary.highlightLines).toContain("Breakout cashout +2");
+  });
+
   it("records a successful greed route in the shareable case file", () => {
     const summary = buildArcadeMatchSummary({
       outcome: "escaped",
@@ -199,6 +218,23 @@ describe("buildArcadeMatchSummary", () => {
     expect(summary.scanBurns).toBe(1);
     expect(summary.caseFile).toContain("Alibi Pulses: 2");
     expect(summary.caseFile).toContain("Scan Burns: 1");
+  });
+
+  it("records ambush near-misses as a shareable skill highlight", () => {
+    const summary = buildArcadeMatchSummary({
+      outcome: "escaped",
+      playerName: "Agent You",
+      lootValue: 3,
+      artifactsStolen: 1,
+      aiLootValue: 0,
+      alarm: 2,
+      elapsedMs: 55_000,
+      ambushNearMisses: 2
+    });
+
+    expect(summary.ambushNearMisses).toBe(2);
+    expect(summary.highlightLines).toContain("Dashed through rival ambush x2");
+    expect(summary.caseFile).toContain("Ambush Dodges: 2");
   });
 
   it("records carrier intercepts as a shareable match highlight", () => {
