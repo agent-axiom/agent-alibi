@@ -3093,9 +3093,15 @@ export class ArcadeHeistScene extends Phaser.Scene {
     const combo = this.comboCashoutWindow();
     if (!lockBreak.active || !combo) return null;
 
+    const remainingMs = Math.max(0, this.lockBreakCashoutArmedUntilMs - this.elapsedMs);
+    const timerPercent = Phaser.Math.Clamp(Math.round((remainingMs / LOCK_BREAK_CASHOUT_WINDOW_MS) * 100), 0, 100);
+
     return {
       cashoutValue: combo.cashoutValue,
+      baseCashoutValue: combo.cashoutValue - combo.bonus,
+      bonus: combo.bonus,
       secondsLeft: combo.secondsLeft,
+      timerPercent,
       activeMs: lockBreak.activeMs ?? 0
     };
   }
