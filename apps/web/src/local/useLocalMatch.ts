@@ -272,6 +272,7 @@ function makeInitialArcadeHud(state: GameState): ArcadeHudState {
     },
     escapePayout: null,
     extractionCue: null,
+    extractionSequence: null,
     routeChoice: null,
     routePulse: null,
     radarBlips: [],

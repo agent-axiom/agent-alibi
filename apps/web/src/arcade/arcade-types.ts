@@ -34,6 +34,15 @@ export type ArcadeExtractionCue = {
   action: string;
 };
 
+export type ArcadeExtractionSequence = {
+  active: true;
+  label: "EXTRACTION LIVE";
+  outcome: "escaped" | "sealed" | "caught";
+  cashoutValue: number;
+  remainingMs: number;
+  beamVisible: boolean;
+};
+
 export type ArcadeRouteChoice = {
   mode: "escape" | "greed";
   cashoutNow: number;
@@ -151,6 +160,7 @@ export type ArcadeHudState = {
   vaultCondition: ArcadeVaultCondition;
   escapePayout: ArcadeEscapePayout | null;
   extractionCue: ArcadeExtractionCue | null;
+  extractionSequence: ArcadeExtractionSequence | null;
   routeChoice: ArcadeRouteChoice | null;
   routePulse: ArcadeRoutePulse | null;
   radarBlips: ArcadeRadarBlip[];
