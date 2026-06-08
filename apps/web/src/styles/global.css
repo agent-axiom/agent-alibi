@@ -2155,7 +2155,7 @@ p {
 }
 
 .arcade-shell.breach-alert .arcade-rival-objective {
-  display: none;
+  display: grid;
 }
 
 .arcade-shell.breach-alert .arcade-mission-meta {

@@ -667,6 +667,10 @@ test("rival agents stay visually staged until the breach starts", async ({ page 
   expect(breached?.rivalIntentRoutes?.routeCount).toBeGreaterThanOrEqual(3);
   expect(breached?.rivalIntentRoutes?.targetLabels).toEqual(expect.arrayContaining([expect.stringMatching(/rook -> /i)]));
   expect(breached?.rivalIntentRoutes?.targetLabels).toEqual(expect.arrayContaining([expect.stringMatching(/rook -> you/i)]));
+  const rivalObjective = page.getByLabel(/rival objective/i);
+  await expect(rivalObjective.getByText(/rook marks you/i)).toBeVisible();
+  await expect(rivalObjective.getByText(/gremlin \/ anchor raid relics/i)).toBeVisible();
+  await expect(rivalObjective.getByText(/cashout before red carriers score/i)).toBeVisible();
   expect(breached?.rivalHunter).toEqual(
     expect.objectContaining({
       visible: true,
