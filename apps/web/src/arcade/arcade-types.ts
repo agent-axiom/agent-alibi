@@ -60,6 +60,7 @@ export type ArcadeRivalIntercept = {
   agentName: string;
   relicName: string;
   value: number;
+  swingValue: number;
   distanceMeters: number;
   directionLabel: string;
   cashoutSeconds: number;

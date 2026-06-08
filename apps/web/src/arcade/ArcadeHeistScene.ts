@@ -2482,6 +2482,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       agentName: carrier.agent.name,
       relicName: carrier.relic.name,
       value: carrier.relic.value,
+      swingValue: carrier.relic.value * 2,
       distanceMeters: carrier.distanceMeters,
       directionLabel: carrier.directionLabel,
       cashoutSeconds,
@@ -2506,7 +2507,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
         tone: rivalIntercept.urgency === "critical" ? "danger" : "warning",
         label: "Rival Objective",
         title: `${rivalIntercept.agentName} carrier run`,
-        detail: `${rivalIntercept.relicName} +${rivalIntercept.value} · ${rivalIntercept.cashoutSeconds}s to lift`,
+        detail: `${rivalIntercept.relicName} +${rivalIntercept.value} · deny Red +${rivalIntercept.value} / swing +${rivalIntercept.swingValue} · ${rivalIntercept.cashoutSeconds}s to lift`,
         action: rivalIntercept.urgency === "critical" ? "Intercept now" : "Intercept before cashout"
       };
     }
