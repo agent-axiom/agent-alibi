@@ -1566,6 +1566,11 @@ test("alibi pulse jams a close rival scan", async ({ page }) => {
   await expect(page.getByText(/alibi pulse: scanner jammed/i)).toBeVisible();
   await expect(page.getByText(/jammed .+ scan/i)).toBeVisible();
   await expect(page.getByLabel(/rival scan meter/i).getByText(/scan jammed/i)).toBeVisible();
+  const alibiWindow = page.getByLabel(/route pulse/i);
+  await expect(alibiWindow.getByText(/alibi window open/i)).toBeVisible();
+  await expect(alibiWindow.getByText(/2s scan break/i)).toBeVisible();
+  await expect(alibiWindow.getByText(/dash clear before scan returns/i)).toBeVisible();
+  await expect(page.locator(".arcade-route-pulse.alibi")).toBeVisible();
   const afterPulse = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());
   expect(afterPulse?.alibiPulseCooldownMs).toBeGreaterThan(0);
   expect(afterPulse?.rivalScanChargeMs).toBe(0);
