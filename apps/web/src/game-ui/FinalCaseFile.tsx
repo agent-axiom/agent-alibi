@@ -1,10 +1,15 @@
 import { Copy, Home, RotateCcw, Volume2, VolumeX } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { MatchSummary, TeamScore } from "@agent-alibi/shared";
+import type { Locale } from "../i18n";
+import { localizeText, t } from "../i18n";
+import { LanguageToggle } from "./LanguageToggle";
 
 type FinalCaseFileProps = {
   summary: MatchSummary;
   soundEnabled?: boolean;
+  locale?: Locale;
+  onLocaleChange?: (locale: Locale) => void;
   onToggleSound?: () => void;
   onRematch: () => void;
   onHome: () => void;
@@ -42,7 +47,7 @@ export type LocalBestCaseStatus = {
   delta: string;
 };
 
-export function FinalCaseFile({ summary, soundEnabled = false, onToggleSound, onRematch, onHome }: FinalCaseFileProps) {
+export function FinalCaseFile({ summary, soundEnabled = false, locale = "en", onLocaleChange, onToggleSound, onRematch, onHome }: FinalCaseFileProps) {
   const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "blocked">("idle");
   const [bestCase] = useState(() => buildLocalBestCaseStatus(summary, readLocalBestCaseRecord()));
   const blueScore = summary.teamScores.find((score) => score.teamId === "blue");
@@ -82,13 +87,13 @@ export function FinalCaseFile({ summary, soundEnabled = false, onToggleSound, on
   return (
     <main className={`final-shell ${afterburnerFinish ? "afterburner-finish" : ""}`}>
       {escapeBonus > 0 ? (
-        <div className="arcade-score-popup bonus final-score-popup" aria-label="Score popup" aria-live="polite">
-          <strong>+{escapeBonus} Escape bonus</strong>
+        <div className="arcade-score-popup bonus final-score-popup" aria-label={t(locale, "final.scorePopup")} aria-live="polite">
+          <strong>{t(locale, "final.escapeBonus", { escape: escapeBonus })}</strong>
           <span>{finalPopupDetail}</span>
         </div>
       ) : null}
       <section className="case-file">
-        <p className="eyebrow">Final Case File</p>
+        <p className="eyebrow">{t(locale, "final.eyebrow")}</p>
         <h1>{summary.title}</h1>
         <section className="case-stamp" aria-label="Share case stamp">
           <span>{caseStamp.kicker}</span>
@@ -103,16 +108,16 @@ export function FinalCaseFile({ summary, soundEnabled = false, onToggleSound, on
         </section>
         <section className="final-scoreboard" aria-label="Final scores">
           <div className="final-score">
-            <span>Winner</span>
+            <span>{t(locale, "final.winner")}</span>
             <strong>{winner}</strong>
           </div>
           <div className="final-score final-margin">
-            <span>Score Margin</span>
+            <span>{t(locale, "final.scoreMargin")}</span>
             <strong>{scoreMargin}</strong>
           </div>
           {summary.runRating ? (
             <div className="final-score final-rating">
-              <span>Run Rating</span>
+              <span>{t(locale, "final.runRating")}</span>
               <strong>{summary.runRating}</strong>
               <small>{summary.styleBonus ? `Clean exit bonus +${summary.styleBonus}` : "No clean bonus"}</small>
             </div>
@@ -231,22 +236,23 @@ export function FinalCaseFile({ summary, soundEnabled = false, onToggleSound, on
         <div className="final-actions">
           <button className="final-run-it-back" onClick={onRematch}>
             <RotateCcw aria-hidden="true" size={20} />
-            <span>Run It Back</span>
-            <small>{nextRunContracts[0]?.title ?? "New contract"}</small>
+            <span>{t(locale, "final.runItBack")}</span>
+            <small>{nextRunContracts[0]?.title ?? t(locale, "final.newContract")}</small>
           </button>
           <button onClick={copyResult}>
             <Copy aria-hidden="true" size={18} />
-            {copyStatus === "copied" ? "Copied" : copyStatus === "blocked" ? "Copy blocked" : "Copy Result"}
+            {copyStatus === "copied" ? t(locale, "final.copied") : copyStatus === "blocked" ? t(locale, "final.copyBlocked") : t(locale, "final.copyResult")}
           </button>
           {onToggleSound ? (
-            <button onClick={onToggleSound} aria-label={soundEnabled ? "Sound On" : "Sound Off"} title={soundEnabled ? "Sound On" : "Sound Off"}>
+            <button onClick={onToggleSound} aria-label={soundEnabled ? t(locale, "sound.on") : t(locale, "sound.off")} title={soundEnabled ? t(locale, "sound.on") : t(locale, "sound.off")}>
               {soundEnabled ? <Volume2 aria-hidden="true" size={18} /> : <VolumeX aria-hidden="true" size={18} />}
-              {soundEnabled ? "Sound On" : "Sound Off"}
+              {soundEnabled ? t(locale, "sound.on") : t(locale, "sound.off")}
             </button>
           ) : null}
+          {onLocaleChange ? <LanguageToggle locale={locale} onLocaleChange={onLocaleChange} /> : null}
           <button onClick={onHome}>
             <Home aria-hidden="true" size={18} />
-            Home
+            {t(locale, "final.home")}
           </button>
         </div>
         {copyStatus === "blocked" ? (
@@ -405,11 +411,11 @@ function localBestRatingValue(rating: string): number {
   return 0;
 }
 
-export function formatLocalBestCaseDetail(record: LocalBestCaseRecord): string {
-  const boostDetail = record.afterburnerExitBonus && record.afterburnerExitBonus > 0 ? ` · boost +${record.afterburnerExitBonus}` : "";
-  const breakoutDetail = record.lockBreakCashoutBonus && record.lockBreakCashoutBonus > 0 ? ` · breakout +${record.lockBreakCashoutBonus}` : "";
-  const denialDetail = record.carrierIntercepts && record.carrierIntercepts > 0 ? ` · denial x${record.carrierIntercepts}` : "";
-  return `Score ${record.score} · ${record.runRating} · chain x${record.lootChain}${boostDetail}${breakoutDetail}${denialDetail}`;
+export function formatLocalBestCaseDetail(record: LocalBestCaseRecord, locale: Locale = "en"): string {
+  const boostDetail = record.afterburnerExitBonus && record.afterburnerExitBonus > 0 ? t(locale, "best.boost", { boost: record.afterburnerExitBonus }) : "";
+  const breakoutDetail = record.lockBreakCashoutBonus && record.lockBreakCashoutBonus > 0 ? t(locale, "best.breakout", { breakout: record.lockBreakCashoutBonus }) : "";
+  const denialDetail = record.carrierIntercepts && record.carrierIntercepts > 0 ? t(locale, "best.denial", { denial: record.carrierIntercepts }) : "";
+  return t(locale, "best.detail", { score: record.score, rating: record.runRating, chain: record.lootChain, boost: boostDetail, breakout: breakoutDetail, denial: denialDetail });
 }
 
 function buildLocalBestDelta(current: LocalBestCaseRecord, previous: LocalBestCaseRecord | null, isNewBest: boolean): string {

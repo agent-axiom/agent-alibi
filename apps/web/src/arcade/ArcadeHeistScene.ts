@@ -54,6 +54,8 @@ const LOOT_SPEED_SURGE_MS = 6_000;
 const LOOT_SPEED_SURGE_MULTIPLIER = 2.05;
 const GHOST_STEP_SURGE_MS = 2_400;
 const GHOST_STEP_SURGE_MULTIPLIER = 1.65;
+const BREACH_SPRINT_MS = 8_500;
+const BREACH_SPRINT_MULTIPLIER = 1.42;
 const LOOT_SPEED_SURGE_CAMERA_ZOOM = 1.08;
 const VAULT_RUSH_MS = 3_400;
 const VAULT_RUSH_DASH_COOLDOWN_MS = 520;
@@ -141,7 +143,7 @@ type RivalCarrierRun = {
 };
 
 type ImpactKind = "steal" | "intercept" | "alibi" | "escape" | "lockdown" | "cashout" | "laser" | "dodge";
-type SpeedSurgeMode = "afterburner" | "ghost-step";
+type SpeedSurgeMode = "afterburner" | "ghost-step" | "breach-sprint";
 type CameraKickKind = ImpactKind | "dash";
 type ArenaCalloutKind = ImpactKind | "rival-steal";
 type MissionOutcome = "escaped" | "sealed" | "caught";
@@ -159,7 +161,7 @@ type ImpactBurstDebug = {
 
 type VaultRushDebug = {
   active: true;
-  label: "VAULT RUSH" | "BREAKOUT RUSH";
+  label: "VAULT RUSH" | "BREAKOUT RUSH" | "BREACH SPRINT";
   source: string | null;
   targetKind: ArcadeObjectiveTarget["kind"] | null;
   secondsLeft: number;
@@ -974,6 +976,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.movementCoachStartX = playerOrigin?.x ?? 0;
     this.movementCoachStartY = playerOrigin?.y ?? 0;
     this.resizeCamera();
+    this.triggerBreachSprint();
     this.updateTargetMarker();
     this.updateGreedRouteHint();
     this.updateMovementCoach();
@@ -1583,6 +1586,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       return;
     }
 
+    this.cancelBreachSprint();
     actor.carriedRelics.push({ name: artifact.name, value: artifact.value });
     actor.targetRoomId = "atrium";
     this.alarm = Math.min(5, this.alarm + 0.12);
@@ -1644,6 +1648,28 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.scorePopup = popup;
     this.scorePopupUntilMs = this.elapsedMs + 1_800;
     this.emitHudIfNeeded(true);
+  }
+
+  private triggerBreachSprint() {
+    const target = this.primaryTargetArtifact();
+    if (!this.player || !target) return;
+    this.lootSpeedSurgeUntilMs = this.elapsedMs + BREACH_SPRINT_MS;
+    this.lootSpeedSurgeSource = target.name;
+    this.lootSpeedSurgeMode = "breach-sprint";
+    this.lootSpeedSurgeMultiplierValue = BREACH_SPRINT_MULTIPLIER;
+    this.lootSpeedSurgeExitBonus = false;
+    this.triggerVaultRush(target.name);
+  }
+
+  private cancelBreachSprint() {
+    if (this.lootSpeedSurgeMode !== "breach-sprint" || !this.lootSpeedSurgeActive()) return;
+    this.lootSpeedSurgeUntilMs = 0;
+    this.lootSpeedSurgeSource = null;
+    this.lootSpeedSurgeMode = "afterburner";
+    this.lootSpeedSurgeMultiplierValue = 1;
+    this.lootSpeedSurgeExitBonus = false;
+    this.vaultRushUntilMs = 0;
+    this.vaultRushSource = null;
   }
 
   private triggerLootSpeedSurge(source: string) {
@@ -1712,7 +1738,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     if (!this.lootSpeedSurgeActive()) return null;
     return {
       active: true,
-      label: this.lootSpeedSurgeMode === "ghost-step" ? "GHOST STEP" : "AFTERBURNER",
+      label: this.lootSpeedSurgeMode === "ghost-step" ? "GHOST STEP" : this.lootSpeedSurgeMode === "breach-sprint" ? "BREACH SPRINT" : "AFTERBURNER",
       multiplier: this.lootSpeedSurgeMultiplierValue,
       source: this.lootSpeedSurgeSource,
       exitBonus: this.lootSpeedSurgeExitBonus,
@@ -1726,7 +1752,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     const spec = this.vaultRushLaneSpec(target, distance);
     return {
       active: true,
-      label: this.breakoutRushActive() ? "BREAKOUT RUSH" : "VAULT RUSH",
+      label: this.breakoutRushActive() ? "BREAKOUT RUSH" : this.lootSpeedSurgeMode === "breach-sprint" && this.lootSpeedSurgeActive() ? "BREACH SPRINT" : "VAULT RUSH",
       source: this.vaultRushSource,
       targetKind: target?.kind ?? null,
       secondsLeft: Math.max(1, Math.ceil((this.vaultRushUntilMs - this.elapsedMs) / 1000)),
@@ -1740,7 +1766,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private lootSpeedSurgeHud() {
     if (!this.lootSpeedSurgeActive()) return null;
     return {
-      label: this.lootSpeedSurgeMode === "ghost-step" ? "Ghost Step" as const : "Afterburner" as const,
+      label: this.lootSpeedSurgeMode === "ghost-step" ? "Ghost Step" as const : this.lootSpeedSurgeMode === "breach-sprint" ? "Breach Sprint" as const : "Afterburner" as const,
       multiplier: this.lootSpeedSurgeMultiplierValue,
       secondsLeft: Math.max(1, Math.ceil((this.lootSpeedSurgeUntilMs - this.elapsedMs) / 1000)),
       source: this.lootSpeedSurgeSource,
@@ -4328,8 +4354,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
     const basePulseCount = target ? this.routePulseCount(distance) : 0;
     const distanceMeters = Math.max(0, Math.round(distance / 8));
     return {
-      pulseCount: target ? basePulseCount + (target.kind === "carrier" ? 4 : 3) : 0,
-      laneWidth: target?.kind === "carrier" ? 78 : 68,
+      pulseCount: target ? basePulseCount + (this.lootSpeedSurgeMode === "breach-sprint" && this.lootSpeedSurgeActive() ? 5 : target.kind === "carrier" ? 4 : 3) : 0,
+      laneWidth: this.lootSpeedSurgeMode === "breach-sprint" && this.lootSpeedSurgeActive() ? 84 : target?.kind === "carrier" ? 78 : 68,
       distanceMeters
     };
   }
@@ -4471,9 +4497,10 @@ export class ArcadeHeistScene extends Phaser.Scene {
     if (!this.player || this.finished || this.extractionSequenceActive()) return;
 
     const target = this.escapeZone ?? this.rooms.get("atrium");
-    const lockBreakCashoutBonus = outcome === "escaped" ? this.currentLockBreakCashoutBonus() : 0;
-    const cashoutValue = this.lootValue + 2 + lockBreakCashoutBonus;
-    const afterburnerExit = outcome === "escaped" && this.lootValue > 0 && this.afterburnerExitActive();
+    const hasLootCashout = outcome === "escaped" && this.lootValue > 0;
+    const lockBreakCashoutBonus = hasLootCashout ? this.currentLockBreakCashoutBonus() : 0;
+    const cashoutValue = hasLootCashout ? this.lootValue + 2 + lockBreakCashoutBonus : 0;
+    const afterburnerExit = hasLootCashout && this.afterburnerExitActive();
     if (lockBreakCashoutBonus > 0) {
       this.lockBreakCashoutBonusClaimed = lockBreakCashoutBonus;
     }
@@ -4488,14 +4515,26 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.dashCooldownMs = 0;
     this.scorePopup = {
       tone: "bonus",
-      label: lockBreakCashoutBonus > 0 ? `+${lockBreakCashoutBonus} Breakout cashout` : "+2 Escape bonus",
-      detail: ["Cashout " + cashoutValue, afterburnerExit ? "Afterburner +1" : null, lockBreakCashoutBonus > 0 ? "Rook lock broken" : null]
-        .filter(Boolean)
-        .join(" · ")
+      label: hasLootCashout
+        ? lockBreakCashoutBonus > 0
+          ? `+${lockBreakCashoutBonus} Breakout cashout`
+          : "+2 Escape bonus"
+        : "+2 Escape bonus",
+      detail: hasLootCashout
+        ? ["Cashout " + cashoutValue, afterburnerExit ? "Afterburner +1" : null, lockBreakCashoutBonus > 0 ? "Rook lock broken" : null]
+            .filter(Boolean)
+            .join(" · ")
+        : "No relics banked"
     };
     this.scorePopupUntilMs = this.extractionActiveUntilMs + 1_200;
     this.flashSpotlight(outcome === "escaped" ? "Extraction live" : "Vault sealing");
-    this.flashArenaCallout("escape", "CASHOUT +" + cashoutValue, target?.x ?? this.player.x, target?.y ?? this.player.y, 0x7effdf);
+    this.flashArenaCallout(
+      "escape",
+      hasLootCashout ? "CASHOUT +" + cashoutValue : "ESCAPE",
+      target?.x ?? this.player.x,
+      target?.y ?? this.player.y,
+      0x7effdf
+    );
     this.impactPulse(outcome === "escaped" ? "escape" : "lockdown", target?.x ?? this.player.x, target?.y ?? this.player.y);
     this.updateExtractionSequence();
     this.emitHudIfNeeded(true);
@@ -4574,7 +4613,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       active: true,
       label: "EXTRACTION LIVE",
       outcome: this.extractionOutcome,
-      cashoutValue: this.currentCashoutValue(),
+      cashoutValue: this.lootValue > 0 ? this.currentCashoutValue() : 0,
       ageMs,
       remainingMs: Math.max(0, Math.round(this.extractionActiveUntilMs - this.elapsedMs)),
       ringCount: EXTRACTION_SEQUENCE_RING_COUNT,
@@ -4602,12 +4641,15 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.finished = true;
     if (outcome === "escaped" && !extractionAlreadyPlayed) {
       this.impactPulse("escape");
+      const hasLootCashout = this.lootValue > 0;
       this.scorePopup = {
         tone: "bonus",
-        label: lockBreakCashoutBonus > 0 ? `+${lockBreakCashoutBonus} Breakout cashout` : "+2 Escape bonus",
-        detail: ["Cashout " + this.currentCashoutValue(), afterburnerExit ? "Afterburner +1" : null, lockBreakCashoutBonus > 0 ? "Rook lock broken" : null]
-          .filter(Boolean)
-          .join(" · ")
+        label: hasLootCashout && lockBreakCashoutBonus > 0 ? `+${lockBreakCashoutBonus} Breakout cashout` : "+2 Escape bonus",
+        detail: hasLootCashout
+          ? ["Cashout " + this.currentCashoutValue(), afterburnerExit ? "Afterburner +1" : null, lockBreakCashoutBonus > 0 ? "Rook lock broken" : null]
+              .filter(Boolean)
+              .join(" · ")
+          : "No relics banked"
       };
       this.scorePopupUntilMs = this.elapsedMs + 1_800;
     }

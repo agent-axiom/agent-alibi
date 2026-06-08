@@ -5,6 +5,8 @@ import { useDynamicMusic } from "./audio/useDynamicMusic";
 import { useMissionStingers } from "./audio/useMissionStingers";
 import { buildActionCards } from "./game-ui/action-cards";
 import { FinalCaseFile } from "./game-ui/FinalCaseFile";
+import type { Locale } from "./i18n";
+import { readStoredLocale, t, writeStoredLocale } from "./i18n";
 import { MatchScreen } from "./game-ui/MatchScreen";
 import { HomeScreen } from "./lobby/HomeScreen";
 import { RoomScreen } from "./lobby/RoomScreen";
@@ -19,6 +21,7 @@ export function App() {
   const [screen, setScreen] = useState<AppScreen>("home");
   const [onlineSelectedActionId, setOnlineSelectedActionId] = useState<string | null>(null);
   const [soundEnabled, setSoundEnabled] = useState(readStoredSoundPreference);
+  const [locale, setLocale] = useState<Locale>(readStoredLocale);
   const localMatch = useLocalMatch();
   const onlineRoom = useOnlineRoom();
   const arcadeHud = localMatch.arcade?.hud;
@@ -57,6 +60,11 @@ export function App() {
     writeStoredSoundPreference(nextEnabled);
   }
 
+  function updateLocale(nextLocale: Locale) {
+    setLocale(nextLocale);
+    writeStoredLocale(nextLocale);
+  }
+
   function startSolo() {
     void enableSound();
     localMatch.startSolo();
@@ -81,11 +89,13 @@ export function App() {
     return (
       <HomeScreen
         actions={[
-          { label: "Play Now vs AI", icon: Bot, onClick: startSolo },
-          { label: "Create Room", icon: Users, onClick: createRoom },
-          { label: "AI vs AI Demo", icon: Radio, onClick: startDemo }
+          { label: t(locale, "home.playNow"), icon: Bot, onClick: startSolo },
+          { label: t(locale, "home.createRoom"), icon: Users, onClick: createRoom },
+          { label: t(locale, "home.aiDemo"), icon: Radio, onClick: startDemo }
         ]}
         soundEnabled={soundEnabled}
+        locale={locale}
+        onLocaleChange={updateLocale}
         onToggleSound={toggleSound}
       />
     );
@@ -97,6 +107,8 @@ export function App() {
         <FinalCaseFile
           summary={onlineRoom.summary}
           soundEnabled={soundEnabled}
+          locale={locale}
+          onLocaleChange={updateLocale}
           onToggleSound={toggleSound}
           onRematch={onlineRoom.startMatch}
           onHome={() => setScreen("home")}
@@ -133,6 +145,8 @@ export function App() {
             reset: () => setScreen("home")
           }}
           soundEnabled={soundEnabled}
+          locale={locale}
+          onLocaleChange={updateLocale}
           onToggleSound={toggleSound}
         />
       );
@@ -145,6 +159,8 @@ export function App() {
         error={onlineRoom.error}
         onAddAi={onlineRoom.addAi}
         onRemoveAi={onlineRoom.removeAi}
+        locale={locale}
+        onLocaleChange={updateLocale}
         onStart={onlineRoom.startMatch}
       />
     );
@@ -155,6 +171,8 @@ export function App() {
       <FinalCaseFile
         summary={localMatch.summary}
         soundEnabled={soundEnabled}
+        locale={locale}
+        onLocaleChange={updateLocale}
         onToggleSound={toggleSound}
         onRematch={startSolo}
         onHome={() => {
@@ -165,7 +183,7 @@ export function App() {
     );
   }
 
-  return <MatchScreen match={localMatch} soundEnabled={soundEnabled} onToggleSound={toggleSound} />;
+  return <MatchScreen match={localMatch} soundEnabled={soundEnabled} locale={locale} onLocaleChange={updateLocale} onToggleSound={toggleSound} />;
 }
 
 function readStoredSoundPreference(): boolean {

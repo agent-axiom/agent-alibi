@@ -113,7 +113,7 @@ export type ArcadeLootChainWindow = {
 };
 
 export type ArcadeLootSpeedSurge = {
-  label: "Afterburner" | "Ghost Step";
+  label: "Afterburner" | "Ghost Step" | "Breach Sprint";
   multiplier: number;
   secondsLeft: number;
   source: string | null;
