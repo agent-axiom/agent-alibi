@@ -74,6 +74,11 @@ export function MatchScreen({ match, soundEnabled = false, onToggleSound }: Matc
             afterburner: hud.lootSpeedSurge
           }
         : null;
+    const firstStealCashoutMoment = Boolean(cashoutSurge && hud?.scorePopup?.tone === "loot" && hud.artifactsStolen === 1);
+    const visibleScorePopup = firstStealCashoutMoment ? null : (hud?.scorePopup ?? null);
+    const visibleSpotlight = firstStealCashoutMoment ? null : (hud?.spotlight ?? null);
+    const visibleObjectiveBanner = firstStealCashoutMoment && hud?.objectiveBanner?.tone === "escape" ? null : (hud?.objectiveBanner ?? null);
+    const visibleRoutePulse = firstStealCashoutMoment && routePulse?.mode === "escape" ? null : routePulse;
     const afterburnerActive = Boolean(hud?.lootSpeedSurge);
     const rivalPressureActive = Boolean(redLoot > 0 || hud?.rivalObjective || hud?.rivalIntercept || hud?.lastRivalSteal);
     const carrierPressureActive = Boolean(hud?.rivalIntercept);
@@ -123,7 +128,7 @@ export function MatchScreen({ match, soundEnabled = false, onToggleSound }: Matc
     const openingTargetRoute = hud?.targetDistanceLabel?.replace(new RegExp("^Target\\s+", "i"), "") ?? "gold marker";
     return (
       <main
-        className={`arcade-shell ${hud?.phase ?? "stealth"} ${hudDensity === "opening" ? "compact-opening" : ""} ${hudDensity === "chase" ? "chase-compact" : ""} ${breachAlert ? "breach-alert" : ""} ${routePulse ? "route-pulse-active" : ""} ${routePulse?.mode === "alibi" ? "alibi-pulse-active" : ""} ${routePulse?.mode === "comeback" ? "comeback-pulse-active" : ""} ${breakoutCashoutWindow ? "breakout-cashout-active" : ""} ${scanLockActive ? "scan-lock-active" : ""} ${threatCueActive ? "threat-cue-active" : ""} ${denseThreatActive ? "dense-threat-active" : ""} ${countdownPulseActive ? "countdown-pulse-active" : ""} ${afterburnerActive ? "afterburner-active" : ""} ${rivalPressureActive ? "rival-pressure-active" : ""}`}
+        className={`arcade-shell ${hud?.phase ?? "stealth"} ${hudDensity === "opening" ? "compact-opening" : ""} ${hudDensity === "chase" ? "chase-compact" : ""} ${firstStealCashoutMoment ? "first-steal-cashout-moment" : ""} ${breachAlert ? "breach-alert" : ""} ${visibleRoutePulse ? "route-pulse-active" : ""} ${visibleRoutePulse?.mode === "alibi" ? "alibi-pulse-active" : ""} ${visibleRoutePulse?.mode === "comeback" ? "comeback-pulse-active" : ""} ${breakoutCashoutWindow ? "breakout-cashout-active" : ""} ${scanLockActive ? "scan-lock-active" : ""} ${threatCueActive ? "threat-cue-active" : ""} ${denseThreatActive ? "dense-threat-active" : ""} ${countdownPulseActive ? "countdown-pulse-active" : ""} ${afterburnerActive ? "afterburner-active" : ""} ${rivalPressureActive ? "rival-pressure-active" : ""}`}
       >
         <Suspense
           fallback={
@@ -179,11 +184,11 @@ export function MatchScreen({ match, soundEnabled = false, onToggleSound }: Matc
             <small>{formatClock(hud.timeLeftMs)} before the vault seals</small>
           </div>
         ) : null}
-        {routePulse ? (
-          <div className={`arcade-route-pulse ${routePulse.mode}`} aria-label="Route pulse">
-            <span>{routePulse.title}</span>
-            <strong>{routePulse.detail}</strong>
-            <small>{routePulse.action}</small>
+        {visibleRoutePulse ? (
+          <div className={`arcade-route-pulse ${visibleRoutePulse.mode}`} aria-label="Route pulse">
+            <span>{visibleRoutePulse.title}</span>
+            <strong>{visibleRoutePulse.detail}</strong>
+            <small>{visibleRoutePulse.action}</small>
           </div>
         ) : null}
 
@@ -206,11 +211,11 @@ export function MatchScreen({ match, soundEnabled = false, onToggleSound }: Matc
           </aside>
         ) : null}
 
-        {hud?.objectiveBanner ? (
-          <div className={`arcade-objective-banner ${hud.objectiveBanner.tone}`} aria-label="Objective banner" aria-live="polite">
-            <span>{hud.objectiveBanner.tone === "greed" ? "Optional risk" : hud.objectiveBanner.tone === "escape" ? "Cashout window" : "Primary target"}</span>
-            <strong>{hud.objectiveBanner.title}</strong>
-            <small>{hud.objectiveBanner.detail}</small>
+        {visibleObjectiveBanner ? (
+          <div className={`arcade-objective-banner ${visibleObjectiveBanner.tone}`} aria-label="Objective banner" aria-live="polite">
+            <span>{visibleObjectiveBanner.tone === "greed" ? "Optional risk" : visibleObjectiveBanner.tone === "escape" ? "Cashout window" : "Primary target"}</span>
+            <strong>{visibleObjectiveBanner.title}</strong>
+            <small>{visibleObjectiveBanner.detail}</small>
           </div>
         ) : null}
 
@@ -269,16 +274,16 @@ export function MatchScreen({ match, soundEnabled = false, onToggleSound }: Matc
           <small>{radarFocusLabel}</small>
         </aside>
 
-        {hud?.spotlight ? (
+        {visibleSpotlight ? (
           <div className="arcade-spotlight" aria-live="polite">
-            {hud.spotlight}
+            {visibleSpotlight}
           </div>
         ) : null}
 
-        {hud?.scorePopup ? (
-          <div className={`arcade-score-popup ${hud.scorePopup.tone}`} aria-label="Score popup" aria-live="polite">
-            <strong>{hud.scorePopup.label}</strong>
-            <span>{hud.scorePopup.detail}</span>
+        {visibleScorePopup ? (
+          <div className={`arcade-score-popup ${visibleScorePopup.tone}`} aria-label="Score popup" aria-live="polite">
+            <strong>{visibleScorePopup.label}</strong>
+            <span>{visibleScorePopup.detail}</span>
           </div>
         ) : null}
 
