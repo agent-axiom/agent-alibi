@@ -472,6 +472,18 @@ test("stealing a relic gives the player a short cashout speed surge", async ({ p
   await page.keyboard.press("KeyE");
 
   const postStealState = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());
+  const cashoutRoutePulse = page.getByLabel(/route pulse/i);
+  await expect(cashoutRoutePulse.getByText(/cashout route armed/i)).toBeVisible();
+  await expect(cashoutRoutePulse.getByText(/bank \+5 at atrium lift/i)).toBeVisible();
+  await expect(cashoutRoutePulse.getByText(/follow cyan ring/i)).toBeVisible();
+  expect(postStealState?.routePulse).toEqual(
+    expect.objectContaining({
+      mode: "escape",
+      title: "Cashout route armed",
+      detail: "Bank +5 at Atrium Lift",
+      action: "Follow cyan ring"
+    })
+  );
   const surge = postStealState?.lootSpeedSurge;
   expect(surge).toEqual(
     expect.objectContaining({

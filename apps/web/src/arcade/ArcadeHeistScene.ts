@@ -584,6 +584,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       impactBurst: this.impactBurstDebug(),
       extractionSequence: this.extractionSequenceDebug(),
       arenaLabels: this.arenaLabelsDebug(),
+      routePulse: this.routePulse,
       routeMode: this.routeMode,
       nearestRival,
       rivalsReleased: this.aiReleased,
@@ -1512,6 +1513,14 @@ export class ArcadeHeistScene extends Phaser.Scene {
       });
       this.flashArenaCallout("steal", `+${artifact.value} ${artifact.name}`, artifact.x, artifact.y, 0xffd56a);
       this.flashObjectiveBanner(this.buildEscapeBanner(this.artifactsStolen === 1));
+      if (this.artifactsStolen === 1) {
+        this.flashRoutePulse({
+          mode: "escape",
+          title: "Cashout route armed",
+          detail: `Bank +${this.currentCashoutValue()} at Atrium Lift`,
+          action: "Follow cyan ring"
+        });
+      }
       const comebackCashoutValue = this.currentCashoutValue();
       if (comebackWasBehind && comebackCashoutValue > comebackRivalLootValue) {
         this.comebackRoutesArmed += 1;
