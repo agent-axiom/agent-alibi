@@ -1863,11 +1863,12 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.alarm = Math.min(5, this.alarm + 0.16);
     this.shoveRivalAway(rival);
     const interceptSwingLabel = `Recovered +${recoveredValue} - Red denied`;
+    const denialSwingValue = recoveredValue * 2;
     this.flashSpotlight(`Intercepted ${rival.name}`);
     this.flashScorePopup({
       tone: "recover",
       label: interceptSwingLabel,
-      detail: this.relicListLabel(recovered)
+      detail: `${this.relicListLabel(recovered)} · Denial swing +${denialSwingValue}`
     });
     this.flashArenaCallout("intercept", interceptSwingLabel, rival.x, rival.y, 0xffd56a);
     this.impactPulse("intercept");
