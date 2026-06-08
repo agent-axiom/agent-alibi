@@ -1903,12 +1903,18 @@ export class ArcadeHeistScene extends Phaser.Scene {
 
     this.alibiPulseCooldownMs = ALIBI_PULSE_COOLDOWN_MS;
     this.alibiPulsesUsed += 1;
-    this.rivalScanState = { chargeMs: 0, cooldownMs: 900 };
+    this.rivalScanState = { chargeMs: 0, cooldownMs: 1_800 };
     this.shoveRivalAway(rival);
     this.addAlibiPulseVisual();
     this.flashSpotlight("Alibi pulse: scanner jammed");
     this.flashArenaCallout("alibi", "Scan jammed", this.player.x, this.player.y, 0x7effdf);
     this.impactPulse("alibi");
+    this.flashRoutePulse({
+      mode: "alibi",
+      title: "Alibi window open",
+      detail: "2s scan break",
+      action: "Dash clear before scan returns"
+    });
     this.feedLine(`You jammed ${rival.name}'s scan. Break for the exit.`);
     return true;
   }

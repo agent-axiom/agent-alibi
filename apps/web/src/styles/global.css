@@ -1758,6 +1758,18 @@ p {
   box-shadow: 0 22px 52px rgba(0, 0, 0, 0.38), 0 0 46px rgba(189, 169, 255, 0.24);
 }
 
+.arcade-route-pulse.alibi {
+  border-color: rgba(126, 255, 223, 0.72);
+  background:
+    linear-gradient(135deg, rgba(6, 24, 31, 0.94), rgba(14, 48, 62, 0.9)),
+    radial-gradient(circle at 50% 0%, rgba(126, 255, 223, 0.28), transparent 58%);
+  box-shadow: 0 22px 52px rgba(0, 0, 0, 0.38), 0 0 48px rgba(126, 255, 223, 0.28);
+}
+
+.arcade-route-pulse.alibi span {
+  color: #7effdf;
+}
+
 .arcade-cashout-surge {
   position: absolute;
   top: clamp(106px, 16vh, 142px);
@@ -2000,6 +2012,12 @@ p {
 
 .arcade-shell.route-pulse-active .arcade-mission-meta > :not(.arcade-race):not(.arcade-route-choice):not(.arcade-escape-payout):not(.arcade-greed) {
   display: none;
+}
+
+.arcade-shell.alibi-pulse-active .arcade-mission-beat,
+.arcade-shell.alibi-pulse-active .arcade-mission-meta > .arcade-rival-scan,
+.arcade-shell.alibi-pulse-active .arcade-mission-meta > .arcade-scan-meter {
+  display: grid !important;
 }
 
 .arcade-shell.dense-threat-active .arcade-steps,
