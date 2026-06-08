@@ -1258,6 +1258,9 @@ test("rival steals trigger a clear red loot alert", async ({ page }) => {
   const recoveryPopup = page.getByLabel(/score popup/i);
   await expect(recoveryPopup.getByText(/recovered \+3 - red denied/i)).toBeVisible();
   await expect(recoveryPopup.getByText(/denial swing \+6/i)).toBeVisible();
+  const recoveryBanner = page.getByLabel(/objective banner/i);
+  await expect(recoveryBanner.getByText(/bank recovered loot/i)).toBeVisible();
+  await expect(recoveryBanner.getByText(/cashout \+5 at atrium lift/i)).toBeVisible();
   await expect(page.getByLabel(/cashout surge/i).getByText(/afterburner x2\.05/i)).toBeVisible();
   const recoverySurge = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().lootSpeedSurge);
   expect(recoverySurge).toEqual(
