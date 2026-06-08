@@ -1362,6 +1362,11 @@ test("rival carriers only score after cashout", async ({ page }) => {
   await expect(page.getByLabel(/active action/i).getByText(/steal/i)).toBeVisible();
   await page.keyboard.press("KeyE");
   await expect(missionBeat.getByText(/cashout beats red by 2/i)).toBeVisible();
+  const comebackPulse = page.getByLabel(/route pulse/i);
+  await expect(comebackPulse.getByText(/comeback live/i)).toBeVisible();
+  await expect(comebackPulse.getByText(/bank \+5 beats red/i)).toBeVisible();
+  await expect(comebackPulse.getByText(/run to lift now/i)).toBeVisible();
+  await expect(page.locator(".arcade-route-pulse.comeback")).toBeVisible();
 });
 
 test("rival carrier near cashout triggers an imminent warning", async ({ page }) => {

@@ -1770,6 +1770,22 @@ p {
   color: #7effdf;
 }
 
+.arcade-route-pulse.comeback {
+  border-color: rgba(255, 79, 123, 0.76);
+  background:
+    linear-gradient(135deg, rgba(39, 9, 25, 0.94), rgba(65, 20, 39, 0.9)),
+    radial-gradient(circle at 50% 0%, rgba(255, 213, 106, 0.25), transparent 58%);
+  box-shadow: 0 22px 52px rgba(0, 0, 0, 0.38), 0 0 52px rgba(255, 79, 123, 0.28);
+}
+
+.arcade-route-pulse.comeback span {
+  color: #ffd56a;
+}
+
+.arcade-route-pulse.comeback strong {
+  color: #fff2f5;
+}
+
 .arcade-cashout-surge {
   position: absolute;
   top: clamp(106px, 16vh, 142px);
@@ -2017,6 +2033,10 @@ p {
 .arcade-shell.alibi-pulse-active .arcade-mission-beat,
 .arcade-shell.alibi-pulse-active .arcade-mission-meta > .arcade-rival-scan,
 .arcade-shell.alibi-pulse-active .arcade-mission-meta > .arcade-scan-meter {
+  display: grid !important;
+}
+
+.arcade-shell.comeback-pulse-active .arcade-mission-beat {
   display: grid !important;
 }
 

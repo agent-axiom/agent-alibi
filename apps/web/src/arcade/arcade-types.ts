@@ -44,7 +44,7 @@ export type ArcadeRouteChoice = {
 };
 
 export type ArcadeRoutePulse = {
-  mode: "escape" | "greed" | "alibi";
+  mode: "escape" | "greed" | "alibi" | "comeback";
   title: string;
   detail: string;
   action: string;
