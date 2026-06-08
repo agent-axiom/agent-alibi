@@ -2162,6 +2162,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
         nearRivalCarrierName: rivalCarrier?.name ?? null,
         nearRivalCarrierRelicName: rivalCarrierRelic?.name ?? null,
         nearRivalCarrierValue: rivalCarrierRelic?.value ?? null,
+        nearRivalCarrierSwingValue: rivalCarrierRelic ? rivalCarrierRelic.value * 2 : null,
         nearArtifactName: nearArtifact?.name ?? null,
         nearArtifactValue: nearArtifact?.value ?? null,
         nearExit,

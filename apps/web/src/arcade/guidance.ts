@@ -42,6 +42,7 @@ export type ActiveActionHintInput = {
   nearRivalCarrierName?: string | null;
   nearRivalCarrierRelicName?: string | null;
   nearRivalCarrierValue?: number | null;
+  nearRivalCarrierSwingValue?: number | null;
   nearArtifactName: string | null;
   nearArtifactValue?: number | null;
   nearExit: boolean;
@@ -212,7 +213,7 @@ export function buildActiveActionHint(input: ActiveActionHintInput): ActiveActio
   if (input.nearRivalCarrierName) {
     return {
       key: "E / Space",
-      label: buildRecoverActionLabel(input.nearRivalCarrierRelicName ?? null, input.nearRivalCarrierValue ?? null),
+      label: buildRecoverActionLabel(input.nearRivalCarrierRelicName ?? null, input.nearRivalCarrierValue ?? null, input.nearRivalCarrierSwingValue ?? null),
       tone: "danger"
     };
   }
@@ -252,9 +253,13 @@ function buildStealActionLabel(artifactName: string, artifactValue: number | nul
   return artifactValue && artifactValue > 0 ? `Steal ${artifactName} +${artifactValue}` : `Steal ${artifactName}`;
 }
 
-function buildRecoverActionLabel(relicName: string | null, relicValue: number | null): string {
+function buildRecoverActionLabel(relicName: string | null, relicValue: number | null, swingValue: number | null): string {
   if (!relicName) return "Intercept carrier";
-  return relicValue && relicValue > 0 ? `Recover ${relicName} +${relicValue}` : `Recover ${relicName}`;
+  if (relicValue && relicValue > 0) {
+    const base = `Recover ${relicName} +${relicValue}`;
+    return swingValue && swingValue > 0 ? `${base} / swing +${swingValue}` : base;
+  }
+  return `Recover ${relicName}`;
 }
 
 function buildCashoutActionLabel(cashoutValue: number | null): string {
