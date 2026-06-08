@@ -1,6 +1,6 @@
 import { ARCADE_MISSION_DURATION_MS, type ArcadeHudState } from "./arcade-types";
 
-export type ArcadeHudDensity = "opening" | "full";
+export type ArcadeHudDensity = "opening" | "chase" | "full";
 
 const OPENING_GRACE_MS = 12_000;
 
@@ -17,5 +17,17 @@ export function selectArcadeHudDensity(hud: ArcadeHudState | null | undefined): 
     !hud.lastRivalSteal &&
     !hud.scorePopup;
 
-  return elapsedMs <= OPENING_GRACE_MS && noScoreYet && noImmediateThreat ? "opening" : "full";
+  if (elapsedMs <= OPENING_GRACE_MS && noScoreYet && noImmediateThreat) return "opening";
+
+  const heavyThreat = hud.threatCue?.label === "Laser sweep" || hud.threatCue?.label === "Scan lock";
+  const cashoutChase =
+    hud.phase === "stealth" &&
+    hud.lootValue > 0 &&
+    hud.canEscape &&
+    Boolean(hud.escapePayout) &&
+    !hud.rivalIntercept &&
+    !hud.lastRivalSteal &&
+    !heavyThreat;
+
+  return cashoutChase ? "chase" : "full";
 }

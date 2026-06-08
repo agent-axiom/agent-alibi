@@ -89,7 +89,7 @@ describe("selectArcadeHudDensity", () => {
     expect(selectArcadeHudDensity(hud())).toBe("opening");
   });
 
-  it("opens the full HUD once the first score creates a cashout decision", () => {
+  it("compresses the HUD once the first score creates a cashout chase", () => {
     expect(
       selectArcadeHudDensity(
         hud({
@@ -101,6 +101,33 @@ describe("selectArcadeHudDensity", () => {
           escapePayout: {
             escapeBonus: 2,
             cashout: 5
+          }
+        })
+      )
+    ).toBe("chase");
+  });
+
+  it("keeps the full HUD for carrier intercept emergencies", () => {
+    expect(
+      selectArcadeHudDensity(
+        hud({
+          lootValue: 3,
+          canEscape: true,
+          loopStep: "escape",
+          objective: "Escape with 3 loot",
+          escapePayout: {
+            escapeBonus: 2,
+            cashout: 5
+          },
+          rivalIntercept: {
+            agentName: "Anchor",
+            relicName: "Crystal Ledger",
+            value: 1,
+            distanceMeters: 12,
+            directionLabel: "NW 12m",
+            cashoutSeconds: 3,
+            swingValue: 2,
+            urgency: "critical"
           }
         })
       )
