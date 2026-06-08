@@ -2,6 +2,9 @@ import type { LucideIcon } from "lucide-react";
 import { Volume2, VolumeX } from "lucide-react";
 import { useState } from "react";
 import { formatLocalBestCaseDetail, LOCAL_BEST_CASE_STORAGE_KEY, parseLocalBestCaseRecord, type LocalBestCaseRecord } from "../game-ui/FinalCaseFile";
+import type { Locale } from "../i18n";
+import { t } from "../i18n";
+import { LanguageToggle } from "../game-ui/LanguageToggle";
 
 type HomeAction = {
   label: string;
@@ -12,18 +15,21 @@ type HomeAction = {
 type HomeScreenProps = {
   actions: HomeAction[];
   soundEnabled: boolean;
+  locale: Locale;
+  onLocaleChange: (locale: Locale) => void;
   onToggleSound: () => void;
 };
 
-export function HomeScreen({ actions, soundEnabled, onToggleSound }: HomeScreenProps) {
+export function HomeScreen({ actions, soundEnabled, locale, onLocaleChange, onToggleSound }: HomeScreenProps) {
   const SoundIcon = soundEnabled ? Volume2 : VolumeX;
   const [savedBestCase] = useState(readSavedBestCase);
 
   return (
     <main className="home-shell">
+      <LanguageToggle className="home-language-toggle" locale={locale} onLocaleChange={onLocaleChange} />
       <button className={`sound-toggle ${soundEnabled ? "enabled" : ""}`} onClick={onToggleSound} type="button">
         <SoundIcon aria-hidden="true" size={18} />
-        <span>{soundEnabled ? "Sound On" : "Sound Off"}</span>
+        <span>{soundEnabled ? t(locale, "sound.on") : t(locale, "sound.off")}</span>
       </button>
       <div className="home-visual" aria-hidden="true">
         <span className="vault-beam" />
@@ -36,18 +42,16 @@ export function HomeScreen({ actions, soundEnabled, onToggleSound }: HomeScreenP
       </div>
       <section className="home-panel" aria-label="Agent Alibi launch">
         <div>
-          <p className="eyebrow">Neon Moon Heist / six rounds / human + AI crew</p>
+          <p className="eyebrow">{t(locale, "home.eyebrow")}</p>
           <h1>Agent Alibi</h1>
-          <p className="home-copy">
-            Pick a plan, watch agents lie through lasers, steal lunar relics, and escape before the vault seals.
-          </p>
+          <p className="home-copy">{t(locale, "home.copy")}</p>
         </div>
         {savedBestCase ? (
           <section className="home-best-case" aria-label="Saved best case">
-            <span>Best case</span>
+            <span>{t(locale, "home.bestCase")}</span>
             <strong>{savedBestCase.title}</strong>
-            <small>{formatLocalBestCaseDetail(savedBestCase)}</small>
-            <em>{buildSavedBestCaseCta(savedBestCase)}</em>
+            <small>{formatLocalBestCaseDetail(savedBestCase, locale)}</small>
+            <em>{buildSavedBestCaseCta(savedBestCase, locale)}</em>
           </section>
         ) : null}
         <div className="home-actions">
@@ -66,9 +70,9 @@ export function HomeScreen({ actions, soundEnabled, onToggleSound }: HomeScreenP
   );
 }
 
-function buildSavedBestCaseCta(record: LocalBestCaseRecord): string {
-  if (record.carrierIntercepts && record.carrierIntercepts > 0) return "Repeat denial run";
-  return "Beat your case";
+function buildSavedBestCaseCta(record: LocalBestCaseRecord, locale: Locale): string {
+  if (record.carrierIntercepts && record.carrierIntercepts > 0) return t(locale, "home.repeatDenial");
+  return t(locale, "home.beatCase");
 }
 
 function readSavedBestCase(): LocalBestCaseRecord | null {

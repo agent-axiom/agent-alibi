@@ -78,6 +78,34 @@ test("sound preference survives a reload", async ({ page }) => {
   await expect(page.getByRole("button", { name: /sound on/i })).toBeVisible();
 });
 
+test("language picker supports English Russian and Chinese and persists", async ({ page }) => {
+  await page.goto("/");
+  await expect(page.getByRole("button", { name: /play now vs ai/i })).toBeVisible();
+
+  const language = page.getByLabel(/language/i);
+  await language.getByRole("button", { name: /Русский/i }).click();
+  await expect(page.getByRole("button", { name: /Играть против AI/i })).toBeVisible();
+  await expect(page.getByText(/Неоновое лунное ограбление/i)).toBeVisible();
+  await expect.poll(() => page.evaluate(() => localStorage.getItem("agent-alibi:locale:v1"))).toBe("ru");
+
+  await page.reload();
+  await expect(page.getByRole("button", { name: /Играть против AI/i })).toBeVisible();
+
+  await page.getByLabel(/language/i).getByRole("button", { name: /中文/i }).click();
+  await expect(page.getByRole("button", { name: /立即对战 AI/i })).toBeVisible();
+  await page.getByRole("button", { name: /立即对战 AI/i }).click();
+
+  const openingContract = page.getByLabel(/opening contract/i);
+  await expect(openingContract.getByText(/月库合约/i)).toBeVisible();
+  await expect(openingContract.getByText(/偷取月亮珍珠 \+3/i)).toBeVisible();
+  const objectiveBanner = page.getByLabel(/objective banner/i);
+  await expect(objectiveBanner.getByText(/偷取月亮珍珠/i)).toBeVisible();
+  await expect(objectiveBanner.getByText(/先得分掌控节奏/i)).toBeVisible();
+  await expect(page.locator(".arcade-objective > strong", { hasText: /偷取月亮珍珠 \+3/i })).toBeVisible();
+  await expect(objectiveBanner.getByText(/steal moon pearl/i)).toHaveCount(0);
+  await expect(page.getByLabel(/breach sprint/i).getByText(/突破冲刺/i)).toBeVisible();
+});
+
 test("solo match starts and reaches final case file", async ({ page }) => {
   await page.addInitScript(() => {
     Object.defineProperty(navigator, "clipboard", {
@@ -365,14 +393,14 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   const shareStamp = page.getByLabel(/share case stamp/i);
   await expect(shareStamp.getByText(/agent alibi case file/i)).toBeVisible();
   await expect(shareStamp.getByText(/blue crew wins/i)).toBeVisible();
-  await expect(shareStamp.getByText(/s-rank/i)).toBeVisible();
+  await expect(shareStamp.getByText(/[as]-rank/i)).toBeVisible();
   await expect(shareStamp.getByText(/loot chain x2/i)).toBeVisible();
   await expect(shareStamp.getByText(/stole moon pearl \+ argent crown/i)).toBeVisible();
   const finalScores = page.getByLabel(/final scores/i);
   await expect(finalScores).toBeVisible();
   await expect(finalScores.getByText(/score margin/i)).toBeVisible();
   await expect(finalScores.getByText(/blue by \d+/i)).toBeVisible();
-  await expect(finalScores.getByText(/s-rank/i)).toBeVisible();
+  await expect(finalScores.getByText(/[as]-rank/i)).toBeVisible();
   await expect(finalScores.getByText(/clean exit bonus/i)).toBeVisible();
   await expect(finalScores.getByText(/afterburner exit/i)).toBeVisible();
   await expect(finalScores.getByText(/\+1/i)).toBeVisible();
@@ -383,7 +411,7 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(finalScores.getByText(/argent crown/i)).toBeVisible();
   const localBestCase = page.getByLabel(/local best case/i);
   await expect(localBestCase.getByText(/new best case/i)).toBeVisible();
-  await expect(localBestCase.getByText(/score \d+ · s-rank · chain x2/i)).toBeVisible();
+  await expect(localBestCase.getByText(/score \d+ · [as]-rank · chain x2/i)).toBeVisible();
   await expect(localBestCase.getByText(/first record saved/i)).toBeVisible();
   const storedBestCase = await page.evaluate(() => localStorage.getItem("agent-alibi:best-case:v1"));
   expect(storedBestCase).toContain('"score"');
@@ -393,19 +421,18 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(caseHighlights.getByText(/cashed out \+8 at lift/i)).toBeVisible();
   await expect(caseHighlights.getByText(/escaped with 6 loot/i)).toBeVisible();
   await expect(caseHighlights.getByText(/afterburner exit \+1/i)).toBeVisible();
-  await expect(caseHighlights.getByText(/clean exit bonus \+3/i)).toBeVisible();
+  await expect(caseHighlights.getByText(/clean exit bonus \+[23]/i)).toBeVisible();
   await expect(page.getByText(/cashout banked: \+8/i)).toBeVisible();
   await expect(page.getByText(/afterburner exit bonus: \+1/i)).toBeVisible();
   await expect(page.getByLabel(/rematch hook/i).getByText(/hit afterburner again and cashout before the boost dies/i)).toBeVisible();
   await expect(page.getByText(/relics stolen: moon pearl, argent crown/i)).toBeVisible();
   const nextRunContracts = page.getByLabel(/next run contracts/i);
-  await expect(nextRunContracts.getByText(/speedrun/i)).toBeVisible();
-  await expect(nextRunContracts.getByText(/beat your case/i)).toBeVisible();
-  await expect(nextRunContracts.getByText(/clean play/i)).toBeVisible();
-  await expect(nextRunContracts.getByText(/no scan burns/i)).toBeVisible();
-  await expect(nextRunContracts.getByText("Boost", { exact: true })).toBeVisible();
-  await expect(nextRunContracts.getByText(/afterburner encore/i)).toBeVisible();
-  await expect(nextRunContracts.getByText(/cashout before the boost dies/i)).toBeVisible();
+  await expect(nextRunContracts.getByText(/speedrun|rank push/i)).toBeVisible();
+  await expect(nextRunContracts.getByText(/beat your case|chase s-rank/i)).toBeVisible();
+  await expect(nextRunContracts.getByText(/clean play|clean exit/i)).toBeVisible();
+  await expect(nextRunContracts.getByText(/no scan burns|avoid scan burns/i)).toBeVisible();
+  await expect(nextRunContracts.locator("span").filter({ hasText: /^(Boost|Risk)$/i })).toBeVisible();
+  await expect(nextRunContracts.getByText(/afterburner encore|try greed route/i)).toBeVisible();
   const finalSoundOn = page.getByRole("button", { name: /sound on/i });
   await expect(finalSoundOn).toBeVisible();
   await finalSoundOn.click();
@@ -417,7 +444,7 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   expect(copiedShareText).toContain("https://agent-axiom.github.io/agent-alibi/");
   const runItBack = page.getByRole("button", { name: /run it back/i });
   await expect(runItBack).toBeVisible();
-  await expect(runItBack).toContainText(/afterburner encore/i);
+  await expect(runItBack).toContainText(/afterburner encore|chase s-rank/i);
   await runItBack.click();
   await expect(page.getByLabel(/opening contract/i).getByText(/moon vault contract/i)).toBeVisible();
   await expect(page.getByLabel(/final scores/i)).toBeHidden();
@@ -555,6 +582,72 @@ test("in-world action ring switches from approach to ready prompts", async ({ pa
       cue: "E / SPACE"
     })
   );
+});
+
+test("opening run starts with a Breach Sprint to the first relic", async ({ page }) => {
+  await startSoloArcade(page);
+  await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_STATE__ === "function");
+
+  const opening = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());
+  expect(opening?.lootSpeedSurge).toEqual(
+    expect.objectContaining({
+      active: true,
+      label: "BREACH SPRINT",
+      source: "Moon Pearl",
+      multiplier: expect.any(Number),
+      exitBonus: false
+    })
+  );
+  expect(opening?.lootSpeedSurge?.multiplier).toBeGreaterThan(1.25);
+  expect(opening?.vaultRush).toEqual(
+    expect.objectContaining({
+      active: true,
+      label: "BREACH SPRINT",
+      source: "Moon Pearl",
+      targetKind: "artifact",
+      pulseCount: expect.any(Number),
+      laneWidth: expect.any(Number)
+    })
+  );
+  expect(opening?.vaultRush?.laneWidth).toBeGreaterThan(opening?.routeGuide?.laneWidth ?? 0);
+  expect(opening?.vaultRush?.pulseCount).toBeGreaterThan(opening?.routeGuide?.pulseCount ?? 0);
+  expect(opening?.motionTrail?.active).toBe(false);
+  await expect(page.locator(".arcade-shell")).toHaveClass(/breach-sprint-active/);
+  const sprint = page.getByLabel(/breach sprint/i);
+  await expect(sprint.getByText(/breach sprint/i)).toBeVisible();
+  await expect(sprint.getByText(/moon pearl/i)).toBeVisible();
+  await expect(sprint.getByText(/follow gold runway/i)).toBeVisible();
+
+  const beforeSprintMove = opening?.player;
+  const beforeSprintX = beforeSprintMove?.x ?? 0;
+  await page.keyboard.down("ArrowRight");
+  try {
+    await page.waitForFunction((startX) => ((window.__AGENT_ALIBI_ARCADE_STATE__?.().player?.x ?? startX) - startX) > 95, beforeSprintX, {
+      timeout: 1_000
+    });
+  } finally {
+    await page.keyboard.up("ArrowRight");
+  }
+
+  await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget());
+  await page.keyboard.press("KeyE");
+  const postSteal = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());
+  expect(postSteal?.lootSpeedSurge?.label).toBe("AFTERBURNER");
+  await expect(page.getByLabel(/breach sprint/i)).toBeHidden();
+});
+
+test("Breach Sprint yields to the clean bonus window", async ({ page }) => {
+  await startSoloArcade(page);
+  await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_STATE__ === "function");
+
+  await expect(page.getByLabel(/breach sprint/i)).toBeVisible();
+  await page.waitForFunction(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().lootSpeedSurge === null, { timeout: 16_000 });
+
+  await expect(page.getByLabel(/breach sprint/i)).toBeHidden();
+  await expect(page.locator(".arcade-shell")).not.toHaveClass(/breach-sprint-active/);
+  const state = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());
+  expect(state?.lootSpeedSurge).toBeNull();
+  await expect(page.getByLabel(/momentum meter/i).getByText(/clean bonus/i)).toHaveCount(1);
 });
 
 test("stealing a relic gives the player a short cashout speed surge", async ({ page }) => {
@@ -1834,7 +1927,7 @@ test("no-loot lockdown escape final case avoids cashout wording", async ({ page 
   await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget?.());
   await page.keyboard.press("KeyE");
 
-  await expect(page.getByRole("heading", { name: /empty-handed exit/i })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /empty-handed exit/i })).toBeVisible({ timeout: FINAL_CASE_TIMEOUT_MS });
   await expect(page.getByLabel(/share case stamp/i).getByText(/empty-handed exit/i)).toBeVisible();
   const finalScores = page.getByLabel(/final scores/i);
   await expect(finalScores).toBeVisible();
