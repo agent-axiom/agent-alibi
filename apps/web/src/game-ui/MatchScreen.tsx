@@ -35,7 +35,9 @@ export function MatchScreen({ match, soundEnabled = false, onToggleSound }: Matc
     const hud = match.arcade.hud;
     const blueLoot = hud?.lootValue ?? 0;
     const redLoot = hud?.aiLootValue ?? 0;
-    const raceTone = blueLoot > redLoot ? "leading" : blueLoot < redLoot ? "trailing" : "tied";
+    const redPendingLoot = hud?.aiPendingLootValue ?? 0;
+    const redThreatLoot = redLoot + redPendingLoot;
+    const raceTone = blueLoot > redThreatLoot ? "leading" : blueLoot < redThreatLoot ? "trailing" : "tied";
     const radarFocus = hud?.radarBlips.find((blip) => blip.kind === "carrier") ?? hud?.radarBlips.find((blip) => blip.kind === "target" || blip.kind === "exit");
     const radarFocusLabel = radarFocus
       ? `${radarFocusPrefix(radarFocus.kind, hud?.escapePayout?.cashout ?? null)}: ${radarFocus.label}`
@@ -45,7 +47,13 @@ export function MatchScreen({ match, soundEnabled = false, onToggleSound }: Matc
     const cashoutStepLabel = hud?.escapePayout ? `Cashout +${hud.escapePayout.cashout}` : "Escape";
     const carriedLoot = hud && hud.lootValue > 0 && hud.escapePayout ? { loot: hud.lootValue, cashout: hud.escapePayout.cashout } : null;
     const blueRaceLabel = carriedLoot ? `Blue carrying +${carriedLoot.loot}` : `Blue ${blueLoot}`;
-    const raceStatusLabel = carriedLoot ? `Bank +${carriedLoot.cashout} at lift` : (hud?.raceStatus ?? "Loot race is tied");
+    const redLootLabel = redPendingLoot > 0 ? `AI ${redLoot} (+${redPendingLoot} pending)` : `AI ${redLoot}`;
+    const redRaceLabel = redPendingLoot > 0 ? `Red ${redLoot} (+${redPendingLoot} pending)` : `Red ${redLoot}`;
+    const raceStatusLabel = redPendingLoot > 0
+      ? `Recover +${redPendingLoot} before Red banks`
+      : carriedLoot
+        ? `Bank +${carriedLoot.cashout} at lift`
+        : (hud?.raceStatus ?? "Loot race is tied");
     const SoundIcon = soundEnabled ? Volume2 : VolumeX;
     const routePulse = hud?.routePulse ?? null;
     const breakoutCashoutWindow = hud?.comboCashoutWindow ?? null;
@@ -227,7 +235,7 @@ export function MatchScreen({ match, soundEnabled = false, onToggleSound }: Matc
           <div className="arcade-stat">
             <span>Loot</span>
             <strong>
-              {blueLoot} / AI {redLoot}
+              {blueLoot} / {redLootLabel}
             </strong>
           </div>
           <div className="arcade-alarm" aria-label={`Alarm ${hud?.alarm ?? match.state.alarm} of 5`}>
@@ -367,7 +375,7 @@ export function MatchScreen({ match, soundEnabled = false, onToggleSound }: Matc
               <div>
                 <strong>{blueRaceLabel}</strong>
                 <i />
-                <strong>Red {redLoot}</strong>
+                <strong>{redRaceLabel}</strong>
               </div>
               <small>{raceStatusLabel}</small>
             </div>

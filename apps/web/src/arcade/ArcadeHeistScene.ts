@@ -542,6 +542,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       cameraLookahead: this.cameraLookahead,
       lootValue: this.lootValue,
       aiLootValue: this.aiLootValue,
+      aiPendingLootValue: this.aiPendingLootValue(),
       alarmRaw: Number(this.alarm.toFixed(3)),
       dashCooldownMs: Math.round(this.dashCooldownMs),
       rivalScanChargeMs: Math.round(this.rivalScanState.chargeMs),
@@ -2082,6 +2083,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       alarm: Math.ceil(this.alarm),
       lootValue: this.lootValue,
       aiLootValue: this.aiLootValue,
+      aiPendingLootValue: this.aiPendingLootValue(),
       artifactsStolen: this.artifactsStolen,
       totalArtifacts: this.artifacts.length,
       canEscape,
@@ -4324,6 +4326,13 @@ export class ArcadeHeistScene extends Phaser.Scene {
   }
   private pendingRivalRelicNames(): string[] {
     return this.aiAgents.flatMap((agent) => agent.carriedRelics.map((relic) => relic.name));
+  }
+
+  private aiPendingLootValue(): number {
+    return this.aiAgents.reduce(
+      (total, agent) => total + agent.carriedRelics.reduce((agentTotal, relic) => agentTotal + relic.value, 0),
+      0
+    );
   }
 
   private finish(outcome: MissionOutcome) {

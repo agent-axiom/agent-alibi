@@ -9,6 +9,7 @@ function hud(overrides: Partial<ArcadeHudState> = {}): ArcadeHudState {
     alarm: 1,
     lootValue: 0,
     aiLootValue: 0,
+    aiPendingLootValue: 0,
     artifactsStolen: 0,
     totalArtifacts: 5,
     canEscape: false,

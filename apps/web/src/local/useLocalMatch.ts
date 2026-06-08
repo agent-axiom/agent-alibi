@@ -240,6 +240,7 @@ function makeInitialArcadeHud(state: GameState): ArcadeHudState {
     alarm: state.alarm,
     lootValue: 0,
     aiLootValue: 0,
+    aiPendingLootValue: 0,
     artifactsStolen: 0,
     totalArtifacts: state.artifacts.length,
     canEscape: false,

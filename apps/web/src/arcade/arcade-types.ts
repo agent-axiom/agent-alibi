@@ -133,6 +133,7 @@ export type ArcadeHudState = {
   alarm: number;
   lootValue: number;
   aiLootValue: number;
+  aiPendingLootValue: number;
   artifactsStolen: number;
   totalArtifacts: number;
   canEscape: boolean;
