@@ -57,8 +57,8 @@ export function MatchScreen({ match, soundEnabled = false, onToggleSound }: Matc
         : (hud?.raceStatus ?? "Loot race is tied");
     const SoundIcon = soundEnabled ? Volume2 : VolumeX;
     const routePulse = hud?.routePulse ?? null;
-    const breakoutCashoutWindow = hud?.comboCashoutWindow ?? null;
-    const scanLockActive = hud?.threatCue?.label === "Scan lock" && /jam/i.test(hud.threatCue.action);
+    const rawBreakoutCashoutWindow = hud?.comboCashoutWindow ?? null;
+    const scanLockCueActive = hud?.threatCue?.label === "Scan lock" && /jam/i.test(hud.threatCue.action);
     const threatCueActive = Boolean(hud?.threatCue);
     const denseThreatActive = hud?.threatCue?.label === "Laser sweep";
     const countdownPulseActive = hud?.phase === "lockdown";
@@ -82,10 +82,14 @@ export function MatchScreen({ match, soundEnabled = false, onToggleSound }: Matc
           }
         : null;
     const firstStealCashoutMoment = Boolean(cashoutSurge && hud?.scorePopup?.tone === "loot" && hud.artifactsStolen === 1);
-    const visibleCashoutSurge = cashoutPayoff ? null : cashoutSurge;
-    const visibleScorePopup = cashoutPayoff || firstStealCashoutMoment ? null : (hud?.scorePopup ?? null);
-    const visibleSpotlight = cashoutPayoff || firstStealCashoutMoment ? null : (hud?.spotlight ?? null);
-    const visibleObjectiveBanner = cashoutPayoff || (firstStealCashoutMoment && hud?.objectiveBanner?.tone === "escape") ? null : (hud?.objectiveBanner ?? null);
+    const lockBreakPayoff = cashoutPayoff ? null : (hud?.lockBreakPayoff ?? null);
+    const hunterChase = cashoutPayoff || lockBreakPayoff ? null : (hud?.hunterChaseCue ?? null);
+    const breakoutCashoutWindow = lockBreakPayoff ? null : rawBreakoutCashoutWindow;
+    const scanLockActive = !lockBreakPayoff && scanLockCueActive;
+    const visibleCashoutSurge = cashoutPayoff || hunterChase || lockBreakPayoff ? null : cashoutSurge;
+    const visibleScorePopup = cashoutPayoff || lockBreakPayoff || firstStealCashoutMoment ? null : (hud?.scorePopup ?? null);
+    const visibleSpotlight = cashoutPayoff || lockBreakPayoff || firstStealCashoutMoment ? null : (hud?.spotlight ?? null);
+    const visibleObjectiveBanner = cashoutPayoff || lockBreakPayoff || (firstStealCashoutMoment && hud?.objectiveBanner?.tone === "escape") ? null : (hud?.objectiveBanner ?? null);
     const visibleRoutePulse = cashoutPayoff || (firstStealCashoutMoment && routePulse?.mode === "escape") ? null : routePulse;
     const afterburnerActive = Boolean(hud?.lootSpeedSurge);
     const rivalPressureActive = Boolean(redLoot > 0 || hud?.rivalObjective || hud?.rivalIntercept || hud?.lastRivalSteal);
@@ -136,7 +140,7 @@ export function MatchScreen({ match, soundEnabled = false, onToggleSound }: Matc
     const openingTargetRoute = hud?.targetDistanceLabel?.replace(new RegExp("^Target\\s+", "i"), "") ?? "gold marker";
     return (
       <main
-        className={`arcade-shell ${hud?.phase ?? "stealth"} ${hudDensity === "opening" ? "compact-opening" : ""} ${hudDensity === "chase" ? "chase-compact" : ""} ${firstStealCashoutMoment ? "first-steal-cashout-moment" : ""} ${cashoutPayoff ? "cashout-payoff-active" : ""} ${breachAlert ? "breach-alert" : ""} ${visibleRoutePulse ? "route-pulse-active" : ""} ${visibleRoutePulse?.mode === "alibi" ? "alibi-pulse-active" : ""} ${visibleRoutePulse?.mode === "comeback" ? "comeback-pulse-active" : ""} ${breakoutCashoutWindow ? "breakout-cashout-active" : ""} ${scanLockActive ? "scan-lock-active" : ""} ${threatCueActive ? "threat-cue-active" : ""} ${denseThreatActive ? "dense-threat-active" : ""} ${countdownPulseActive ? "countdown-pulse-active" : ""} ${afterburnerActive ? "afterburner-active" : ""} ${rivalPressureActive ? "rival-pressure-active" : ""}`}
+        className={`arcade-shell ${hud?.phase ?? "stealth"} ${hudDensity === "opening" ? "compact-opening" : ""} ${hudDensity === "chase" ? "chase-compact" : ""} ${firstStealCashoutMoment ? "first-steal-cashout-moment" : ""} ${cashoutPayoff ? "cashout-payoff-active" : ""} ${hunterChase ? "hunter-chase-active" : ""} ${lockBreakPayoff ? "lock-break-payoff-active" : ""} ${breachAlert ? "breach-alert" : ""} ${visibleRoutePulse ? "route-pulse-active" : ""} ${visibleRoutePulse?.mode === "alibi" ? "alibi-pulse-active" : ""} ${visibleRoutePulse?.mode === "comeback" ? "comeback-pulse-active" : ""} ${breakoutCashoutWindow ? "breakout-cashout-active" : ""} ${scanLockActive ? "scan-lock-active" : ""} ${threatCueActive ? "threat-cue-active" : ""} ${denseThreatActive ? "dense-threat-active" : ""} ${countdownPulseActive ? "countdown-pulse-active" : ""} ${afterburnerActive ? "afterburner-active" : ""} ${rivalPressureActive ? "rival-pressure-active" : ""}`}
       >
         <Suspense
           fallback={
@@ -175,6 +179,20 @@ export function MatchScreen({ match, soundEnabled = false, onToggleSound }: Matc
               </>
             ) : null}
             <small>{visibleCashoutSurge.seconds}s before scans · cashout or greed</small>
+          </div>
+        ) : null}
+        {hunterChase ? (
+          <div className="arcade-hunter-chase" aria-label="Hunter chase" aria-live="assertive">
+            <span>{hunterChase.agentName} lock-on</span>
+            <strong>Dash to break lock</strong>
+            <small>{hunterChase.distanceMeters}m closing · {hunterChase.beamCount} beams live</small>
+          </div>
+        ) : null}
+        {lockBreakPayoff ? (
+          <div className="arcade-lock-break-payoff" aria-label="Lock break payoff" aria-live="assertive">
+            <span>Lock broken</span>
+            <strong>Breakout cashout +{lockBreakPayoff.cashoutValue}</strong>
+            <small>Rook scan jammed · {lockBreakPayoff.secondsLeft}s to bank</small>
           </div>
         ) : null}
         {breakoutCashoutWindow ? (

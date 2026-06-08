@@ -926,7 +926,7 @@ test("dash breaks an active Rook lock-on", async ({ page }) => {
   await page.keyboard.up("ArrowRight");
   await page.keyboard.up("Shift");
 
-  await expect(page.getByLabel(/score popup/i).getByText(/lock broken/i)).toBeVisible();
+  await expect(page.getByLabel(/lock break payoff/i).getByText(/lock broken/i)).toBeVisible();
   const broken = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.() as any);
   expect(broken.hunterLockBreak).toEqual(
     expect.objectContaining({
@@ -943,6 +943,39 @@ test("dash breaks an active Rook lock-on", async ({ page }) => {
     })
   );
   expect(broken.lastImpact?.kind).toBe("dodge");
+});
+
+test("hunter chase overlay turns Rook pressure into an immediate dash objective", async ({ page }) => {
+  await startSoloArcade(page);
+  await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget === "function");
+
+  await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget());
+  await page.keyboard.press("KeyE");
+  await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.forceRivalsActive?.());
+
+  const chase = page.getByLabel(/hunter chase/i);
+  await expect(chase.getByText(/rook lock-on/i)).toBeVisible();
+  await expect(chase.getByText(/dash to break lock/i)).toBeVisible();
+  await expect(chase.getByText(/\d+m closing/i)).toBeVisible();
+  await expect(page.locator(".arcade-shell")).toHaveClass(/hunter-chase-active/);
+
+  await page.keyboard.down("Shift");
+  await page.keyboard.down("ArrowRight");
+  await page.waitForTimeout(140);
+  await page.keyboard.up("ArrowRight");
+  await page.keyboard.up("Shift");
+
+  await expect(chase).toBeHidden();
+  const payoff = page.getByLabel(/lock break payoff/i);
+  await expect(payoff.getByText(/lock broken/i)).toBeVisible();
+  await expect(payoff.getByText(/breakout cashout \+7/i)).toBeVisible();
+  await expect(payoff.getByText(/rook scan jammed/i)).toBeVisible();
+  await expect(page.getByLabel(/cashout surge/i)).toBeHidden();
+  await expect(page.getByLabel(/breakout cashout window/i)).toBeHidden();
+  await expect(page.getByLabel(/objective banner/i)).toBeHidden();
+  await expect(page.getByLabel(/score popup/i)).toBeHidden();
+  await expect(page.getByLabel(/current objective/i)).toBeHidden();
+  await expect(page.locator(".arcade-shell")).toHaveClass(/lock-break-payoff-active/);
 });
 
 test("breaking Rook lock turns a fast cashout into a combo payoff", async ({ page }) => {
@@ -968,13 +1001,9 @@ test("breaking Rook lock turns a fast cashout into a combo payoff", async ({ pag
   await page.keyboard.up("ArrowRight");
   await page.keyboard.up("Shift");
 
-  await expect(page.getByLabel(/score popup/i).getByText(/lock broken/i)).toBeVisible();
+  await expect(page.getByLabel(/lock break payoff/i).getByText(/lock broken/i)).toBeVisible();
+  await expect(page.getByLabel(/lock break payoff/i).getByText(/breakout cashout \+7/i)).toBeVisible();
   await expect(page.getByLabel(/mission radio/i).getByText(/breakout cashout armed/i)).toBeVisible();
-  const breakoutWindow = page.getByLabel(/breakout cashout window/i);
-  await expect(breakoutWindow.getByText(/breakout cashout/i)).toBeVisible();
-  await expect(breakoutWindow.getByText(/\+2 bonus/i)).toBeVisible();
-  await expect(breakoutWindow.getByText(/cashout \+7/i)).toBeVisible();
-  await expect(breakoutWindow.getByText(/\d+s to bank/i)).toBeVisible();
   const armedCombo = await page.evaluate(() => (window.__AGENT_ALIBI_ARCADE_STATE__?.() as any)?.comboCashout);
   expect(armedCombo).toEqual(
     expect.objectContaining({
@@ -1002,8 +1031,9 @@ test("breaking Rook lock turns a fast cashout into a combo payoff", async ({ pag
   await page.evaluate(() => window.__AGENT_ALIBI_FINISH_ARCADE__?.());
   await expectFinalCaseFile(page);
   const finalScores = page.getByLabel(/final scores/i);
-  await expect(finalScores.getByText(/breakout cashout/i)).toBeVisible();
-  await expect(finalScores.getByText(/\+2/i)).toBeVisible();
+  const breakoutScore = finalScores.locator(".final-breakout");
+  await expect(breakoutScore.getByText(/breakout cashout/i)).toBeVisible();
+  await expect(breakoutScore.getByText(/\+2/i)).toBeVisible();
   const caseHighlights = page.getByLabel(/case highlights/i);
   await expect(caseHighlights.getByText(/breakout cashout \+2/i)).toBeVisible();
   await expect(page.getByText(/cashout banked: \+7/i)).toBeVisible();

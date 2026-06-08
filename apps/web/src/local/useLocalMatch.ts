@@ -273,6 +273,8 @@ function makeInitialArcadeHud(state: GameState): ArcadeHudState {
     escapePayout: null,
     extractionCue: null,
     extractionSequence: null,
+    hunterChaseCue: null,
+    lockBreakPayoff: null,
     routeChoice: null,
     routePulse: null,
     radarBlips: [],
