@@ -339,6 +339,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private rivalBarkUntilMs = 0;
   private routePulse: ArcadeRoutePulse | null = null;
   private routePulseUntilMs = 0;
+  private lastCashoutReadyPulseKey: string | null = null;
   private finished = false;
   private aiReleased = false;
   private aiWakeHoldMs = 0;
@@ -627,6 +628,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private afterDebugTeleport() {
     this.pointerTarget = undefined;
     this.updateTargetMarker();
+    this.updateCashoutReadyPulse();
     this.updateGreedRouteHint();
     this.updateMovementCoach();
     this.updateInteractionPrompt();
@@ -765,6 +767,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.updateRivalPressureFeed();
     this.updateRivalScan(delta);
     this.updateTargetMarker();
+    this.updateCashoutReadyPulse();
     this.updateGreedRouteHint();
     this.updateInteractionPrompt();
     this.updateCameraLookahead(delta);
@@ -824,6 +827,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.rivalBarkUntilMs = 0;
     this.routePulse = null;
     this.routePulseUntilMs = 0;
+    this.lastCashoutReadyPulseKey = null;
     this.finished = false;
     this.aiReleased = false;
     this.aiWakeHoldMs = 0;
@@ -1513,6 +1517,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       });
       this.flashArenaCallout("steal", `+${artifact.value} ${artifact.name}`, artifact.x, artifact.y, 0xffd56a);
       this.flashObjectiveBanner(this.buildEscapeBanner(this.artifactsStolen === 1));
+      this.lastCashoutReadyPulseKey = null;
       if (this.artifactsStolen === 1) {
         this.flashRoutePulse({
           mode: "escape",
@@ -1729,6 +1734,22 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.routePulse = pulse;
     this.routePulseUntilMs = this.elapsedMs + 2_000;
     this.emitHudIfNeeded(true);
+  }
+
+  private updateCashoutReadyPulse() {
+    if (this.lootValue <= 0 || !this.isNearExit() || this.extractionSequenceActive()) return;
+
+    const cashoutValue = this.currentCashoutValue();
+    const pulseKey = `cashout-ready:${cashoutValue}`;
+    if (this.lastCashoutReadyPulseKey === pulseKey) return;
+
+    this.lastCashoutReadyPulseKey = pulseKey;
+    this.flashRoutePulse({
+      mode: "escape",
+      title: "Cashout ready",
+      detail: `Press E / Space to bank +${cashoutValue}`,
+      action: "Escape now"
+    });
   }
 
   private flashArenaCallout(kind: ArenaCalloutKind, label: string, x: number, y: number, color: number) {
