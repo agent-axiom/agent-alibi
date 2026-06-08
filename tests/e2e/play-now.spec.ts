@@ -81,8 +81,9 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   const openingContract = page.getByLabel(/opening contract/i);
   await expect(openingContract.getByText(/moon vault contract/i)).toBeVisible();
   await expect(openingContract.getByText(/steal moon pearl \+3/i)).toBeVisible();
+  await expect(openingContract.getByText(/moon pearl - (?:n|ne|e|se|s|sw|w|nw|here) \d+m/i)).toBeVisible();
   await expect(openingContract.getByText(/cashout at atrium lift/i)).toBeVisible();
-  await expect(openingContract.getByText(/red crew breaches after first score/i)).toBeVisible();
+  await expect(openingContract.getByText(/press e \/ space at relic/i)).toBeVisible();
   const openingLayout = await page.evaluate(() => {
     const contract = document.querySelector(`[aria-label="Opening contract"]`)?.getBoundingClientRect();
     const objective = document.querySelector(`[aria-label="Current objective"]`)?.getBoundingClientRect();
@@ -559,8 +560,9 @@ test("opening seconds focus the player on the contract before expanding the full
   const openingContract = page.getByLabel(/opening contract/i);
   await expect(openingContract.getByText(/moon vault contract/i)).toBeVisible();
   await expect(openingContract.getByText(/steal moon pearl \+3/i)).toBeVisible();
+  await expect(openingContract.getByText(/moon pearl - (?:n|ne|e|se|s|sw|w|nw|here) \d+m/i)).toBeVisible();
   await expect(openingContract.getByText(/cashout at atrium lift/i)).toBeVisible();
-  await expect(openingContract.getByText(/red crew breaches after first score/i)).toBeVisible();
+  await expect(openingContract.getByText(/press e \/ space at relic/i)).toBeVisible();
   await expect(page.getByLabel(/live agents/i)).toBeHidden();
   await expect(page.getByLabel(/mission radio/i)).toBeHidden();
   await expect(page.getByLabel(/mini radar/i)).toBeHidden();

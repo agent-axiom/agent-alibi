@@ -120,6 +120,7 @@ export function MatchScreen({ match, soundEnabled = false, onToggleSound }: Matc
             cleanBonusWindow: hud?.cleanBonusWindow ?? null,
             lootChainWindow: hud?.lootChainWindow ?? null
           });
+    const openingTargetRoute = hud?.targetDistanceLabel?.replace(new RegExp("^Target\\s+", "i"), "") ?? "gold marker";
     return (
       <main
         className={`arcade-shell ${hud?.phase ?? "stealth"} ${hudDensity === "opening" ? "compact-opening" : ""} ${breachAlert ? "breach-alert" : ""} ${routePulse ? "route-pulse-active" : ""} ${routePulse?.mode === "alibi" ? "alibi-pulse-active" : ""} ${routePulse?.mode === "comeback" ? "comeback-pulse-active" : ""} ${breakoutCashoutWindow ? "breakout-cashout-active" : ""} ${scanLockActive ? "scan-lock-active" : ""} ${threatCueActive ? "threat-cue-active" : ""} ${denseThreatActive ? "dense-threat-active" : ""} ${countdownPulseActive ? "countdown-pulse-active" : ""} ${afterburnerActive ? "afterburner-active" : ""} ${rivalPressureActive ? "rival-pressure-active" : ""}`}
@@ -192,7 +193,7 @@ export function MatchScreen({ match, soundEnabled = false, onToggleSound }: Matc
             <strong>Steal Moon Pearl +3</strong>
             <div>
               <small>1</small>
-              <b>Follow gold marker</b>
+              <b>{"Moon Pearl - " + openingTargetRoute}</b>
             </div>
             <div>
               <small>2</small>
@@ -200,7 +201,7 @@ export function MatchScreen({ match, soundEnabled = false, onToggleSound }: Matc
             </div>
             <div>
               <small>3</small>
-              <b>Red crew breaches after first score</b>
+              <b>Press E / Space at relic</b>
             </div>
           </aside>
         ) : null}
