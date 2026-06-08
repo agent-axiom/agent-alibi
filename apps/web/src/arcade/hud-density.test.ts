@@ -31,6 +31,7 @@ function hud(overrides: Partial<ArcadeHudState> = {}): ArcadeHudState {
     raceStatus: "Loot race is tied",
     lastRivalSteal: null,
     rivalIntercept: null,
+    rivalObjective: null,
     vaultCondition: {
       tone: "stable",
       label: "Vault Stable",

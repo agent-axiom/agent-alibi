@@ -1989,6 +1989,7 @@ p {
 
 .arcade-shell.route-pulse-active .arcade-mission-beat,
 .arcade-shell.route-pulse-active .arcade-threat-cue,
+.arcade-shell.route-pulse-active .arcade-rival-objective,
 .arcade-shell.route-pulse-active .arcade-objective > small {
   display: none;
 }
@@ -2113,6 +2114,10 @@ p {
 
 .arcade-shell.breach-alert .arcade-director-cue {
   padding: 3px 5px;
+}
+
+.arcade-shell.breach-alert .arcade-rival-objective {
+  display: none;
 }
 
 .arcade-shell.breach-alert .arcade-mission-meta {
@@ -3426,6 +3431,75 @@ p {
 .arcade-shell.rival-pressure-active .arcade-rivals {
   border-color: rgba(255, 79, 123, 0.72);
   box-shadow: 0 0 24px rgba(255, 79, 123, 0.2), inset 0 0 20px rgba(255, 213, 106, 0.08);
+}
+
+.arcade-rival-objective {
+  grid-column: 1 / -1;
+  width: 100%;
+  min-width: 0;
+  border: 1px solid rgba(255, 213, 106, 0.58);
+  border-radius: 8px;
+  padding: 7px 9px;
+  background: linear-gradient(135deg, rgba(34, 27, 9, 0.92), rgba(14, 27, 33, 0.84));
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05), 0 10px 24px rgba(0, 0, 0, 0.18);
+  color: #fff8e6;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 4px 8px;
+  overflow-wrap: anywhere;
+}
+
+.arcade-rival-objective.danger {
+  border-color: rgba(255, 79, 123, 0.68);
+  background: linear-gradient(135deg, rgba(40, 12, 24, 0.94), rgba(29, 21, 12, 0.86));
+}
+
+.arcade-rival-objective span,
+.arcade-rival-objective strong,
+.arcade-rival-objective small,
+.arcade-rival-objective em {
+  min-width: 0;
+  display: block;
+  line-height: 1.08;
+}
+
+.arcade-rival-objective span {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  color: #ffd56a;
+  font-size: 0.62rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.arcade-rival-objective strong {
+  grid-column: 2;
+  color: #ffffff;
+  font-size: 0.82rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.arcade-rival-objective small {
+  grid-column: 2;
+  color: #d8fcff;
+  font-size: 0.68rem;
+  font-weight: 760;
+}
+
+.arcade-rival-objective em {
+  grid-column: 3;
+  grid-row: 1 / span 2;
+  justify-self: end;
+  border-radius: 6px;
+  padding: 5px 7px;
+  background: #ff4f7b;
+  color: #fff4f7;
+  font-size: 0.66rem;
+  font-style: normal;
+  font-weight: 950;
+  text-transform: uppercase;
 }
 
 .arcade-rival-loot {

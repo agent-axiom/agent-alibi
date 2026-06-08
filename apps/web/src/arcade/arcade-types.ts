@@ -66,6 +66,14 @@ export type ArcadeRivalIntercept = {
   urgency: "chase" | "critical";
 };
 
+export type ArcadeRivalObjective = {
+  tone: "warning" | "danger";
+  label: "Rival Objective";
+  title: string;
+  detail: string;
+  action: string;
+};
+
 export type ArcadeLootChainWindow = {
   label: string;
   detail: string;
@@ -137,6 +145,7 @@ export type ArcadeHudState = {
   raceStatus: string;
   lastRivalSteal: string | null;
   rivalIntercept: ArcadeRivalIntercept | null;
+  rivalObjective: ArcadeRivalObjective | null;
   vaultCondition: ArcadeVaultCondition;
   escapePayout: ArcadeEscapePayout | null;
   extractionCue: ArcadeExtractionCue | null;
