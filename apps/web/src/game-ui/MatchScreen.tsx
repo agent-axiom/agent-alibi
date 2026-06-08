@@ -66,7 +66,7 @@ export function MatchScreen({ match, soundEnabled = false, onToggleSound }: Matc
           }
         : null;
     const afterburnerActive = Boolean(hud?.lootSpeedSurge);
-    const rivalPressureActive = Boolean(redLoot > 0 || hud?.rivalIntercept || hud?.lastRivalSteal);
+    const rivalPressureActive = Boolean(redLoot > 0 || hud?.rivalObjective || hud?.rivalIntercept || hud?.lastRivalSteal);
     const carrierPressureActive = Boolean(hud?.rivalIntercept);
     const carrierContractLabel = hud?.rivalIntercept
       ? hud.rivalIntercept.urgency === "critical"
@@ -316,6 +316,14 @@ export function MatchScreen({ match, soundEnabled = false, onToggleSound }: Matc
               <strong>{hud.objectiveCompass.target}</strong>
               <i>{hud.objectiveCompass.route}</i>
               <small>{hud.objectiveCompass.detail}</small>
+            </div>
+          ) : null}
+          {hud?.rivalObjective ? (
+            <div className={`arcade-rival-objective ${hud.rivalObjective.tone}`} aria-label="Rival objective">
+              <span>{hud.rivalObjective.label}</span>
+              <strong>{hud.rivalObjective.title}</strong>
+              <small>{hud.rivalObjective.detail}</small>
+              <em>{hud.rivalObjective.action}</em>
             </div>
           ) : null}
           {hud?.missionBeat ? (

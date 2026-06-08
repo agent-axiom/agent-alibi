@@ -1181,6 +1181,15 @@ test("rival steals trigger a clear red loot alert", async ({ page }) => {
   );
 
   const rivalLootAlert = page.getByLabel(/rival loot alert/i);
+  const rivalObjective = page.getByLabel(/rival objective/i);
+  await expect(rivalObjective.getByText(/rival objective/i)).toBeVisible();
+  await expect(rivalObjective.getByText(/rook carrier run/i)).toBeVisible();
+  await expect(rivalObjective.getByText(/moon pearl \+3/i)).toBeVisible();
+  await expect(rivalObjective.getByText(/intercept before cashout/i)).toBeVisible();
+  await page.locator(".arcade-objective-banner").waitFor({ state: "detached" });
+  const rivalObjectiveBox = await rivalObjective.boundingBox();
+  expect(rivalObjectiveBox).not.toBeNull();
+  expect(rivalObjectiveBox!.y + rivalObjectiveBox!.height).toBeLessThanOrEqual(page.viewportSize()!.height - 8);
   await expect(page.locator(".arcade-shell")).toHaveClass(/rival-pressure-active/);
   await expect(rivalLootAlert.getByText(/pending \+\d/i)).toBeVisible();
   await expect(rivalLootAlert.getByText(/stole/i)).toBeVisible();

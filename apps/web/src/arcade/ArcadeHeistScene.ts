@@ -13,6 +13,7 @@ import {
   type ArcadeRadarBlip,
   type ArcadeRivalBark,
   type ArcadeRivalIntercept,
+  type ArcadeRivalObjective,
   type ArcadeRouteChoice,
   type ArcadeRoutePulse,
   type ArcadeScorePopup,
@@ -2103,6 +2104,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       raceStatus: guidance.raceStatus,
       lastRivalSteal: this.lastRivalSteal,
       rivalIntercept,
+      rivalObjective: this.rivalObjective(rivalIntercept, nearestRival, rivalPressure),
       vaultCondition: this.vaultCondition(),
       escapePayout,
       extractionCue: this.extractionCue(escapePayout),
@@ -2424,6 +2426,66 @@ export class ArcadeHeistScene extends Phaser.Scene {
     if (!target) return 0;
     const distance = Phaser.Math.Distance.Between(agent.x, agent.y, target.x, target.y);
     return Math.max(1, Math.ceil(distance / AI_SPEED));
+  }
+
+  private rivalObjective(
+    rivalIntercept: ArcadeRivalIntercept | null,
+    nearestRival: RivalScan | null,
+    rivalPressure: RivalPressure
+  ): ArcadeRivalObjective | null {
+    if (rivalIntercept) {
+      return {
+        tone: rivalIntercept.urgency === "critical" ? "danger" : "warning",
+        label: "Rival Objective",
+        title: `${rivalIntercept.agentName} carrier run`,
+        detail: `${rivalIntercept.relicName} +${rivalIntercept.value} · ${rivalIntercept.cashoutSeconds}s to lift`,
+        action: rivalIntercept.urgency === "critical" ? "Intercept now" : "Intercept before cashout"
+      };
+    }
+
+    const hunter = this.rivalHunterDebug();
+    if (hunter.visible) {
+      return {
+        tone: hunter.status === "hunting" || rivalPressure.level === "danger" ? "danger" : "warning",
+        label: "Rival Objective",
+        title: `${hunter.agentName} hunter lock`,
+        detail: `${hunter.distanceMeters}m out · targeting you`,
+        action: "Break lock, dash, or cashout"
+      };
+    }
+
+    if (this.aiReleased && this.aiWakeHoldMs > 0) {
+      return {
+        tone: "warning",
+        label: "Rival Objective",
+        title: "Red crew staging",
+        detail: `${Math.max(1, Math.ceil(this.aiWakeHoldMs / 1000))}s before scans`,
+        action: "Choose cashout or greed"
+      };
+    }
+
+    if (nearestRival && rivalPressure.level !== "clear" && rivalPressure.level !== "standby") {
+      return {
+        tone: rivalPressure.level === "danger" ? "danger" : "warning",
+        label: "Rival Objective",
+        title: `${nearestRival.name} scan pressure`,
+        detail: `${nearestRival.distanceMeters}m out · alarm climbing`,
+        action: "Jam scan or break line"
+      };
+    }
+
+    if (this.aiLootValue > this.lootValue) {
+      const lead = this.aiLootValue - this.lootValue;
+      return {
+        tone: "danger",
+        label: "Rival Objective",
+        title: `Red leads by ${lead}`,
+        detail: "Next relic plus lift bonus can swing it",
+        action: "Steal and bank"
+      };
+    }
+
+    return null;
   }
 
   private threatCue(
