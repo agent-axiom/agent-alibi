@@ -150,13 +150,8 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(page.getByText(/steal the moon pearl/i)).toBeVisible();
   await expect(objectiveBanner.getByText(/steal moon pearl/i)).toBeVisible();
   await expect(objectiveBanner.getByText(/first score wins tempo/i)).toBeVisible();
-  await expect(missionBeat.getByText(/first objective/i)).toBeVisible();
-  await expect(missionBeat.getByText(/steal moon pearl/i)).toBeVisible();
-  await expect(missionBeat.getByText(/move with wasd \/ arrows/i)).toBeVisible();
-  const directorCue = page.getByLabel(/heist director cue/i);
-  await expect(directorCue.getByText(/director cue/i)).toBeVisible();
-  await expect(directorCue.getByText(/first hit: moon pearl/i)).toBeVisible();
-  await expect(directorCue.getByText(/first score unlocks the cashout route/i)).toBeVisible();
+  await expect(missionBeat).toBeHidden();
+  await expect(page.getByLabel(/heist director cue/i)).toBeHidden();
   await expect(currentObjective.getByText(/steal the moon pearl \+3/i)).toBeVisible();
   await expect(page.getByLabel(/mission loop/i)).toBeHidden();
   await expect(page.getByText(/target (?:n|ne|e|se|s|sw|w|nw|here) \d+m/i)).toBeHidden();
@@ -168,6 +163,7 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(page.getByText(/s-rank pace/i)).toBeHidden();
   await expect(page.getByLabel(/clean bonus window/i)).toBeHidden();
   await expect(page.getByText(/dash ready/i)).toBeHidden();
+  await expect(page.getByLabel(/contract chain/i)).toBeHidden();
   await expect(page.getByLabel(/active action/i).getByText(/move/i)).toBeVisible();
   await expect(page.getByLabel(/active action/i).getByText(/follow marker/i)).toBeVisible();
   const objectiveCompass = page.getByLabel(/objective compass/i);
@@ -763,6 +759,11 @@ test("opening seconds focus the player on the contract before expanding the full
   await expect(page.getByLabel(/mission radio/i)).toBeHidden();
   await expect(page.getByLabel(/mini radar/i)).toBeHidden();
   await expect(page.getByLabel(/current objective/i).getByText(/steal the moon pearl \+3/i)).toBeVisible();
+  await expect(page.getByLabel(/mission beat/i)).toBeHidden();
+  await expect(page.getByLabel(/heist director cue/i)).toBeHidden();
+  await expect(page.getByLabel(/contract chain/i)).toBeHidden();
+  await expect(page.getByLabel(/heist race/i)).toBeHidden();
+  await expect(page.getByLabel(/clean bonus window/i)).toBeHidden();
 
   await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget === "function");
   await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget());

@@ -49,6 +49,7 @@ export function MatchScreen({ match, soundEnabled = false, locale = "en", onLoca
       : t(locale, "match.sweepClear");
     const routeChoice = hud?.routeChoice ?? null;
     const hudDensity = selectArcadeHudDensity(hud);
+    const openingCommandMode = hudDensity === "opening";
     const cashoutStepLabel = hud?.escapePayout ? t(locale, "match.cashoutStep", { cashout: hud.escapePayout.cashout }) : t(locale, "match.escape");
     const carriedLoot = hud && hud.lootValue > 0 && hud.escapePayout ? { loot: hud.lootValue, cashout: hud.escapePayout.cashout } : null;
     const blueRaceLabel = carriedLoot ? t(locale, "match.blueCarrying", { loot: carriedLoot.loot }) : t(locale, "match.blueScore", { loot: blueLoot });
@@ -170,7 +171,7 @@ export function MatchScreen({ match, soundEnabled = false, locale = "en", onLoca
       }
     ];
     const momentumMeter =
-      hudDensity === "opening"
+      openingCommandMode
         ? null
         : buildArcadeMomentumMeter({
             cleanBonusWindow: hud?.cleanBonusWindow ?? null,
@@ -310,7 +311,7 @@ export function MatchScreen({ match, soundEnabled = false, locale = "en", onLoca
           </div>
         ) : null}
 
-        {hudDensity === "opening" ? (
+        {openingCommandMode ? (
           <aside className="arcade-opening-contract" aria-label="Opening contract">
             <span>{t(locale, "match.openingContract")}</span>
             <strong>{t(locale, "match.stealMoonPearl")}</strong>
@@ -451,7 +452,7 @@ export function MatchScreen({ match, soundEnabled = false, locale = "en", onLoca
               <small>{localizeText(locale, displayedObjectiveCompass.detail)}</small>
             </div>
           ) : null}
-          {hud?.rivalObjective ? (
+          {!openingCommandMode && hud?.rivalObjective ? (
             <div className={`arcade-rival-objective ${hud.rivalObjective.tone}`} aria-label="Rival objective">
               <span>{localizeText(locale, hud.rivalObjective.label)}</span>
               <strong>{localizeText(locale, hud.rivalObjective.title)}</strong>
@@ -459,7 +460,7 @@ export function MatchScreen({ match, soundEnabled = false, locale = "en", onLoca
               <em>{localizeText(locale, hud.rivalObjective.action)}</em>
             </div>
           ) : null}
-          {hud?.missionBeat ? (
+          {!openingCommandMode && hud?.missionBeat ? (
             <div className={`arcade-mission-beat ${hud.missionBeat.tone}`} aria-label="Mission beat">
               <span>{localizeText(locale, hud.missionBeat.kicker)}</span>
               <strong>{localizeText(locale, hud.missionBeat.title)}</strong>
@@ -475,26 +476,29 @@ export function MatchScreen({ match, soundEnabled = false, locale = "en", onLoca
               ) : null}
             </div>
           ) : null}
-          {hud?.threatCue ? (
+          {!openingCommandMode && hud?.threatCue ? (
             <div className={`arcade-threat-cue ${hud.threatCue.tone}`} aria-label="Threat vector">
               <strong>{localizeText(locale, hud.threatCue.label)}</strong>
               <span>{localizeText(locale, hud.threatCue.detail)}</span>
               <small>{localizeText(locale, hud.threatCue.action)}</small>
             </div>
           ) : null}
-          <div className="arcade-steps" aria-label="Contract chain">
-            {contractSteps.map((step) => (
-              <span
-                aria-current={step.status === "current" ? "step" : undefined}
-                aria-label={`${step.label} ${step.status === "done" ? "complete" : step.status}`}
-                className={`${step.status} ${step.status === "current" ? "active" : ""}`}
-                key={step.key}
-              >
-                <b>{step.number}</b> {localizeText(locale, step.label)}
-              </span>
-            ))}
-          </div>
-          <div className="arcade-mission-meta">
+          {!openingCommandMode ? (
+            <div className="arcade-steps" aria-label="Contract chain">
+              {contractSteps.map((step) => (
+                <span
+                  aria-current={step.status === "current" ? "step" : undefined}
+                  aria-label={`${step.label} ${step.status === "done" ? "complete" : step.status}`}
+                  className={`${step.status} ${step.status === "current" ? "active" : ""}`}
+                  key={step.key}
+                >
+                  <b>{step.number}</b> {localizeText(locale, step.label)}
+                </span>
+              ))}
+            </div>
+          ) : null}
+          {!openingCommandMode ? (
+            <div className="arcade-mission-meta">
             <div className={`arcade-race ${raceTone}`} aria-label="Heist race">
               <span>{t(locale, "match.heistRace")}</span>
               <div>
@@ -620,7 +624,8 @@ export function MatchScreen({ match, soundEnabled = false, locale = "en", onLoca
                 {localizeText(locale, hud.greedStatus)}
               </div>
             ) : null}
-          </div>
+            </div>
+          ) : null}
           <small>
             {t(locale, "match.controls")}
           </small>
