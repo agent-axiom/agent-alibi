@@ -2513,12 +2513,17 @@ export class ArcadeHeistScene extends Phaser.Scene {
 
     const hunter = this.rivalHunterDebug();
     if (hunter.visible) {
+      const raiders = this.aiAgents
+        .filter((agent) => agent.name !== hunter.agentName)
+        .map((agent) => agent.name)
+        .slice(0, 2)
+        .join(" / ") || "Red crew";
       return {
         tone: hunter.status === "hunting" || rivalPressure.level === "danger" ? "danger" : "warning",
         label: "Rival Objective",
-        title: `${hunter.agentName} hunter lock`,
-        detail: `${hunter.distanceMeters}m out · targeting you`,
-        action: "Break lock, dash, or cashout"
+        title: `${hunter.agentName} marks you`,
+        detail: `${raiders} raid relics · ${hunter.distanceMeters}m out`,
+        action: "Cashout before Red carriers score"
       };
     }
 
