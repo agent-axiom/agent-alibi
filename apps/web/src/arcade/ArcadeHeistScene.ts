@@ -1492,6 +1492,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
     artifact.takenBy = actor.id;
 
     if (actor.id === this.player?.id) {
+      const comebackRivalLootValue = this.aiLootValue;
+      const comebackWasBehind = comebackRivalLootValue > 0 && this.currentCashoutValue() <= comebackRivalLootValue;
       actor.lootValue += artifact.value;
       this.lootValue += artifact.value;
       this.artifactsStolen += 1;
@@ -1508,6 +1510,15 @@ export class ArcadeHeistScene extends Phaser.Scene {
       });
       this.flashArenaCallout("steal", `+${artifact.value} ${artifact.name}`, artifact.x, artifact.y, 0xffd56a);
       this.flashObjectiveBanner(this.buildEscapeBanner(this.artifactsStolen === 1));
+      const comebackCashoutValue = this.currentCashoutValue();
+      if (comebackWasBehind && comebackCashoutValue > comebackRivalLootValue) {
+        this.flashRoutePulse({
+          mode: "comeback",
+          title: "Comeback live",
+          detail: `Bank +${comebackCashoutValue} beats Red`,
+          action: "Run to lift now"
+        });
+      }
       this.impactPulse("steal", artifact.x, artifact.y);
       this.triggerLootSpeedSurge(artifact.name);
       this.collectArtifactVisual(artifact, 0xffd56a);
