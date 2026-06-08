@@ -45,6 +45,7 @@ function hud(overrides: Partial<ArcadeHudState> = {}): ArcadeHudState {
     lockBreakPayoff: null,
     routeChoice: null,
     routePulse: null,
+    alibiPayoff: null,
     radarBlips: [],
     greedStatus: null,
     targetDistanceLabel: "Target NE 71m",

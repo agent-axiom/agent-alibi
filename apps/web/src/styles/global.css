@@ -1825,7 +1825,8 @@ p {
 
 .arcade-hunter-chase,
 .arcade-rival-cashout-emergency,
-.arcade-lock-break-payoff {
+.arcade-lock-break-payoff,
+.arcade-alibi-payoff {
   position: absolute;
   left: 50%;
   z-index: 6;
@@ -1849,7 +1850,10 @@ p {
 .arcade-rival-cashout-emergency small,
 .arcade-lock-break-payoff span,
 .arcade-lock-break-payoff strong,
-.arcade-lock-break-payoff small {
+.arcade-lock-break-payoff small,
+.arcade-alibi-payoff span,
+.arcade-alibi-payoff strong,
+.arcade-alibi-payoff small {
   display: block;
   overflow-wrap: anywhere;
   line-height: 1;
@@ -1958,6 +1962,39 @@ p {
   font-weight: 900;
 }
 
+.arcade-alibi-payoff {
+  top: clamp(156px, 22vh, 218px);
+  z-index: 7;
+  border: 1px solid rgba(126, 255, 223, 0.88);
+  background:
+    linear-gradient(135deg, rgba(4, 35, 38, 0.97), rgba(8, 24, 44, 0.94)),
+    radial-gradient(circle at 50% 0%, rgba(126, 255, 223, 0.38), transparent 62%),
+    radial-gradient(circle at 50% 100%, rgba(255, 213, 106, 0.16), transparent 54%);
+  box-shadow: 0 26px 66px rgba(0, 0, 0, 0.48), 0 0 54px rgba(126, 255, 223, 0.38), 0 0 68px rgba(255, 213, 106, 0.18);
+  color: #d8fff4;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.46);
+  backdrop-filter: blur(9px);
+  animation: arcade-alibi-payoff-hit 1.04s ease both;
+}
+
+.arcade-alibi-payoff span {
+  color: #7effdf;
+  font-size: 0.76rem;
+  font-weight: 950;
+}
+
+.arcade-alibi-payoff strong {
+  color: #fffaf2;
+  font-size: clamp(1.2rem, 2.8vw, 1.86rem);
+  font-weight: 950;
+}
+
+.arcade-alibi-payoff small {
+  color: #ffd56a;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
 .arcade-lock-break-contract {
   display: inline-flex;
   align-items: center;
@@ -2005,6 +2042,24 @@ p {
   background: linear-gradient(90deg, #7effdf, #ffd56a, #ff4f7b);
   box-shadow: 0 0 18px rgba(126, 255, 223, 0.48);
   transition: width 120ms linear;
+}
+
+@keyframes arcade-alibi-payoff-hit {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(18px) scale(0.9);
+  }
+
+  18%,
+  88% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+
+  100% {
+    opacity: 0.97;
+    transform: translateX(-50%) translateY(-3px) scale(1);
+  }
 }
 
 @keyframes arcade-hunter-chase-pulse {

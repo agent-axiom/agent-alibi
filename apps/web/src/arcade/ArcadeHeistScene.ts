@@ -4,6 +4,7 @@ import { ALIBI_PULSE_COOLDOWN_MS, buildAlibiPulseStatus, canUseAlibiPulse } from
 import { rateArcadeRun } from "./arcade-rules";
 import {
   ARCADE_MISSION_DURATION_MS,
+  type ArcadeAlibiPayoff,
   type ArcadeExtractionCue,
   type ArcadeHudPhase,
   type ArcadeHudState,
@@ -341,6 +342,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private rivalBarkUntilMs = 0;
   private routePulse: ArcadeRoutePulse | null = null;
   private routePulseUntilMs = 0;
+  private alibiPayoff: ArcadeAlibiPayoff | null = null;
+  private alibiPayoffUntilMs = 0;
   private lastCashoutReadyPulseKey: string | null = null;
   private finished = false;
   private aiReleased = false;
@@ -588,6 +591,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       extractionSequence: this.extractionSequenceDebug(),
       arenaLabels: this.arenaLabelsDebug(),
       routePulse: this.routePulse,
+      alibiPayoff: this.alibiPayoff,
       routeMode: this.routeMode,
       nearestRival,
       rivalsReleased: this.aiReleased,
@@ -829,6 +833,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.rivalBarkUntilMs = 0;
     this.routePulse = null;
     this.routePulseUntilMs = 0;
+    this.alibiPayoff = null;
+    this.alibiPayoffUntilMs = 0;
     this.lastCashoutReadyPulseKey = null;
     this.finished = false;
     this.aiReleased = false;
@@ -1737,6 +1743,10 @@ export class ArcadeHeistScene extends Phaser.Scene {
   }
 
   private flashRoutePulse(pulse: ArcadeRoutePulse) {
+    if (pulse.mode !== "alibi") {
+      this.alibiPayoff = null;
+      this.alibiPayoffUntilMs = 0;
+    }
     this.routePulse = pulse;
     this.routePulseUntilMs = this.elapsedMs + 2_000;
     this.emitHudIfNeeded(true);
@@ -1966,12 +1976,15 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.flashSpotlight("Alibi pulse: scanner jammed");
     this.flashArenaCallout("alibi", "Scan jammed", this.player.x, this.player.y, 0x7effdf);
     this.impactPulse("alibi");
-    this.flashRoutePulse({
-      mode: "alibi",
-      title: "Alibi window open",
-      detail: "2s scan break",
-      action: "Dash clear before scan returns"
-    });
+    this.routePulse = null;
+    this.routePulseUntilMs = 0;
+    this.alibiPayoff = {
+      label: "Alibi Pulse",
+      result: "Scan jammed",
+      detail: "Alarm stayed clean",
+      action: "Pulse recharging"
+    };
+    this.alibiPayoffUntilMs = this.elapsedMs + 2_100;
     this.feedLine(`You jammed ${rival.name}'s scan. Break for the exit.`);
     return true;
   }
@@ -2092,6 +2105,9 @@ export class ArcadeHeistScene extends Phaser.Scene {
     if (this.routePulse && this.elapsedMs >= this.routePulseUntilMs) {
       this.routePulse = null;
     }
+    if (this.alibiPayoff && this.elapsedMs >= this.alibiPayoffUntilMs) {
+      this.alibiPayoff = null;
+    }
     const targetArtifact = this.primaryTargetArtifact();
     const targetArtifactLabel = targetArtifact ? this.artifactTargetLabel(targetArtifact) : null;
     const nearArtifact = this.nearPlayerArtifact();
@@ -2188,6 +2204,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       lockBreakPayoff: this.lockBreakPayoff(),
       routeChoice: this.routeChoice(escapePayout, targetArtifact),
       routePulse: this.routePulse,
+      alibiPayoff: this.alibiPayoff,
       radarBlips: this.buildRadarBlips(objectiveTarget),
       greedStatus,
       targetDistanceLabel: targetDirectionLabel,
