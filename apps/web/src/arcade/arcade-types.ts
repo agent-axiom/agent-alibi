@@ -51,7 +51,10 @@ export type ArcadeHunterChaseCue = {
 
 export type ArcadeLockBreakPayoff = {
   cashoutValue: number;
+  baseCashoutValue: number;
+  bonus: number;
   secondsLeft: number;
+  timerPercent: number;
   activeMs: number;
 };
 

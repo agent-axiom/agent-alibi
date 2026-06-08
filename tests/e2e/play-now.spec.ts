@@ -969,10 +969,17 @@ test("hunter chase overlay turns Rook pressure into an immediate dash objective"
   const payoff = page.getByLabel(/lock break payoff/i);
   await expect(payoff.getByText(/lock broken/i)).toBeVisible();
   await expect(payoff.getByText(/breakout cashout \+7/i)).toBeVisible();
+  await expect(payoff.getByText(/bank now/i)).toBeVisible();
+  await expect(payoff.getByText(/\+5 loot \+2 breakout/i)).toBeVisible();
+  const breakoutTimer = payoff.getByRole("progressbar", { name: /breakout cashout timer/i });
+  await expect(breakoutTimer).toBeVisible();
+  await expect(breakoutTimer).toHaveAttribute("aria-valuemin", "0");
+  await expect(breakoutTimer).toHaveAttribute("aria-valuemax", "100");
   await expect(payoff.getByText(/rook scan jammed/i)).toBeVisible();
   await expect(page.getByLabel(/cashout surge/i)).toBeHidden();
   await expect(page.getByLabel(/breakout cashout window/i)).toBeHidden();
   await expect(page.getByLabel(/objective banner/i)).toBeHidden();
+  await expect(page.getByLabel(/route pulse/i)).toBeHidden();
   await expect(page.getByLabel(/score popup/i)).toBeHidden();
   await expect(page.getByLabel(/current objective/i)).toBeHidden();
   await expect(page.locator(".arcade-shell")).toHaveClass(/lock-break-payoff-active/);

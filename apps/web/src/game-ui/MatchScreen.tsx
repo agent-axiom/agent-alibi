@@ -90,7 +90,7 @@ export function MatchScreen({ match, soundEnabled = false, onToggleSound }: Matc
     const visibleScorePopup = cashoutPayoff || lockBreakPayoff || firstStealCashoutMoment ? null : (hud?.scorePopup ?? null);
     const visibleSpotlight = cashoutPayoff || lockBreakPayoff || firstStealCashoutMoment ? null : (hud?.spotlight ?? null);
     const visibleObjectiveBanner = cashoutPayoff || lockBreakPayoff || (firstStealCashoutMoment && hud?.objectiveBanner?.tone === "escape") ? null : (hud?.objectiveBanner ?? null);
-    const visibleRoutePulse = cashoutPayoff || (firstStealCashoutMoment && routePulse?.mode === "escape") ? null : routePulse;
+    const visibleRoutePulse = cashoutPayoff || lockBreakPayoff || (firstStealCashoutMoment && routePulse?.mode === "escape") ? null : routePulse;
     const afterburnerActive = Boolean(hud?.lootSpeedSurge);
     const rivalPressureActive = Boolean(redLoot > 0 || hud?.rivalObjective || hud?.rivalIntercept || hud?.lastRivalSteal);
     const carrierPressureActive = Boolean(hud?.rivalIntercept);
@@ -192,6 +192,20 @@ export function MatchScreen({ match, soundEnabled = false, onToggleSound }: Matc
           <div className="arcade-lock-break-payoff" aria-label="Lock break payoff" aria-live="assertive">
             <span>Lock broken</span>
             <strong>Breakout cashout +{lockBreakPayoff.cashoutValue}</strong>
+            <div className="arcade-lock-break-contract">
+              <b>Bank now</b>
+              <small>+{lockBreakPayoff.baseCashoutValue} loot +{lockBreakPayoff.bonus} breakout</small>
+            </div>
+            <div
+              aria-label="Breakout cashout timer"
+              aria-valuemax={100}
+              aria-valuemin={0}
+              aria-valuenow={lockBreakPayoff.timerPercent}
+              className="arcade-lock-break-meter"
+              role="progressbar"
+            >
+              <i style={{ width: `${lockBreakPayoff.timerPercent}%` }} />
+            </div>
             <small>Rook scan jammed · {lockBreakPayoff.secondsLeft}s to bank</small>
           </div>
         ) : null}
