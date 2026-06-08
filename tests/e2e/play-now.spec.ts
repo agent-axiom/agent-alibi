@@ -1275,7 +1275,14 @@ test("cleanly dodging a security sweep gives immediate reward feedback", async (
   await page.waitForTimeout(360);
   await page.keyboard.up("ArrowLeft");
 
-  await expect(page.getByLabel("Score popup").getByText(/clean dodge/i)).toBeVisible();
+  const ghostStep = page.getByLabel(/ghost step boost/i);
+  await expect(ghostStep.getByText(/clean dodge/i)).toBeVisible();
+  await expect(ghostStep.getByText(/ghost step/i)).toBeVisible();
+  await expect(ghostStep.getByText(/speed burst/i)).toBeVisible();
+  await expect(ghostStep.getByText(/clean escape/i)).toBeVisible();
+  await expect(page.locator(".arcade-shell")).toHaveClass(/ghost-step-active/);
+  await expect(page.getByLabel("Score popup")).toBeHidden();
+  await expect(page.getByLabel(/objective banner/i)).toBeHidden();
   const dodgedSweep = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());
   expect(dodgedSweep?.securitySweep).toEqual(
     expect.objectContaining({
@@ -1285,6 +1292,16 @@ test("cleanly dodging a security sweep gives immediate reward feedback", async (
       hitCount: 0
     })
   );
+  expect(dodgedSweep?.lootSpeedSurge).toEqual(
+    expect.objectContaining({
+      active: true,
+      label: "GHOST STEP",
+      source: "Clean dodge",
+      multiplier: expect.any(Number)
+    })
+  );
+  expect(dodgedSweep?.lootSpeedSurge?.multiplier).toBeGreaterThan(1.45);
+  expect(dodgedSweep?.lootSpeedSurge?.activeMs).toBeGreaterThan(1_000);
   expect(dodgedSweep?.lastImpact?.kind).toBe("dodge");
 });
 
