@@ -2267,6 +2267,20 @@ p {
   line-height: 1;
 }
 
+.arcade-loot-stat.rival-pending {
+  border-color: rgba(255, 79, 123, 0.72);
+  background: linear-gradient(135deg, rgba(42, 11, 24, 0.78), rgba(7, 16, 28, 0.72));
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.28), 0 0 26px rgba(255, 79, 123, 0.22);
+}
+
+.arcade-loot-stat.rival-pending span {
+  color: #ffb4c5;
+}
+
+.arcade-loot-stat.rival-pending strong {
+  color: #fff4f7;
+}
+
 .arcade-condition {
   border-color: rgba(76, 244, 240, 0.3);
 }
