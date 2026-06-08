@@ -394,7 +394,7 @@ export function MatchScreen({ match, soundEnabled = false, onToggleSound }: Matc
                 </strong>
                 <small>
                   {hud.rivalIntercept.distanceMeters}m away ·{" "}
-                  {hud.rivalIntercept.urgency === "critical" ? "cashout imminent" : `cashout in ${hud.rivalIntercept.cashoutSeconds}s`} · intercept with E
+                  {hud.rivalIntercept.urgency === "critical" ? "cashout imminent" : `cashout in ${hud.rivalIntercept.cashoutSeconds}s`} · intercept with E · deny Red +{hud.rivalIntercept.value} / swing +{hud.rivalIntercept.swingValue}
                 </small>
               </div>
             ) : null}

@@ -1220,6 +1220,7 @@ test("rival steals trigger a clear red loot alert", async ({ page }) => {
   await expect(rivalObjective.getByText(/rival objective/i)).toBeVisible();
   await expect(rivalObjective.getByText(/rook carrier run/i)).toBeVisible();
   await expect(rivalObjective.getByText(/moon pearl \+3/i)).toBeVisible();
+  await expect(rivalObjective.getByText(/deny red \+3 \/ swing \+6/i)).toBeVisible();
   await expect(rivalObjective.getByText(/intercept before cashout/i)).toBeVisible();
   await page.locator(".arcade-objective-banner").waitFor({ state: "detached" });
   const rivalObjectiveBox = await rivalObjective.boundingBox();
@@ -1273,8 +1274,11 @@ test("rival steals trigger a clear red loot alert", async ({ page }) => {
   await expect(rivalIntercept.getByText(/moon pearl \+3/i)).toBeVisible();
   await expect(rivalIntercept.getByText(/\d+m away/i)).toBeVisible();
   await expect(rivalIntercept.getByText(/cashout in \d+s/i)).toBeVisible();
+  await expect(rivalIntercept.getByText(/deny red \+3/i)).toBeVisible();
+  await expect(rivalIntercept.getByText(/swing \+6/i)).toBeVisible();
   const carrierRun = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().rivalIntercept);
   expect(carrierRun?.cashoutSeconds).toBeGreaterThan(0);
+  expect(carrierRun?.swingValue).toBe(6);
   const miniRadar = page.getByLabel(/mini radar/i);
   await expect(miniRadar.getByText(/carrier: rook carrying moon pearl/i)).toBeVisible();
   await expect(page.getByLabel(/radar carrier: rook carrying moon pearl/i)).toBeVisible();

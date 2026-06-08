@@ -15,6 +15,7 @@ describe("buildDirectorCue", () => {
         agentName: "Rook",
         relicName: "Moon Pearl",
         value: 3,
+        swingValue: 6,
         distanceMeters: 11,
         directionLabel: "Carrier E 11m",
         cashoutSeconds: 3,
