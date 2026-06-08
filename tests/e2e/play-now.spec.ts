@@ -451,7 +451,20 @@ test("in-world action ring switches from approach to ready prompts", async ({ pa
   );
 
   await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget());
-  const cashoutReadyRing = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().actionRing);
+  const cashoutReadyPulse = page.getByLabel(/route pulse/i);
+  await expect(cashoutReadyPulse.getByText(/cashout ready/i)).toBeVisible();
+  await expect(cashoutReadyPulse.getByText(/press e \/ space to bank \+5/i)).toBeVisible();
+  await expect(cashoutReadyPulse.getByText(/escape now/i)).toBeVisible();
+  const cashoutReadyState = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());
+  expect(cashoutReadyState?.routePulse).toEqual(
+    expect.objectContaining({
+      mode: "escape",
+      title: "Cashout ready",
+      detail: "Press E / Space to bank +5",
+      action: "Escape now"
+    })
+  );
+  const cashoutReadyRing = cashoutReadyState?.actionRing;
   expect(cashoutReadyRing).toEqual(
     expect.objectContaining({
       visible: true,
