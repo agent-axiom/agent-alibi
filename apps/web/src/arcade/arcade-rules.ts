@@ -16,6 +16,7 @@ export type ArcadeMissionResult = {
   alibiPulsesUsed?: number;
   scanBurns?: number;
   carrierIntercepts?: number;
+  ambushNearMisses?: number;
   interceptedRelicNames?: string[];
   interceptedLootValue?: number;
   afterburnerExit?: boolean;
@@ -40,6 +41,7 @@ export function buildArcadeMatchSummary(result: ArcadeMissionResult): MatchSumma
   const alibiPulsesUsed = result.alibiPulsesUsed ?? 0;
   const scanBurns = result.scanBurns ?? 0;
   const carrierIntercepts = result.carrierIntercepts ?? 0;
+  const ambushNearMisses = Math.max(0, result.ambushNearMisses ?? 0);
   const interceptedRelicNames = result.interceptedRelicNames ?? [];
   const afterburnerExitBonus = escaped && result.afterburnerExit ? 1 : 0;
   const lockBreakCashoutBonus = escaped ? Math.max(0, result.lockBreakCashoutBonus ?? 0) : 0;
@@ -91,6 +93,7 @@ export function buildArcadeMatchSummary(result: ArcadeMissionResult): MatchSumma
     alibiPulsesUsed,
     scanBurns,
     carrierIntercepts,
+    ambushNearMisses,
     interceptedRelicNames,
     highlightLines,
     caseFile: buildCaseFile(result, title, blueScore, redScore, runRating, styleBonus, afterburnerExitBonus, lockBreakCashoutBonus)
@@ -162,6 +165,12 @@ function buildHighlightLines(
   if (pendingRivalRelicNames.length > 0) {
     lines.push(`Blocked rival cashout on ${pendingRivalRelicNames.join(" + ")}`);
   }
+  if (lockBreakCashoutBonus > 0) {
+    lines.push(`Breakout cashout +${lockBreakCashoutBonus}`);
+  }
+  if ((result.ambushNearMisses ?? 0) > 0) {
+    lines.push(`Dashed through rival ambush x${result.ambushNearMisses}`);
+  }
   if (result.outcome === "escaped") {
     if (result.lootValue > 0) {
       lines.push(`Cashed out +${cashoutBankedValue(result)} at lift`);
@@ -174,9 +183,6 @@ function buildHighlightLines(
     lines.push("Vault sealed before extraction");
   } else {
     lines.push("Caught in the alarm wash");
-  }
-  if (lockBreakCashoutBonus > 0) {
-    lines.push(`Breakout cashout +${lockBreakCashoutBonus}`);
   }
   if (styleBonus > 0) {
     lines.push(`Clean exit bonus +${styleBonus}`);
@@ -253,6 +259,7 @@ function buildCaseFile(
     `Alibi Pulses: ${result.alibiPulsesUsed ?? 0}`,
     `Scan Burns: ${result.scanBurns ?? 0}`,
     `Carrier Intercepts: ${result.carrierIntercepts ?? 0}`,
+    `Ambush Dodges: ${result.ambushNearMisses ?? 0}`,
     `Recovered From Rivals: ${result.interceptedRelicNames?.length ? result.interceptedRelicNames.join(", ") : "none"}`,
     ...(denialSwingLine ? [denialSwingLine] : []),
     `Alarm: ${result.alarm}/5`,

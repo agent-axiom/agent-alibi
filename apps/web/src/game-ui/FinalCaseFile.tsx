@@ -180,6 +180,13 @@ export function FinalCaseFile({ summary, soundEnabled = false, onToggleSound, on
               <small>{interceptedRelicLine}</small>
             </div>
           ) : null}
+          {summary.ambushNearMisses && summary.ambushNearMisses > 0 ? (
+            <div className="final-score final-ambush">
+              <span>Ambush Dodges</span>
+              <strong>x{summary.ambushNearMisses}</strong>
+              <small>Rival ambush dashed</small>
+            </div>
+          ) : null}
           {summary.scanBurns && summary.scanBurns > 0 ? (
             <div className="final-score final-burn">
               <span>Scan Burns</span>
