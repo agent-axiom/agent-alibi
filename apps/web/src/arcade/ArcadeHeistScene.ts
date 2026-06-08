@@ -7,6 +7,8 @@ import {
   type ArcadeExtractionCue,
   type ArcadeHudPhase,
   type ArcadeHudState,
+  type ArcadeHunterChaseCue,
+  type ArcadeLockBreakPayoff,
   type ArcadeComboCashoutWindow,
   type ArcadeMissionConfig,
   type ArcadeObjectiveBanner,
@@ -2178,6 +2180,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
       escapePayout,
       extractionCue: this.extractionCue(escapePayout),
       extractionSequence: this.extractionSequenceDebug(),
+      hunterChaseCue: this.hunterChaseCue(),
+      lockBreakPayoff: this.lockBreakPayoff(),
       routeChoice: this.routeChoice(escapePayout, targetArtifact),
       routePulse: this.routePulse,
       radarBlips: this.buildRadarBlips(objectiveTarget),
@@ -3056,6 +3060,29 @@ export class ArcadeHeistScene extends Phaser.Scene {
       this.feedLine("Lock broken. Your dash cut Rook's scan.");
     }
     this.impactPulse("dodge", this.player.x, this.player.y);
+  }
+
+  private hunterChaseCue(): ArcadeHunterChaseCue | null {
+    const lockOn = this.hunterLockOnDebug();
+    if (!lockOn.visible || lockOn.status !== "danger") return null;
+
+    return {
+      agentName: lockOn.agentName,
+      distanceMeters: lockOn.distanceMeters,
+      beamCount: lockOn.beamCount
+    };
+  }
+
+  private lockBreakPayoff(): ArcadeLockBreakPayoff | null {
+    const lockBreak = this.hunterLockBreakDebug();
+    const combo = this.comboCashoutWindow();
+    if (!lockBreak.active || !combo) return null;
+
+    return {
+      cashoutValue: combo.cashoutValue,
+      secondsLeft: combo.secondsLeft,
+      activeMs: lockBreak.activeMs ?? 0
+    };
   }
 
   private lockBreakCashoutArmed() {

@@ -43,6 +43,18 @@ export type ArcadeExtractionSequence = {
   beamVisible: boolean;
 };
 
+export type ArcadeHunterChaseCue = {
+  agentName: string;
+  distanceMeters: number;
+  beamCount: number;
+};
+
+export type ArcadeLockBreakPayoff = {
+  cashoutValue: number;
+  secondsLeft: number;
+  activeMs: number;
+};
+
 export type ArcadeRouteChoice = {
   mode: "escape" | "greed";
   cashoutNow: number;
@@ -161,6 +173,8 @@ export type ArcadeHudState = {
   escapePayout: ArcadeEscapePayout | null;
   extractionCue: ArcadeExtractionCue | null;
   extractionSequence: ArcadeExtractionSequence | null;
+  hunterChaseCue: ArcadeHunterChaseCue | null;
+  lockBreakPayoff: ArcadeLockBreakPayoff | null;
   routeChoice: ArcadeRouteChoice | null;
   routePulse: ArcadeRoutePulse | null;
   radarBlips: ArcadeRadarBlip[];
