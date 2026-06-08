@@ -677,6 +677,43 @@ p {
   white-space: pre-wrap;
 }
 
+.final-copy-fallback {
+  display: grid;
+  gap: 8px;
+  border: 2px solid #171717;
+  border-radius: 8px;
+  padding: 14px;
+  background: #fff0dc;
+  box-shadow: 0 8px 0 rgba(209, 73, 91, 0.28);
+}
+
+.final-copy-fallback strong {
+  color: #171717;
+  font-size: 1rem;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.final-copy-fallback small {
+  color: #5a463d;
+  font-weight: 800;
+}
+
+.final-copy-fallback textarea {
+  width: 100%;
+  min-height: 180px;
+  resize: vertical;
+  border: 2px solid #171717;
+  border-radius: 8px;
+  padding: 12px;
+  background: #fffaf2;
+  color: #171717;
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 0.82rem;
+  line-height: 1.35;
+  white-space: pre-wrap;
+}
+
 .case-stamp {
   display: grid;
   gap: 8px;

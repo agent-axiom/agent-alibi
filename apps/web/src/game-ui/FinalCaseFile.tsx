@@ -43,7 +43,7 @@ export type LocalBestCaseStatus = {
 };
 
 export function FinalCaseFile({ summary, soundEnabled = false, onToggleSound, onRematch, onHome }: FinalCaseFileProps) {
-  const [copied, setCopied] = useState(false);
+  const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "blocked">("idle");
   const [bestCase] = useState(() => buildLocalBestCaseStatus(summary, readLocalBestCaseRecord()));
   const blueScore = summary.teamScores.find((score) => score.teamId === "blue");
   const redScore = summary.teamScores.find((score) => score.teamId === "red");
@@ -61,6 +61,7 @@ export function FinalCaseFile({ summary, soundEnabled = false, onToggleSound, on
     ? `Red denied: ${summary.interceptedRelicNames.join(" + ")}`
     : "Red denied: recovered loot";
   const afterburnerFinish = Boolean(summary.afterburnerExitBonus && summary.afterburnerExitBonus > 0);
+  const shareText = buildCaseShareText(summary);
 
   useEffect(() => {
     if (bestCase.isNewBest) {
@@ -69,8 +70,13 @@ export function FinalCaseFile({ summary, soundEnabled = false, onToggleSound, on
   }, [bestCase]);
 
   async function copyResult() {
-    await navigator.clipboard?.writeText(buildCaseShareText(summary)).catch(() => undefined);
-    setCopied(true);
+    try {
+      if (!navigator.clipboard?.writeText) throw new Error("Clipboard unavailable");
+      await navigator.clipboard.writeText(shareText);
+      setCopyStatus("copied");
+    } catch {
+      setCopyStatus("blocked");
+    }
   }
 
   return (
@@ -223,7 +229,7 @@ export function FinalCaseFile({ summary, soundEnabled = false, onToggleSound, on
           </button>
           <button onClick={copyResult}>
             <Copy aria-hidden="true" size={18} />
-            {copied ? "Copied" : "Copy Result"}
+            {copyStatus === "copied" ? "Copied" : copyStatus === "blocked" ? "Copy blocked" : "Copy Result"}
           </button>
           {onToggleSound ? (
             <button onClick={onToggleSound} aria-label={soundEnabled ? "Sound On" : "Sound Off"} title={soundEnabled ? "Sound On" : "Sound Off"}>
@@ -236,6 +242,13 @@ export function FinalCaseFile({ summary, soundEnabled = false, onToggleSound, on
             Home
           </button>
         </div>
+        {copyStatus === "blocked" ? (
+          <section className="final-copy-fallback" aria-label="Manual share fallback">
+            <strong>Clipboard blocked</strong>
+            <small>Select and copy this case file manually.</small>
+            <textarea aria-label="Manual case file text" readOnly value={shareText} />
+          </section>
+        ) : null}
       </section>
     </main>
   );
