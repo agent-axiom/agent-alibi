@@ -1255,7 +1255,9 @@ test("rival steals trigger a clear red loot alert", async ({ page }) => {
   const beforeRecoveryCamera = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().camera);
   await page.keyboard.press("KeyE");
   await expect(page.getByText("Intercepted Rook", { exact: true })).toBeVisible();
-  await expect(page.getByLabel(/score popup/i).getByText(/recovered \+3 - red denied/i)).toBeVisible();
+  const recoveryPopup = page.getByLabel(/score popup/i);
+  await expect(recoveryPopup.getByText(/recovered \+3 - red denied/i)).toBeVisible();
+  await expect(recoveryPopup.getByText(/denial swing \+6/i)).toBeVisible();
   await expect(page.getByLabel(/cashout surge/i).getByText(/afterburner x2\.05/i)).toBeVisible();
   const recoverySurge = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().lootSpeedSurge);
   expect(recoverySurge).toEqual(
