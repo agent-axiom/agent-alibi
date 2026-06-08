@@ -2630,6 +2630,65 @@ p {
   min-height: 32px;
 }
 
+.arcade-shell.chase-compact .arcade-objective {
+  width: min(760px, calc(100vw - 500px));
+  gap: 5px 8px;
+  max-height: 230px;
+  padding: 8px 10px;
+  border-color: rgba(126, 255, 223, 0.42);
+  background: rgba(7, 16, 28, 0.76);
+  box-shadow: 0 18px 52px rgba(0, 0, 0, 0.34), 0 0 28px rgba(76, 244, 240, 0.12);
+}
+
+.arcade-shell.chase-compact .arcade-objective > strong {
+  font-size: clamp(0.96rem, 1.25vw, 1.18rem);
+}
+
+.arcade-shell.chase-compact .arcade-objective-compass {
+  min-height: 34px;
+  grid-template-columns: auto minmax(0, 1fr) auto minmax(108px, 0.45fr);
+  padding: 6px 8px;
+}
+
+.arcade-shell.chase-compact .arcade-steps,
+.arcade-shell.chase-compact .arcade-mission-beat,
+.arcade-shell.chase-compact .arcade-director-cue,
+.arcade-shell.chase-compact .arcade-objective > small,
+.arcade-shell.chase-compact .arcade-route,
+.arcade-shell.chase-compact .arcade-rivals,
+.arcade-shell.chase-compact .arcade-race,
+.arcade-shell.chase-compact .arcade-escape-payout,
+.arcade-shell.chase-compact .arcade-rival-scan,
+.arcade-shell.chase-compact .arcade-scan-meter,
+.arcade-shell.chase-compact .arcade-carried-loot {
+  display: none;
+}
+
+.arcade-shell.chase-compact .arcade-objective-compass small {
+  grid-column: auto;
+}
+
+.arcade-shell.chase-compact .arcade-rival-objective {
+  min-height: 34px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  padding: 6px 8px;
+}
+
+.arcade-shell.chase-compact .arcade-mission-meta {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.arcade-shell.chase-compact .arcade-mission-meta > :not(.arcade-route-choice):not(.arcade-rival-intercept):not(.arcade-rival-loot):not(.arcade-clean-bonus):not(.arcade-loot-chain):not(.arcade-momentum-meter) {
+  display: none;
+}
+
+.arcade-shell.chase-compact .arcade-route-choice {
+  grid-column: 1 / -1;
+  width: auto;
+  min-height: 34px;
+  padding: 6px 8px;
+}
+
 .arcade-objective-banner.escape {
   border-color: rgba(57, 229, 192, 0.72);
   box-shadow: 0 20px 54px rgba(0, 0, 0, 0.4), 0 0 34px rgba(57, 229, 192, 0.25);

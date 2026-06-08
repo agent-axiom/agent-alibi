@@ -235,43 +235,26 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(page.getByLabel(/live agents/i)).toBeVisible();
   await expect(page.getByLabel(/mission radio/i)).toBeVisible();
   await expect(miniRadar).toBeVisible();
-  await expect(page.getByText(/dash ready/i)).toBeVisible();
+  await expect(page.getByRole("button", { name: /dash ready/i })).toBeVisible();
   await expect(currentObjective.getByText(/escape with/i)).toBeVisible();
-  await expect(page.getByLabel(/rival crew status/i).getByText(/rivals waking in \d+s/i)).toBeVisible();
+  await expect(page.locator(".arcade-shell")).toHaveClass(/chase-compact/);
   await expect(page.getByLabel(/mission radio/i).getByText(/rival agents entered the vault/i)).toBeVisible();
-  const wakeThreat = page.getByLabel(/threat vector/i);
-  await expect(wakeThreat.getByText(/rivals waking/i)).toBeVisible();
-  await expect(wakeThreat.getByText(/\d+s head start before scans/i)).toBeVisible();
-  await expect(wakeThreat.getByText(/choose cashout or greed now/i)).toBeVisible();
-  await expect(page.getByText(/moon pearl secured/i)).toBeVisible();
+  const rivalObjective = page.getByLabel(/rival objective/i);
+  await expect(rivalObjective.getByText(/rook marks you/i)).toBeVisible();
+  await expect(rivalObjective.getByText(/cashout before red carriers score/i)).toBeVisible();
+  await expect(page.getByLabel(/route choice/i).getByText(/bank \+5 now/i)).toBeVisible();
+  await expect(page.locator(".arcade-spotlight").getByText(/moon pearl secured/i)).toBeVisible();
   const stealImpact = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().lastImpact);
   expect(stealImpact?.kind).toBe("steal");
   expect(stealImpact?.count).toBeGreaterThan(0);
-  await expect(missionBeat.getByText(/loot secured/i)).toBeVisible();
-  await expect(missionBeat.getByText(/cashout worth 5/i)).toBeVisible();
-  await expect(missionBeat.getByText(/reach atrium lift or press g/i)).toBeVisible();
+  await expect(page.getByLabel(/objective compass/i).getByText(/follow cyan ring/i)).toBeVisible();
+  await expect(page.getByLabel(/route choice/i).getByText(/risk \+3: argent crown/i)).toBeVisible();
+  await expect(page.getByLabel(/route choice/i).getByText(/press g for cashout \+8/i)).toBeVisible();
   await expect(page.locator(".arcade-shell")).not.toHaveClass(/breach-alert/);
-  await expect(page.getByText(/3 cashout \+5/i)).toBeVisible();
-  await expect(page.getByLabel(/route distance/i)).toContainText(/cashout \+5/i);
   const lootChainWindow = page.getByLabel(/loot chain window/i);
   await expect(lootChainWindow.getByText(/loot chain x1/i)).toBeVisible();
   await expect(lootChainWindow.getByText(/next relic keeps streak/i)).toBeVisible();
   await expect(lootChainWindow.getByText(/\d+s left/i)).toBeVisible();
-  await expect(page.getByText(/optional relic/i)).toBeVisible();
-  await expect(heistRace.getByText(/blue carrying \+3/i)).toBeVisible();
-  await expect(heistRace.getByText(/red 0/i)).toBeVisible();
-  await expect(heistRace.getByText(/bank \+5 at lift/i)).toBeVisible();
-  const carriedLoot = page.getByLabel(/carried loot/i);
-  await expect(carriedLoot.getByText(/carrying \+3/i)).toBeVisible();
-  await expect(carriedLoot.getByText(/bank \+5 at lift/i)).toBeVisible();
-  const escapePayout = page.getByLabel(/escape payout/i);
-  await expect(escapePayout.getByText(/escape bonus \+2/i)).toBeVisible();
-  await expect(escapePayout.getByText(/cashout 5/i)).toBeVisible();
-  const extractionCue = page.getByLabel(/extraction cue/i);
-  await expect(extractionCue.getByText(/extraction armed/i)).toBeVisible();
-  await expect(extractionCue.getByText(/atrium lift/i)).toBeVisible();
-  await expect(extractionCue.getByText(/cashout 5/i)).toBeVisible();
-  await expect(extractionCue.getByText(/follow the cyan ring/i)).toBeVisible();
   const routeChoice = page.getByLabel(/route choice/i);
   await expect(routeChoice.getByText(/bank \+5 now/i)).toBeVisible();
   await expect(routeChoice.getByText(/risk \+3: argent crown/i)).toBeVisible();
@@ -322,7 +305,6 @@ test("solo match starts and reaches final case file", async ({ page }) => {
     };
   });
   expect(routePulseState).toEqual({ pointerEvents: "none", objectiveCut: false, present: true });
-  await expect(page.getByLabel(/optional relic/i).getByText(/greed route/i)).toBeVisible();
   await expect(routeChoice.getByText(/greed armed/i)).toBeVisible();
   await expect(routeChoice.getByText(/projected cashout \+8 · \d+m to relic/i)).toBeVisible();
   const armedGreedRouteHint = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().greedRouteHint);
@@ -343,16 +325,12 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   expect(afterGreedSteal?.target?.kind).toBe("escape");
   expect(afterGreedSteal?.targetMarker?.label).toBe("Cashout +8");
   expect(afterGreedSteal?.escapeZoneBadge).toEqual({ visible: true, label: "Cashout +8" });
-  await expect(heistRace.getByText(/blue carrying \+6/i)).toBeVisible();
-  await expect(heistRace.getByText(/bank \+8 at lift/i)).toBeVisible();
-  await expect(carriedLoot.getByText(/carrying \+6/i)).toBeVisible();
-  await expect(carriedLoot.getByText(/bank \+8 at lift/i)).toBeVisible();
+  await expect(currentObjective.getByText(/escape with 6 loot/i)).toBeVisible();
+  await expect(page.getByLabel(/objective compass/i).getByText(/\+8 at atrium lift/i)).toBeVisible();
 
   await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget());
   await expect(page.locator(".arcade-objective > span").getByText(/press e \/ space to cashout \+8/i)).toBeVisible();
   await expect(page.getByLabel(/active action/i).getByText(/cashout \+8/i)).toBeVisible();
-  await expect(extractionCue.getByText(/extract now/i)).toBeVisible();
-  await expect(extractionCue.getByText(/press e \/ space to cashout \+8/i)).toBeVisible();
   await page.keyboard.press("KeyE");
   const extractionSequence = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().extractionSequence);
   expect(extractionSequence).toEqual(
@@ -655,7 +633,7 @@ test("opening seconds focus the player on the contract before expanding the full
   await expect(page.getByLabel(/current objective/i).getByText(/escape with/i)).toBeVisible();
 });
 
-test("contract chain keeps the current heist step explicit", async ({ page }) => {
+test("cashout chase keeps the current heist step explicit", async ({ page }) => {
   await startSoloArcade(page);
   await expect(page.locator(".arcade-shell")).not.toHaveClass(/compact-opening/, { timeout: 20_000 });
 
@@ -670,8 +648,11 @@ test("contract chain keeps the current heist step explicit", async ({ page }) =>
   await page.keyboard.press("Space");
 
   await expect(page.getByLabel(/score popup/i).getByText(/moon pearl/i)).toBeVisible();
-  await expect(contractChain.getByLabel(/steal relic complete/i)).toBeVisible();
-  await expect(contractChain.locator('[aria-current="step"]')).toContainText(/cashout/i);
+  await expect(page.locator(".arcade-shell")).toHaveClass(/chase-compact/);
+  await expect(contractChain).toBeHidden();
+  await expect(page.getByLabel(/objective compass/i).getByText(/\+5 at atrium lift/i)).toBeVisible();
+  await expect(page.getByLabel(/route choice/i).getByText(/bank \+5 now/i)).toBeVisible();
+  await expect(page.getByLabel(/route choice/i).getByText(/risk \+3: argent crown/i)).toBeVisible();
 });
 
 test("momentum meter turns clean runs and loot chains into one readable payoff", async ({ page }) => {
@@ -1256,6 +1237,36 @@ test("desktop arcade HUD leaves the playfield center open", async ({ page }) => 
   expect(layout).not.toBeNull();
   expect(layout!.objective.height).toBeLessThanOrEqual(310);
   expect(layout!.objective.y).toBeGreaterThanOrEqual(Math.round(layout!.viewportHeight * 0.58));
+});
+
+test("desktop cashout chase collapses the objective panel", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await startSoloArcade(page);
+  await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget === "function");
+
+  await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget());
+  await page.keyboard.press("KeyE");
+  await expect(page.locator(".arcade-shell")).toHaveClass(/chase-compact/);
+
+  const layout = await page.evaluate(() => {
+    const objectiveElement = document.querySelector('[aria-label="Current objective"]');
+    const objective = objectiveElement?.getBoundingClientRect();
+    return objective
+      ? {
+          objective: {
+            y: Math.round(objective.y),
+            height: Math.round(objective.height),
+            clipped: objectiveElement ? objectiveElement.scrollHeight > objectiveElement.clientHeight + 2 : true
+          },
+          viewportHeight: window.innerHeight
+        }
+      : null;
+  });
+
+  expect(layout).not.toBeNull();
+  expect(layout!.objective.height).toBeLessThanOrEqual(230);
+  expect(layout!.objective.y).toBeGreaterThanOrEqual(Math.round(layout!.viewportHeight * 0.62));
+  expect(layout!.objective.clipped).toBe(false);
 });
 
 test("rival steals trigger a clear red loot alert", async ({ page }) => {
