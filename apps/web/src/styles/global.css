@@ -1824,6 +1824,7 @@ p {
 }
 
 .arcade-hunter-chase,
+.arcade-rival-cashout-emergency,
 .arcade-lock-break-payoff {
   position: absolute;
   left: 50%;
@@ -1843,6 +1844,9 @@ p {
 .arcade-hunter-chase span,
 .arcade-hunter-chase strong,
 .arcade-hunter-chase small,
+.arcade-rival-cashout-emergency span,
+.arcade-rival-cashout-emergency strong,
+.arcade-rival-cashout-emergency small,
 .arcade-lock-break-payoff span,
 .arcade-lock-break-payoff strong,
 .arcade-lock-break-payoff small {
@@ -1878,6 +1882,51 @@ p {
   color: #ff9bb4;
   font-size: 0.72rem;
   font-weight: 900;
+}
+
+.arcade-rival-cashout-emergency {
+  top: clamp(168px, 24vh, 236px);
+  border: 1px solid rgba(255, 79, 123, 0.88);
+  z-index: 7;
+  background:
+    linear-gradient(135deg, rgba(42, 8, 21, 0.99), rgba(31, 17, 4, 0.98)),
+    radial-gradient(circle at 50% 0%, rgba(255, 79, 123, 0.48), transparent 62%);
+  box-shadow: 0 26px 68px rgba(0, 0, 0, 0.56), 0 0 54px rgba(255, 79, 123, 0.44), 0 0 58px rgba(255, 213, 106, 0.2);
+  color: #fff2f5;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.48);
+  backdrop-filter: blur(9px);
+  animation: arcade-rival-cashout-emergency-hit 860ms ease both;
+}
+
+.arcade-rival-cashout-emergency span {
+  color: #ffd56a;
+  font-size: 0.75rem;
+  font-weight: 950;
+}
+
+.arcade-rival-cashout-emergency strong {
+  color: #ffffff;
+  font-size: clamp(1.16rem, 2.55vw, 1.72rem);
+  font-weight: 950;
+}
+
+.arcade-rival-cashout-emergency small {
+  color: #ffb7c7;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+@keyframes arcade-rival-cashout-emergency-hit {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(18px) scale(0.92);
+  }
+
+  24%,
+  100% {
+    opacity: 0.98;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
 }
 
 .arcade-lock-break-payoff {
