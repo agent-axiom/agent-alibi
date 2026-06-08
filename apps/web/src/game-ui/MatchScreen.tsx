@@ -48,6 +48,7 @@ export function MatchScreen({ match, soundEnabled = false, onToggleSound }: Matc
     const carriedLoot = hud && hud.lootValue > 0 && hud.escapePayout ? { loot: hud.lootValue, cashout: hud.escapePayout.cashout } : null;
     const blueRaceLabel = carriedLoot ? `Blue carrying +${carriedLoot.loot}` : `Blue ${blueLoot}`;
     const redLootLabel = redPendingLoot > 0 ? `AI ${redLoot} (+${redPendingLoot} pending)` : `AI ${redLoot}`;
+    const lootScoreLabel = `Loot score: Blue ${blueLoot}, Red banked ${redLoot}${redPendingLoot > 0 ? `, Red pending ${redPendingLoot}` : ""}`;
     const redRaceLabel = redPendingLoot > 0 ? `Red ${redLoot} (+${redPendingLoot} pending)` : `Red ${redLoot}`;
     const raceStatusLabel = redPendingLoot > 0
       ? `Recover +${redPendingLoot} before Red banks`
@@ -232,7 +233,7 @@ export function MatchScreen({ match, soundEnabled = false, onToggleSound }: Matc
             <span>Timer</span>
             <strong>{formatClock(hud?.timeLeftMs ?? 0)}</strong>
           </div>
-          <div className="arcade-stat">
+          <div aria-label={lootScoreLabel} className={`arcade-stat arcade-loot-stat ${redPendingLoot > 0 ? "rival-pending" : ""}`}>
             <span>Loot</span>
             <strong>
               {blueLoot} / {redLootLabel}

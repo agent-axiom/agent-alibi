@@ -1181,7 +1181,9 @@ test("rival steals trigger a clear red loot alert", async ({ page }) => {
   );
 
   const rivalLootAlert = page.getByLabel(/rival loot alert/i);
-  const lootStat = page.locator(".arcade-stat").filter({ hasText: /^Loot/i });
+  const lootStat = page.getByLabel(/loot score/i);
+  await expect(lootStat).toHaveAttribute("aria-label", /red pending 3/i);
+  await expect(lootStat).toHaveClass(/rival-pending/);
   await expect(lootStat.getByText(/AI 0 \(\+3 pending\)/i)).toBeVisible();
   const rivalObjective = page.getByLabel(/rival objective/i);
   await expect(rivalObjective.getByText(/rival objective/i)).toBeVisible();
