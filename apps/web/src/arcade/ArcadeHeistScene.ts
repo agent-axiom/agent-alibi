@@ -1870,6 +1870,14 @@ export class ArcadeHeistScene extends Phaser.Scene {
       label: interceptSwingLabel,
       detail: `${this.relicListLabel(recovered)} · Denial swing +${denialSwingValue}`
     });
+    this.flashObjectiveBanner(
+      {
+        tone: "escape",
+        title: "Bank recovered loot",
+        detail: `Cashout +${this.currentCashoutValue()} at Atrium Lift`
+      },
+      2_100
+    );
     this.flashArenaCallout("intercept", interceptSwingLabel, rival.x, rival.y, 0xffd56a);
     this.impactPulse("intercept");
     this.triggerLootSpeedSurge(recoveredNames.at(-1) ?? "Recovered relic");
