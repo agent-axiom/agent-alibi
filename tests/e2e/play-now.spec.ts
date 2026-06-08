@@ -1017,6 +1017,12 @@ test("breaking Rook lock launches a breakout rush lane to cashout", async ({ pag
   expect(postBreak.vaultRush.dashCooldownMs).toBeLessThan(700);
   expect(postBreak.vaultRush.laneWidth).toBeGreaterThan(postBreak.routeGuide?.laneWidth ?? 0);
   expect(postBreak.vaultRush.pulseCount).toBeGreaterThan(postBreak.routeGuide?.pulseCount ?? 0);
+  expect(postBreak.routeSignal).toEqual(
+    expect.objectContaining({
+      laneLabel: "BREAKOUT RUSH",
+      detail: expect.stringMatching(/bank \+7 at lift/i)
+    })
+  );
   expect(postBreak.camera.zoom).toBeGreaterThan((preBreak.camera?.zoom ?? 0) + 0.01);
 });
 
@@ -1058,7 +1064,17 @@ test("breaking Rook lock turns a fast cashout into a combo payoff", async ({ pag
   );
 
   await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToExit?.());
-  await expect(page.getByLabel(/active action/i).getByText(/cashout \+7/i)).toBeVisible();
+  await expect(page.getByRole("button", { name: /interact: cashout \+7/i })).toBeVisible();
+  const cashoutReadyRing = await page.evaluate(() => (window.__AGENT_ALIBI_ARCADE_STATE__?.() as any)?.actionRing);
+  expect(cashoutReadyRing).toEqual(
+    expect.objectContaining({
+      visible: true,
+      kind: "escape",
+      state: "ready",
+      label: "CASHOUT",
+      cue: "E / SPACE"
+    })
+  );
   await page.keyboard.press("KeyE");
 
   const extractionSequence = await page.evaluate(() => (window.__AGENT_ALIBI_ARCADE_STATE__?.() as any)?.extractionSequence);

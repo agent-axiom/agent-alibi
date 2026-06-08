@@ -4019,6 +4019,15 @@ export class ArcadeHeistScene extends Phaser.Scene {
     }
 
     if (target.kind === "escape") {
+      if (this.breakoutRushActive() && this.lootValue > 0) {
+        return {
+          laneLabel: "BREAKOUT RUSH",
+          detail: `Bank +${this.currentCashoutValue()} at lift - ${distanceMeters}m`,
+          pulseCount,
+          laneWidth
+        };
+      }
+
       return {
         laneLabel: this.lootValue > 0 ? `BANK +${this.currentCashoutValue()}` : "EXIT ROUTE",
         detail: `${distanceMeters}m to lift`,
