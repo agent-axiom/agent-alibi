@@ -1823,6 +1823,74 @@ p {
   color: #fff2f5;
 }
 
+.arcade-cashout-payoff {
+  position: absolute;
+  top: clamp(124px, 18vh, 172px);
+  left: 50%;
+  z-index: 7;
+  width: min(460px, calc(100vw - 34px));
+  display: grid;
+  gap: 6px;
+  justify-items: center;
+  border: 1px solid rgba(126, 255, 223, 0.86);
+  border-radius: 8px;
+  padding: 14px 18px;
+  background:
+    linear-gradient(135deg, rgba(4, 35, 38, 0.96), rgba(26, 32, 9, 0.9)),
+    radial-gradient(circle at 50% 0%, rgba(126, 255, 223, 0.34), transparent 62%);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.44), 0 0 46px rgba(126, 255, 223, 0.32), 0 0 74px rgba(255, 213, 106, 0.18);
+  color: #d8fff4;
+  pointer-events: none;
+  text-align: center;
+  text-transform: uppercase;
+  transform: translateX(-50%);
+  animation: arcade-cashout-payoff-hit 0.92s ease-out both;
+}
+
+.arcade-cashout-payoff span,
+.arcade-cashout-payoff strong,
+.arcade-cashout-payoff small {
+  display: block;
+  overflow-wrap: anywhere;
+  line-height: 1;
+}
+
+.arcade-cashout-payoff span {
+  color: #7effdf;
+  font-size: 0.76rem;
+  font-weight: 950;
+}
+
+.arcade-cashout-payoff strong {
+  color: #fffaf2;
+  font-size: clamp(1.28rem, 3vw, 2rem);
+  font-weight: 950;
+}
+
+.arcade-cashout-payoff small {
+  color: #ffd56a;
+  font-size: 0.74rem;
+  font-weight: 900;
+}
+
+@keyframes arcade-cashout-payoff-hit {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(18px) scale(0.92);
+  }
+
+  18%,
+  82% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+
+  100% {
+    opacity: 0.96;
+    transform: translateX(-50%) translateY(-4px) scale(1);
+  }
+}
+
 .arcade-cashout-surge {
   position: absolute;
   top: clamp(106px, 16vh, 142px);
@@ -2658,6 +2726,10 @@ p {
 }
 
 .arcade-shell.first-steal-cashout-moment .arcade-threat-cue {
+  display: none;
+}
+
+.arcade-shell.cashout-payoff-active .arcade-objective {
   display: none;
 }
 

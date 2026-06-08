@@ -2177,6 +2177,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       vaultCondition: this.vaultCondition(),
       escapePayout,
       extractionCue: this.extractionCue(escapePayout),
+      extractionSequence: this.extractionSequenceDebug(),
       routeChoice: this.routeChoice(escapePayout, targetArtifact),
       routePulse: this.routePulse,
       radarBlips: this.buildRadarBlips(objectiveTarget),

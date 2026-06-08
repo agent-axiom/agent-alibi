@@ -40,6 +40,7 @@ function hud(overrides: Partial<ArcadeHudState> = {}): ArcadeHudState {
     },
     escapePayout: null,
     extractionCue: null,
+    extractionSequence: null,
     routeChoice: null,
     routePulse: null,
     radarBlips: [],

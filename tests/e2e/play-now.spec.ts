@@ -438,6 +438,49 @@ test("copy result exposes manual case file when clipboard is blocked", async ({ 
   await expect(page.getByText(/copied/i)).toHaveCount(0);
 });
 
+test("cashout payoff owns the center stage after banking loot", async ({ page }) => {
+  await startSoloArcade(page);
+  await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget === "function");
+
+  await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget());
+  await page.keyboard.press("KeyE");
+  await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToExit());
+  await expect(page.getByLabel(/active action/i).getByText(/cashout \+5/i)).toBeVisible();
+
+  await page.keyboard.press("KeyE");
+
+  const payoff = page.getByLabel(/cashout payoff/i);
+  await expect(payoff.getByText(/cashout banked/i)).toBeVisible();
+  await expect(payoff.getByText(/\+5/i)).toBeVisible();
+  await expect(payoff.getByText(/extraction live/i)).toBeVisible();
+  await expect(page.getByLabel(/route pulse/i)).toBeHidden();
+  await expect(page.getByLabel(/cashout surge/i)).toBeHidden();
+  await expect(page.getByLabel(/objective banner/i)).toBeHidden();
+  await expect(page.locator(".arcade-spotlight")).toBeHidden();
+  await expect(page.getByText(new RegExp("press e / space to bank \\+5", "i"))).toBeHidden();
+
+  const payoffState = await page.evaluate(() => {
+    const extraction = window.__AGENT_ALIBI_ARCADE_STATE__?.().extractionSequence;
+    const payoffElement = document.querySelector("[aria-label=\"Cashout payoff\"]");
+    const objective = document.querySelector("[aria-label=\"Current objective\"]");
+    return {
+      extraction,
+      payoffVisible: payoffElement ? getComputedStyle(payoffElement).display !== "none" : false,
+      objectiveCut: objective ? objective.scrollHeight > objective.clientHeight + 2 : true
+    };
+  });
+  expect(payoffState.extraction).toEqual(
+    expect.objectContaining({
+      active: true,
+      outcome: "escaped",
+      cashoutValue: 5,
+      beamVisible: true
+    })
+  );
+  expect(payoffState.payoffVisible).toBe(true);
+  expect(payoffState.objectiveCut).toBe(false);
+});
+
 test("in-world action ring switches from approach to ready prompts", async ({ page }) => {
   await startSoloArcade(page);
   await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_STATE__ === "function");
