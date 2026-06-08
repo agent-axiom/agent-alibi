@@ -84,16 +84,40 @@ export function MatchScreen({ match, soundEnabled = false, onToggleSound }: Matc
     const firstStealCashoutMoment = Boolean(cashoutSurge && hud?.scorePopup?.tone === "loot" && hud.artifactsStolen === 1);
     const lockBreakPayoff = cashoutPayoff ? null : (hud?.lockBreakPayoff ?? null);
     const hunterChase = cashoutPayoff || lockBreakPayoff ? null : (hud?.hunterChaseCue ?? null);
+    const rivalCashoutEmergency = cashoutPayoff || lockBreakPayoff || hunterChase ? null : hud?.rivalIntercept?.urgency === "critical" ? hud.rivalIntercept : null;
     const breakoutCashoutWindow = lockBreakPayoff ? null : rawBreakoutCashoutWindow;
     const scanLockActive = !lockBreakPayoff && scanLockCueActive;
     const visibleCashoutSurge = cashoutPayoff || hunterChase || lockBreakPayoff ? null : cashoutSurge;
     const visibleScorePopup = cashoutPayoff || lockBreakPayoff || firstStealCashoutMoment ? null : (hud?.scorePopup ?? null);
     const visibleSpotlight = cashoutPayoff || lockBreakPayoff || firstStealCashoutMoment ? null : (hud?.spotlight ?? null);
-    const visibleObjectiveBanner = cashoutPayoff || lockBreakPayoff || (firstStealCashoutMoment && hud?.objectiveBanner?.tone === "escape") ? null : (hud?.objectiveBanner ?? null);
+    const visibleObjectiveBanner = cashoutPayoff || lockBreakPayoff || rivalCashoutEmergency || (firstStealCashoutMoment && hud?.objectiveBanner?.tone === "escape") ? null : (hud?.objectiveBanner ?? null);
     const visibleRoutePulse = cashoutPayoff || lockBreakPayoff || (firstStealCashoutMoment && routePulse?.mode === "escape") ? null : routePulse;
     const afterburnerActive = Boolean(hud?.lootSpeedSurge);
     const rivalPressureActive = Boolean(redLoot > 0 || hud?.rivalObjective || hud?.rivalIntercept || hud?.lastRivalSteal);
     const carrierPressureActive = Boolean(hud?.rivalIntercept);
+    const carrierEmergencyInteractReady = Boolean(
+      rivalCashoutEmergency &&
+        hud?.activeAction.key.toLowerCase().startsWith("e") &&
+        /recover|intercept/i.test(hud.activeAction.label)
+    );
+    const displayedActiveAction = rivalCashoutEmergency && !carrierEmergencyInteractReady
+      ? { key: "Move", label: `Close gap ${rivalCashoutEmergency.distanceMeters}m`, tone: "danger" as const }
+      : (hud?.activeAction ?? null);
+    const displayedPrompt = rivalCashoutEmergency
+      ? carrierEmergencyInteractReady
+        ? "Press E / Space to intercept"
+        : "Red cashout imminent"
+      : (hud?.prompt ?? (hud?.phase === "lockdown" ? "Lockdown" : hud?.phase === "alarm" ? "Alarm rising" : "Heist live"));
+    const displayedObjective = rivalCashoutEmergency ? `Intercept ${rivalCashoutEmergency.agentName} before lift` : (hud?.objective ?? "Steal a relic before the vault learns your name");
+    const displayedObjectiveCompass = rivalCashoutEmergency
+      ? {
+          tone: "danger" as const,
+          verb: "INTERCEPT",
+          target: `${rivalCashoutEmergency.agentName} +${rivalCashoutEmergency.value}`,
+          route: rivalCashoutEmergency.directionLabel,
+          detail: `Deny Red +${rivalCashoutEmergency.value} / swing +${rivalCashoutEmergency.swingValue}`
+        }
+      : (hud?.objectiveCompass ?? null);
     const carrierContractLabel = hud?.rivalIntercept
       ? hud.rivalIntercept.urgency === "critical"
         ? "Stop " + hud.rivalIntercept.agentName + " cashout +" + hud.rivalIntercept.value
@@ -140,7 +164,7 @@ export function MatchScreen({ match, soundEnabled = false, onToggleSound }: Matc
     const openingTargetRoute = hud?.targetDistanceLabel?.replace(new RegExp("^Target\\s+", "i"), "") ?? "gold marker";
     return (
       <main
-        className={`arcade-shell ${hud?.phase ?? "stealth"} ${hudDensity === "opening" ? "compact-opening" : ""} ${hudDensity === "chase" ? "chase-compact" : ""} ${firstStealCashoutMoment ? "first-steal-cashout-moment" : ""} ${cashoutPayoff ? "cashout-payoff-active" : ""} ${hunterChase ? "hunter-chase-active" : ""} ${lockBreakPayoff ? "lock-break-payoff-active" : ""} ${breachAlert ? "breach-alert" : ""} ${visibleRoutePulse ? "route-pulse-active" : ""} ${visibleRoutePulse?.mode === "alibi" ? "alibi-pulse-active" : ""} ${visibleRoutePulse?.mode === "comeback" ? "comeback-pulse-active" : ""} ${breakoutCashoutWindow ? "breakout-cashout-active" : ""} ${scanLockActive ? "scan-lock-active" : ""} ${threatCueActive ? "threat-cue-active" : ""} ${denseThreatActive ? "dense-threat-active" : ""} ${countdownPulseActive ? "countdown-pulse-active" : ""} ${afterburnerActive ? "afterburner-active" : ""} ${rivalPressureActive ? "rival-pressure-active" : ""}`}
+        className={`arcade-shell ${hud?.phase ?? "stealth"} ${hudDensity === "opening" ? "compact-opening" : ""} ${hudDensity === "chase" ? "chase-compact" : ""} ${firstStealCashoutMoment ? "first-steal-cashout-moment" : ""} ${cashoutPayoff ? "cashout-payoff-active" : ""} ${hunterChase ? "hunter-chase-active" : ""} ${lockBreakPayoff ? "lock-break-payoff-active" : ""} ${breachAlert ? "breach-alert" : ""} ${visibleRoutePulse ? "route-pulse-active" : ""} ${visibleRoutePulse?.mode === "alibi" ? "alibi-pulse-active" : ""} ${visibleRoutePulse?.mode === "comeback" ? "comeback-pulse-active" : ""} ${breakoutCashoutWindow ? "breakout-cashout-active" : ""} ${rivalCashoutEmergency ? "rival-cashout-emergency-active" : ""} ${scanLockActive ? "scan-lock-active" : ""} ${threatCueActive ? "threat-cue-active" : ""} ${denseThreatActive ? "dense-threat-active" : ""} ${countdownPulseActive ? "countdown-pulse-active" : ""} ${afterburnerActive ? "afterburner-active" : ""} ${rivalPressureActive ? "rival-pressure-active" : ""}`}
       >
         <Suspense
           fallback={
@@ -186,6 +210,14 @@ export function MatchScreen({ match, soundEnabled = false, onToggleSound }: Matc
             <span>{hunterChase.agentName} lock-on</span>
             <strong>Dash to break lock</strong>
             <small>{hunterChase.distanceMeters}m closing · {hunterChase.beamCount} beams live</small>
+          </div>
+        ) : null}
+        {rivalCashoutEmergency ? (
+          <div className="arcade-rival-cashout-emergency" aria-label="Rival cashout emergency" aria-live="assertive">
+            <span>Red cashout imminent</span>
+            <strong>Intercept now</strong>
+            <small>Deny Red +{rivalCashoutEmergency.value} / swing +{rivalCashoutEmergency.swingValue}</small>
+            <small>{rivalCashoutEmergency.agentName} is {rivalCashoutEmergency.distanceMeters}m from lift · {rivalCashoutEmergency.cashoutSeconds}s</small>
           </div>
         ) : null}
         {lockBreakPayoff ? (
@@ -366,18 +398,18 @@ export function MatchScreen({ match, soundEnabled = false, onToggleSound }: Matc
         </aside>
 
         <section className="arcade-objective" aria-label="Current objective">
-          <span>{hud?.prompt ?? (hud?.phase === "lockdown" ? "Lockdown" : hud?.phase === "alarm" ? "Alarm rising" : "Heist live")}</span>
-          <strong>{hud?.objective ?? "Steal a relic before the vault learns your name"}</strong>
-          <div className={`arcade-active-action ${hud?.activeAction.tone ?? "neutral"}`} aria-label="Active action">
-            <kbd>{hud?.activeAction.key ?? "Move"}</kbd>
-            <span>{hud?.activeAction.label ?? "Follow marker"}</span>
+          <span>{displayedPrompt}</span>
+          <strong>{displayedObjective}</strong>
+          <div className={`arcade-active-action ${displayedActiveAction?.tone ?? "neutral"}`} aria-label="Active action">
+            <kbd>{displayedActiveAction?.key ?? "Move"}</kbd>
+            <span>{displayedActiveAction?.label ?? "Follow marker"}</span>
           </div>
-          {hud?.objectiveCompass ? (
-            <div className={`arcade-objective-compass ${hud.objectiveCompass.tone}`} aria-label="Objective compass">
-              <span>{hud.objectiveCompass.verb}</span>
-              <strong>{hud.objectiveCompass.target}</strong>
-              <i>{hud.objectiveCompass.route}</i>
-              <small>{hud.objectiveCompass.detail}</small>
+          {displayedObjectiveCompass ? (
+            <div className={`arcade-objective-compass ${displayedObjectiveCompass.tone}`} aria-label="Objective compass">
+              <span>{displayedObjectiveCompass.verb}</span>
+              <strong>{displayedObjectiveCompass.target}</strong>
+              <i>{displayedObjectiveCompass.route}</i>
+              <small>{displayedObjectiveCompass.detail}</small>
             </div>
           ) : null}
           {hud?.rivalObjective ? (
