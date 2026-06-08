@@ -71,6 +71,17 @@ test("sound preference survives a reload", async ({ page }) => {
 });
 
 test("solo match starts and reaches final case file", async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: {
+        writeText: async (text: string) => {
+          (window as Window & { __AGENT_ALIBI_COPIED_TEXT__?: string }).__AGENT_ALIBI_COPIED_TEXT__ = text;
+        }
+      }
+    });
+  });
+
   await startSoloArcade(page);
 
   const currentObjective = page.getByLabel(/current objective/i);
@@ -403,12 +414,43 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(page.getByRole("button", { name: /sound off/i })).toBeVisible();
   await page.getByRole("button", { name: /copy result/i }).click();
   await expect(page.getByText(/copied/i)).toBeVisible();
+  const copiedShareText = await page.evaluate(() => (window as Window & { __AGENT_ALIBI_COPIED_TEXT__?: string }).__AGENT_ALIBI_COPIED_TEXT__ ?? "");
+  expect(copiedShareText).toMatch(/AGENT ALIBI CASE FILE/i);
+  expect(copiedShareText).toContain("https://agent-axiom.github.io/agent-alibi/");
   const runItBack = page.getByRole("button", { name: /run it back/i });
   await expect(runItBack).toBeVisible();
   await expect(runItBack).toContainText(/afterburner encore/i);
   await runItBack.click();
   await expect(page.getByLabel(/opening contract/i).getByText(/moon vault contract/i)).toBeVisible();
   await expect(page.getByLabel(/final scores/i)).toBeHidden();
+});
+
+test("copy result exposes manual case file when clipboard is blocked", async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: {
+        writeText: async (text: string) => {
+          (window as Window & { __AGENT_ALIBI_BLOCKED_COPY_TEXT__?: string }).__AGENT_ALIBI_BLOCKED_COPY_TEXT__ = text;
+          throw new DOMException("Clipboard blocked", "NotAllowedError");
+        }
+      }
+    });
+  });
+
+  await startSoloArcade(page);
+  await page.waitForFunction(() => typeof window.__AGENT_ALIBI_FINISH_ARCADE__ === "function");
+  await page.evaluate(() => window.__AGENT_ALIBI_FINISH_ARCADE__?.());
+  await expect(page.locator(".case-file pre").getByText(/agent alibi case file/i)).toBeVisible();
+
+  await page.getByRole("button", { name: /copy result/i }).click();
+
+  await expect(page.getByRole("button", { name: /copy blocked/i })).toBeVisible();
+  const manualShare = page.getByLabel(/manual share fallback/i);
+  await expect(manualShare.getByText(/clipboard blocked/i)).toBeVisible();
+  await expect(manualShare.locator("textarea")).toContainText(/agent alibi case file/i);
+  await expect(manualShare.locator("textarea")).toContainText(/play\s+https:\/\/agent-axiom\.github\.io\/agent-alibi\//i);
+  await expect(page.getByText(/copied/i)).toHaveCount(0);
 });
 
 test("in-world action ring switches from approach to ready prompts", async ({ page }) => {
