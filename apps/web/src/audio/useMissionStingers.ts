@@ -24,6 +24,12 @@ const STINGER_NOTES: Record<MissionStingerId, Array<[number, number]>> = {
     [587, 75],
     [1047, 150]
   ],
+  comeback: [
+    [330, 0],
+    [660, 70],
+    [990, 135],
+    [1320, 210]
+  ],
   "rival-wake": [
     [294, 0],
     [440, 80],

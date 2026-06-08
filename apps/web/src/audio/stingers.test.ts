@@ -64,4 +64,13 @@ describe("selectMissionStinger", () => {
       )
     ).toBe("route-lock");
   });
+
+  it("plays a comeback stinger when a comeback route pulse appears", () => {
+    expect(
+      selectMissionStinger(
+        { lootValue: 3, aiLootValue: 3, phase: "stealth", spotlight: null, summaryTitle: null, routePulseTitle: null },
+        { lootValue: 3, aiLootValue: 3, phase: "stealth", spotlight: null, summaryTitle: null, routePulseTitle: "Comeback live" }
+      )
+    ).toBe("comeback");
+  });
 });
