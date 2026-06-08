@@ -978,6 +978,48 @@ test("hunter chase overlay turns Rook pressure into an immediate dash objective"
   await expect(page.locator(".arcade-shell")).toHaveClass(/lock-break-payoff-active/);
 });
 
+test("breaking Rook lock launches a breakout rush lane to cashout", async ({ page }) => {
+  await startSoloArcade(page);
+  await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget === "function");
+
+  await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget());
+  await page.keyboard.press("KeyE");
+  await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.forceRivalsActive?.());
+
+  const preBreak = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.() as any);
+  expect(preBreak.vaultRush).toEqual(
+    expect.objectContaining({
+      active: true,
+      label: "VAULT RUSH",
+      source: "Moon Pearl"
+    })
+  );
+
+  await page.keyboard.down("Shift");
+  await page.keyboard.down("ArrowRight");
+  await page.waitForTimeout(140);
+  await page.keyboard.up("ArrowRight");
+  await page.keyboard.up("Shift");
+
+  await expect(page.getByLabel(/lock break payoff/i).getByText(/breakout cashout \+7/i)).toBeVisible();
+  const postBreak = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.() as any);
+  expect(postBreak.vaultRush).toEqual(
+    expect.objectContaining({
+      active: true,
+      label: "BREAKOUT RUSH",
+      source: "Rook lock break",
+      targetKind: "escape",
+      dashCooldownMs: expect.any(Number),
+      pulseCount: expect.any(Number),
+      laneWidth: expect.any(Number)
+    })
+  );
+  expect(postBreak.vaultRush.dashCooldownMs).toBeLessThan(700);
+  expect(postBreak.vaultRush.laneWidth).toBeGreaterThan(postBreak.routeGuide?.laneWidth ?? 0);
+  expect(postBreak.vaultRush.pulseCount).toBeGreaterThan(postBreak.routeGuide?.pulseCount ?? 0);
+  expect(postBreak.camera.zoom).toBeGreaterThan((preBreak.camera?.zoom ?? 0) + 0.01);
+});
+
 test("breaking Rook lock turns a fast cashout into a combo payoff", async ({ page }) => {
   await startSoloArcade(page);
   await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget === "function");
