@@ -163,6 +163,25 @@ describe("buildArcadeMatchSummary", () => {
     expect(summary.caseFile).not.toContain("Cashout Banked");
   });
 
+  it("records comeback cashouts as a shareable case highlight", () => {
+    const summary = buildArcadeMatchSummary({
+      outcome: "escaped",
+      playerName: "Agent You",
+      lootValue: 3,
+      artifactsStolen: 1,
+      aiLootValue: 3,
+      alarm: 3,
+      elapsedMs: 74_000,
+      comebackRoutesArmed: 1
+    } as any);
+
+    expect((summary as any).comebackRoutesArmed).toBe(1);
+    expect(summary.title).toBe("Comeback Cashout");
+    expect(summary.highlightLines).toContain("Comeback cashout beat Red from behind");
+    expect(summary.caseFile).toContain("Comeback Routes: 1");
+    expect(summary.caseFile).toContain("Comeback Swing: beat Red from behind");
+  });
+
   it("records alibi pulse saves and scan burns in the shareable case file", () => {
     const summary = buildArcadeMatchSummary({
       outcome: "escaped",

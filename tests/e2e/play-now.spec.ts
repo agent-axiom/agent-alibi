@@ -1367,6 +1367,19 @@ test("rival carriers only score after cashout", async ({ page }) => {
   await expect(comebackPulse.getByText(/bank \+5 beats red/i)).toBeVisible();
   await expect(comebackPulse.getByText(/run to lift now/i)).toBeVisible();
   await expect(page.locator(".arcade-route-pulse.comeback")).toBeVisible();
+
+  await page.evaluate(() => window.__AGENT_ALIBI_FINISH_ARCADE__?.());
+  await expect(page.getByRole("heading", { name: /comeback cashout/i })).toBeVisible();
+  await expect(page.locator(".case-stamp strong")).toHaveText(/comeback cashout/i);
+  await expect(page.locator(".case-stamp p")).toHaveText(/comeback cashout beat red from behind/i);
+  const finalScoresAfterComeback = page.getByLabel(/final scores/i);
+  const comebackScore = finalScoresAfterComeback.locator(".final-comeback");
+  await expect(comebackScore.getByText(/comeback cashout/i)).toBeVisible();
+  await expect(comebackScore.getByText(/x1/i)).toBeVisible();
+  const comebackHighlights = page.getByLabel(/case highlights/i);
+  await expect(comebackHighlights.getByText(/comeback cashout beat red from behind/i)).toBeVisible();
+  await expect(page.getByText(/comeback routes: 1/i)).toBeVisible();
+  await expect(page.getByText(/comeback swing: beat red from behind/i)).toBeVisible();
 });
 
 test("rival carrier near cashout triggers an imminent warning", async ({ page }) => {

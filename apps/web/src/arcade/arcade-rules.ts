@@ -20,6 +20,7 @@ export type ArcadeMissionResult = {
   interceptedLootValue?: number;
   afterburnerExit?: boolean;
   lockBreakCashoutBonus?: number;
+  comebackRoutesArmed?: number;
 };
 
 export type ArcadeRunRating = {
@@ -42,6 +43,7 @@ export function buildArcadeMatchSummary(result: ArcadeMissionResult): MatchSumma
   const interceptedRelicNames = result.interceptedRelicNames ?? [];
   const afterburnerExitBonus = escaped && result.afterburnerExit ? 1 : 0;
   const lockBreakCashoutBonus = escaped ? Math.max(0, result.lockBreakCashoutBonus ?? 0) : 0;
+  const comebackRoutesArmed = Math.max(0, result.comebackRoutesArmed ?? 0);
   const blueScore: TeamScore = {
     teamId: "blue",
     loot: result.lootValue,
@@ -80,6 +82,7 @@ export function buildArcadeMatchSummary(result: ArcadeMissionResult): MatchSumma
     styleBonus,
     afterburnerExitBonus,
     lockBreakCashoutBonus,
+    comebackRoutesArmed,
     lootChain,
     greedRoute,
     stolenRelicNames,
@@ -121,6 +124,7 @@ function runRatingForResult(result: Pick<ArcadeMissionResult, "outcome">, styleB
 function titleForResult(result: ArcadeMissionResult, winnerTeamId: MatchSummary["winnerTeamId"]): string {
   if ((result.carrierIntercepts ?? 0) > 0) return "Carrier Denied";
   if ((result.lockBreakCashoutBonus ?? 0) > 0) return "Breakout Cashout";
+  if (isComebackCashout(result, winnerTeamId)) return "Comeback Cashout";
   if ((result.pendingRivalRelicNames?.length ?? 0) > 0) return "Lift Denied";
   if (result.outcome === "escaped" && result.lootValue <= 0) return "Empty-Handed Exit";
   if (result.outcome === "escaped" && winnerTeamId === "blue" && result.alarm <= 2) return "Silent Moon Run";
@@ -148,6 +152,9 @@ function buildHighlightLines(
     lines.push(`Stole ${stolenRelicNames.join(" + ")}`);
   } else if (result.artifactsStolen > 0) {
     lines.push(`Stole ${result.artifactsStolen} relic${result.artifactsStolen === 1 ? "" : "s"}`);
+  }
+  if (title === "Comeback Cashout") {
+    lines.push("Comeback cashout beat Red from behind");
   }
   if (interceptedRelicNames.length > 0) {
     lines.push(`Recovered ${interceptedRelicNames.join(" + ")} from rivals`);
@@ -181,7 +188,11 @@ function buildHighlightLines(
 }
 
 function isSpecialCaseTitle(title: string): boolean {
-  return title === "Carrier Denied" || title === "Lift Denied";
+  return title === "Carrier Denied" || title === "Lift Denied" || title === "Comeback Cashout";
+}
+
+function isComebackCashout(result: ArcadeMissionResult, winnerTeamId: MatchSummary["winnerTeamId"]): boolean {
+  return result.outcome === "escaped" && winnerTeamId === "blue" && (result.comebackRoutesArmed ?? 0) > 0 && result.aiLootValue > 0;
 }
 
 function formatRelicCount(count: number): string {
@@ -237,6 +248,8 @@ function buildCaseFile(
     `Relics Stolen: ${result.stolenRelicNames?.length ? result.stolenRelicNames.join(", ") : "none"}`,
     `Rival Relics: ${result.rivalRelicNames?.length ? result.rivalRelicNames.join(", ") : "none"}`,
     `Pending Carrier Loot: ${result.pendingRivalRelicNames?.length ? result.pendingRivalRelicNames.join(", ") : "none"}`,
+    `Comeback Routes: ${result.comebackRoutesArmed ?? 0}`,
+    ...(title === "Comeback Cashout" ? ["Comeback Swing: beat Red from behind"] : []),
     `Alibi Pulses: ${result.alibiPulsesUsed ?? 0}`,
     `Scan Burns: ${result.scanBurns ?? 0}`,
     `Carrier Intercepts: ${result.carrierIntercepts ?? 0}`,
