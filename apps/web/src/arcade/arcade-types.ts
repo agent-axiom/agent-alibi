@@ -74,6 +74,13 @@ export type ArcadeRoutePulse = {
   action: string;
 };
 
+export type ArcadeAlibiPayoff = {
+  label: "Alibi Pulse";
+  result: string;
+  detail: string;
+  action: string;
+};
+
 export type ArcadeCleanBonusWindow = {
   label: string;
   detail: string;
@@ -180,6 +187,7 @@ export type ArcadeHudState = {
   lockBreakPayoff: ArcadeLockBreakPayoff | null;
   routeChoice: ArcadeRouteChoice | null;
   routePulse: ArcadeRoutePulse | null;
+  alibiPayoff: ArcadeAlibiPayoff | null;
   radarBlips: ArcadeRadarBlip[];
   greedStatus: string | null;
   targetDistanceLabel: string | null;

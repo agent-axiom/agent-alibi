@@ -1892,14 +1892,16 @@ test("alibi pulse jams a close rival scan", async ({ page }) => {
 
   const beforePulse = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());
   await page.keyboard.press("KeyE");
-  await expect(page.getByText(/alibi pulse: scanner jammed/i)).toBeVisible();
   await expect(page.getByText(/jammed .+ scan/i)).toBeVisible();
   await expect(page.getByLabel(/rival scan meter/i).getByText(/scan jammed/i)).toBeVisible();
-  const alibiWindow = page.getByLabel(/route pulse/i);
-  await expect(alibiWindow.getByText(/alibi window open/i)).toBeVisible();
-  await expect(alibiWindow.getByText(/2s scan break/i)).toBeVisible();
-  await expect(alibiWindow.getByText(/dash clear before scan returns/i)).toBeVisible();
-  await expect(page.locator(".arcade-route-pulse.alibi")).toBeVisible();
+  const alibiPayoff = page.getByLabel(/alibi pulse payoff/i);
+  await expect(alibiPayoff.getByText(/alibi pulse/i)).toBeVisible();
+  await expect(alibiPayoff.getByText(/scan jammed/i)).toBeVisible();
+  await expect(alibiPayoff.getByText(/alarm stayed clean/i)).toBeVisible();
+  await expect(alibiPayoff.getByText(/pulse recharging/i)).toBeVisible();
+  await expect(page.locator(".arcade-shell")).toHaveClass(/alibi-payoff-active/);
+  await expect(page.locator(".arcade-spotlight")).toBeHidden();
+  await expect(page.getByLabel(/route pulse/i)).toBeHidden();
   const afterPulse = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());
   expect(afterPulse?.alibiPulseCooldownMs).toBeGreaterThan(0);
   expect(afterPulse?.rivalScanChargeMs).toBe(0);
