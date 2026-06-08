@@ -1367,6 +1367,9 @@ test("rival carriers only score after cashout", async ({ page }) => {
   await expect(comebackPulse.getByText(/bank \+5 beats red/i)).toBeVisible();
   await expect(comebackPulse.getByText(/run to lift now/i)).toBeVisible();
   await expect(page.locator(".arcade-route-pulse.comeback")).toBeVisible();
+  const comebackComms = page.getByLabel(/rival comms/i);
+  await expect(comebackComms.getByText(/score just flipped/i)).toBeVisible();
+  await expect(comebackComms.getByText(/cut them off/i)).toBeVisible();
 
   await page.evaluate(() => window.__AGENT_ALIBI_FINISH_ARCADE__?.());
   await expect(page.getByRole("heading", { name: /comeback cashout/i })).toBeVisible();

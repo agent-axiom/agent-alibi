@@ -1521,6 +1521,13 @@ export class ArcadeHeistScene extends Phaser.Scene {
           detail: `Bank +${comebackCashoutValue} beats Red`,
           action: "Run to lift now"
         });
+        const rivalResponder = this.aiAgents.find((candidate) => candidate.name === "Rook") ?? this.aiAgents[0];
+        const rivalName = rivalResponder?.name ?? "Red Crew";
+        this.flashRivalBark({
+          tone: "panic",
+          agentName: rivalName,
+          line: buildRivalBarkLine(rivalName, "comeback", artifact.name)
+        });
       }
       this.impactPulse("steal", artifact.x, artifact.y);
       this.triggerLootSpeedSurge(artifact.name);
