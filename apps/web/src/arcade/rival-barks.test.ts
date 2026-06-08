@@ -13,4 +13,8 @@ describe("buildRivalBarkLine", () => {
   it("uses a bruised but in-character intercept line", () => {
     expect(buildRivalBarkLine("Rook", "intercept", "Moon Pearl")).toBe("Good read. I left you one narrow angle.");
   });
+
+  it("gives Rook a panic line when the player flips a comeback route", () => {
+    expect(buildRivalBarkLine("Rook", "comeback", "Argent Crown")).toBe("Score just flipped. Cut them off before the lift.");
+  });
 });
