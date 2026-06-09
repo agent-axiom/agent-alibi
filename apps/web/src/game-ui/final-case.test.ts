@@ -476,3 +476,56 @@ describe("buildScoreMarginLabel", () => {
     ).toBe("Tie game");
   });
 });
+
+describe("localized final case helpers", () => {
+  it("localizes rematch hooks for Chinese final screens", () => {
+    expect(buildRematchHook(summary({ runRating: "A-Rank", styleBonus: 2 }), "zh")).toBe("下一局：冲击 S-Rank，更快、更低警报结算。");
+  });
+
+  it("localizes next-run contracts for Russian final screens", () => {
+    expect(
+      buildNextRunContracts(
+        summary({
+          carrierIntercepts: 1,
+          interceptedRelicNames: ["Moon Pearl"],
+          runRating: "S-Rank",
+          lootChain: 1
+        }),
+        "ru"
+      )[0]
+    ).toEqual({
+      label: "Перехват",
+      title: "Сорвать лифт снова",
+      detail: "Спровоцируйте Red на перенос добычи, затем перехватите до Лифта Атриума."
+    });
+  });
+
+  it("localizes case stamps and score margins for Chinese final screens", () => {
+    expect(
+      buildCaseStamp(
+        summary({
+          title: "Profitable Disaster",
+          runRating: "S-Rank",
+          highlightLines: ["Stole Moon Pearl + Argent Crown"],
+          lootChain: 2
+        }),
+        "zh"
+      )
+    ).toEqual({
+      kicker: "Agent Alibi 档案",
+      title: "Profitable Disaster",
+      result: "蓝队获胜 · S-Rank · 战利品连锁 x2",
+      quote: "偷取月亮珍珠 + 银冠"
+    });
+
+    expect(
+      buildScoreMarginLabel(
+        [
+          { teamId: "blue", loot: 6, escape: 2, penalties: 0, total: 8 },
+          { teamId: "red", loot: 4, escape: 0, penalties: 0, total: 4 }
+        ],
+        "zh"
+      )
+    ).toBe("蓝队领先 4");
+  });
+});

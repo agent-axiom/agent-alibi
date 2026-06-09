@@ -49,24 +49,28 @@ export type LocalBestCaseStatus = {
 
 export function FinalCaseFile({ summary, soundEnabled = false, locale = "en", onLocaleChange, onToggleSound, onRematch, onHome }: FinalCaseFileProps) {
   const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "blocked">("idle");
-  const [bestCase] = useState(() => buildLocalBestCaseStatus(summary, readLocalBestCaseRecord()));
+  const [bestCaseSeed] = useState(() => ({ previous: readLocalBestCaseRecord(), at: Date.now() }));
+  const bestCase = buildLocalBestCaseStatus(summary, bestCaseSeed.previous, bestCaseSeed.at, locale);
   const blueScore = summary.teamScores.find((score) => score.teamId === "blue");
   const redScore = summary.teamScores.find((score) => score.teamId === "red");
-  const winner = summary.winnerTeamId === "tie" ? "Tie" : summary.winnerTeamId === "blue" ? "Blue Crew" : "Red Crew";
+  const winner = teamResultLabel(locale, summary.winnerTeamId);
   const escapeBonus = blueScore?.escape ?? 0;
   const finalPopupDetail =
     (blueScore?.loot ?? 0) > 0
-      ? `Cashout ${(blueScore?.loot ?? 0) + escapeBonus}${summary.afterburnerExitBonus ? ` · Afterburner +${summary.afterburnerExitBonus}` : ""}`
-      : "No relics banked";
-  const rematchHook = buildRematchHook(summary);
-  const nextRunContracts = buildNextRunContracts(summary);
-  const scoreMargin = buildScoreMarginLabel(summary.teamScores);
-  const caseStamp = buildCaseStamp(summary);
+      ? t(locale, "final.cashoutDetail", {
+          cashout: (blueScore?.loot ?? 0) + escapeBonus,
+          boost: summary.afterburnerExitBonus ? t(locale, "final.afterburnerDetail", { boost: summary.afterburnerExitBonus }) : ""
+        })
+      : t(locale, "final.noRelics");
+  const rematchHook = buildRematchHook(summary, locale);
+  const nextRunContracts = buildNextRunContracts(summary, locale);
+  const scoreMargin = buildScoreMarginLabel(summary.teamScores, locale);
+  const caseStamp = buildCaseStamp(summary, locale);
   const interceptedRelicLine = summary.interceptedRelicNames?.length
-    ? `Red denied: ${summary.interceptedRelicNames.join(" + ")}`
-    : "Red denied: recovered loot";
+    ? t(locale, "final.redDenied", { relics: relicList(summary.interceptedRelicNames, locale) })
+    : t(locale, "final.redDeniedRecovered");
   const afterburnerFinish = Boolean(summary.afterburnerExitBonus && summary.afterburnerExitBonus > 0);
-  const shareText = buildCaseShareText(summary);
+  const shareText = buildCaseShareText(summary, locale);
 
   useEffect(() => {
     if (bestCase.isNewBest) {
@@ -95,18 +99,18 @@ export function FinalCaseFile({ summary, soundEnabled = false, locale = "en", on
       <section className="case-file">
         <p className="eyebrow">{t(locale, "final.eyebrow")}</p>
         <h1>{summary.title}</h1>
-        <section className="case-stamp" aria-label="Share case stamp">
+        <section className="case-stamp" aria-label={t(locale, "final.shareCaseStamp")}>
           <span>{caseStamp.kicker}</span>
           <strong>{caseStamp.title}</strong>
           <small>{caseStamp.result}</small>
           <p>{caseStamp.quote}</p>
         </section>
-        <section className={`local-best-case ${bestCase.isNewBest ? "new" : "stored"}`} aria-label="Local best case">
+        <section className={`local-best-case ${bestCase.isNewBest ? "new" : "stored"}`} aria-label={t(locale, "final.localBestCase")}>
           <span>{bestCase.title}</span>
           <strong>{bestCase.detail}</strong>
           <small>{bestCase.delta}</small>
         </section>
-        <section className="final-scoreboard" aria-label="Final scores">
+        <section className="final-scoreboard" aria-label={t(locale, "final.finalScores")}>
           <div className="final-score">
             <span>{t(locale, "final.winner")}</span>
             <strong>{winner}</strong>
@@ -119,111 +123,111 @@ export function FinalCaseFile({ summary, soundEnabled = false, locale = "en", on
             <div className="final-score final-rating">
               <span>{t(locale, "final.runRating")}</span>
               <strong>{summary.runRating}</strong>
-              <small>{summary.styleBonus ? `Clean exit bonus +${summary.styleBonus}` : "No clean bonus"}</small>
+              <small>{summary.styleBonus ? t(locale, "final.cleanExitBonus", { bonus: summary.styleBonus }) : t(locale, "final.noCleanBonus")}</small>
             </div>
           ) : null}
           {summary.afterburnerExitBonus && summary.afterburnerExitBonus > 0 ? (
             <div className="final-score final-afterburner">
-              <span>Afterburner Exit</span>
+              <span>{t(locale, "final.afterburnerExit")}</span>
               <strong>+{summary.afterburnerExitBonus}</strong>
-              <small>Boost cashout</small>
+              <small>{t(locale, "final.boostCashout")}</small>
             </div>
           ) : null}
           {summary.lockBreakCashoutBonus && summary.lockBreakCashoutBonus > 0 ? (
             <div className="final-score final-breakout">
-              <span>Breakout Cashout</span>
+              <span>{t(locale, "final.breakoutCashout")}</span>
               <strong>+{summary.lockBreakCashoutBonus}</strong>
-              <small>Rook lock broken</small>
+              <small>{t(locale, "final.rookLockBroken")}</small>
             </div>
           ) : null}
           {summary.comebackRoutesArmed && summary.comebackRoutesArmed > 0 ? (
             <div className="final-score final-comeback">
-              <span>Comeback Cashout</span>
+              <span>{t(locale, "final.comebackCashout")}</span>
               <strong>x{summary.comebackRoutesArmed}</strong>
-              <small>Beat Red from behind</small>
+              <small>{t(locale, "final.beatRedBehind")}</small>
             </div>
           ) : null}
           {summary.lootChain && summary.lootChain > 1 ? (
             <div className="final-score final-chain">
-              <span>Loot Chain</span>
+              <span>{t(locale, "final.lootChain")}</span>
               <strong>x{summary.lootChain}</strong>
-              <small>{summary.greedRoute === "successful" ? "Greed route successful" : "Main route only"}</small>
+              <small>{summary.greedRoute === "successful" ? t(locale, "final.greedSuccessful") : t(locale, "final.mainRouteOnly")}</small>
             </div>
           ) : null}
           {summary.stolenRelicNames && summary.stolenRelicNames.length > 0 ? (
             <div className="final-score final-relics">
-              <span>Relics Stolen</span>
+              <span>{t(locale, "final.relicsStolen")}</span>
               <strong>{summary.stolenRelicNames.length}</strong>
-              <small>{summary.stolenRelicNames.join(" + ")}</small>
+              <small>{relicList(summary.stolenRelicNames, locale)}</small>
             </div>
           ) : null}
           {summary.rivalRelicNames && summary.rivalRelicNames.length > 0 ? (
             <div className="final-score final-rival-relics">
-              <span>Rival Relics</span>
+              <span>{t(locale, "final.rivalRelics")}</span>
               <strong>{summary.rivalRelicNames.length}</strong>
-              <small>{summary.rivalRelicNames.join(" + ")}</small>
+              <small>{relicList(summary.rivalRelicNames, locale)}</small>
             </div>
           ) : null}
           {summary.pendingRivalRelicNames && summary.pendingRivalRelicNames.length > 0 ? (
             <div className="final-score final-pending-rival-relics">
-              <span>Pending Carrier Loot</span>
+              <span>{t(locale, "final.pendingCarrierLoot")}</span>
               <strong>{summary.pendingRivalRelicNames.length}</strong>
-              <small>{summary.pendingRivalRelicNames.join(" + ")}</small>
+              <small>{relicList(summary.pendingRivalRelicNames, locale)}</small>
             </div>
           ) : null}
           {summary.alibiPulsesUsed && summary.alibiPulsesUsed > 0 ? (
             <div className="final-score final-alibi">
-              <span>Alibi Pulses</span>
+              <span>{t(locale, "final.alibiPulses")}</span>
               <strong>x{summary.alibiPulsesUsed}</strong>
-              <small>Scanner jams</small>
+              <small>{t(locale, "final.scannerJams")}</small>
             </div>
           ) : null}
           {summary.carrierIntercepts && summary.carrierIntercepts > 0 ? (
             <div className="final-score final-intercepts">
-              <span>Carrier Intercepts</span>
+              <span>{t(locale, "final.carrierIntercepts")}</span>
               <strong>x{summary.carrierIntercepts}</strong>
               <small>{interceptedRelicLine}</small>
             </div>
           ) : null}
           {summary.ambushNearMisses && summary.ambushNearMisses > 0 ? (
             <div className="final-score final-ambush">
-              <span>Ambush Dodges</span>
+              <span>{t(locale, "final.ambushDodges")}</span>
               <strong>x{summary.ambushNearMisses}</strong>
-              <small>Rival ambush dashed</small>
+              <small>{t(locale, "final.rivalAmbushDashed")}</small>
             </div>
           ) : null}
           {summary.scanBurns && summary.scanBurns > 0 ? (
             <div className="final-score final-burn">
-              <span>Scan Burns</span>
+              <span>{t(locale, "final.scanBurns")}</span>
               <strong>x{summary.scanBurns}</strong>
-              <small>Alarm spikes</small>
+              <small>{t(locale, "final.alarmSpikes")}</small>
             </div>
           ) : null}
           <div className="final-score">
-            <span>Blue Crew</span>
+            <span>{t(locale, "final.blueCrew")}</span>
             <strong>{blueScore?.total ?? 0}</strong>
-            <small>{blueScore?.loot ?? 0} loot · {blueScore?.escape ?? 0} escape</small>
+            <small>{t(locale, "final.blueScoreDetail", { loot: blueScore?.loot ?? 0, escape: blueScore?.escape ?? 0 })}</small>
           </div>
           <div className="final-score">
-            <span>Red Crew</span>
+            <span>{t(locale, "final.redCrew")}</span>
             <strong>{redScore?.total ?? 0}</strong>
-            <small>{redScore?.loot ?? 0} rival loot</small>
+            <small>{t(locale, "final.redScoreDetail", { loot: redScore?.loot ?? 0 })}</small>
           </div>
         </section>
         {summary.highlightLines && summary.highlightLines.length > 0 ? (
-          <section className="case-highlights" aria-label="Case highlights">
+          <section className="case-highlights" aria-label={t(locale, "final.caseHighlights")}>
             {summary.highlightLines.map((line, index) => (
               <div className="case-highlight" key={`${line}-${index}`}>
                 <span>0{index + 1}</span>
-                <strong>{line}</strong>
+                <strong>{localizeText(locale, line)}</strong>
               </div>
             ))}
           </section>
         ) : null}
-        <section className="rematch-hook" aria-label="Rematch hook">
+        <section className="rematch-hook" aria-label={t(locale, "final.rematchHook")}>
           <strong>{rematchHook}</strong>
         </section>
-        <section className="next-run-contracts" aria-label="Next run contracts">
+        <section className="next-run-contracts" aria-label={t(locale, "final.nextRunContracts")}>
           {nextRunContracts.map((contract) => (
             <div className="next-run-contract" key={`${contract.label}-${contract.title}`}>
               <span>{contract.label}</span>
@@ -256,10 +260,10 @@ export function FinalCaseFile({ summary, soundEnabled = false, locale = "en", on
           </button>
         </div>
         {copyStatus === "blocked" ? (
-          <section className="final-copy-fallback" aria-label="Manual share fallback">
-            <strong>Clipboard blocked</strong>
-            <small>Select and copy this case file manually.</small>
-            <textarea aria-label="Manual case file text" readOnly value={shareText} />
+          <section className="final-copy-fallback" aria-label={t(locale, "final.manualShareFallback")}>
+            <strong>{t(locale, "final.clipboardBlocked")}</strong>
+            <small>{t(locale, "final.manualCopy")}</small>
+            <textarea aria-label={t(locale, "final.manualCaseFileText")} readOnly value={shareText} />
           </section>
         ) : null}
       </section>
@@ -267,40 +271,56 @@ export function FinalCaseFile({ summary, soundEnabled = false, locale = "en", on
   );
 }
 
-export function buildRematchHook(summary: MatchSummary): string {
+function teamResultLabel(locale: Locale, winnerTeamId: MatchSummary["winnerTeamId"]): string {
+  if (winnerTeamId === "tie") return t(locale, "final.tie");
+  if (winnerTeamId === "blue") return t(locale, "final.blueCrew");
+  return t(locale, "final.redCrew");
+}
+
+function winningRunLabel(locale: Locale, winnerTeamId: MatchSummary["winnerTeamId"]): string {
+  if (winnerTeamId === "tie") return t(locale, "final.tieRun");
+  if (winnerTeamId === "blue") return t(locale, "final.blueCrewWins");
+  return t(locale, "final.redCrewWins");
+}
+
+function relicList(names: string[] | undefined, locale: Locale): string {
+  return (names ?? []).map((name) => localizeText(locale, name)).join(" + ");
+}
+
+export function buildRematchHook(summary: MatchSummary, locale: Locale = "en"): string {
   const blueScore = summary.teamScores.find((score) => score.teamId === "blue");
   const redScore = summary.teamScores.find((score) => score.teamId === "red");
   const redWon = summary.winnerTeamId === "red" || (redScore?.total ?? 0) > (blueScore?.total ?? 0);
 
   if (redWon || (summary.rivalRelicNames?.length ?? 0) > 0) {
-    return "Next run: deny the carrier before Red reaches the Atrium Lift.";
+    return t(locale, "rematch.redWon");
   }
 
   if (summary.carrierIntercepts && summary.carrierIntercepts > 0) {
-    return "Next run: bait another Red carrier run, then deny the lift again.";
+    return t(locale, "rematch.carrierIntercept");
   }
 
   if ((blueScore?.escape ?? 0) > 0 && (blueScore?.loot ?? 0) <= 0) {
-    return "Next run: steal one relic before you call the lift.";
+    return t(locale, "rematch.emptyEscape");
   }
 
   if (summary.lockBreakCashoutBonus && summary.lockBreakCashoutBonus > 0) {
-    return "Next run: break Rook's lock, then cashout before the scan returns.";
+    return t(locale, "rematch.lockBreak");
   }
 
   if (summary.afterburnerExitBonus && summary.afterburnerExitBonus > 0) {
-    return "Next run: hit afterburner again and cashout before the boost dies.";
+    return t(locale, "rematch.afterburner");
   }
 
   if (summary.runRating && summary.runRating !== "S-Rank") {
-    return "Next run: chase S-Rank with a faster, lower-alarm cashout.";
+    return t(locale, "rematch.rank");
   }
 
   if ((summary.lootChain ?? 1) <= 1) {
-    return "Next run: press G after the first relic to push the loot chain.";
+    return t(locale, "rematch.chain");
   }
 
-  return "Next run: run it back and make the case file louder.";
+  return t(locale, "rematch.default");
 }
 
 export function buildLocalBestCaseRecord(summary: MatchSummary, at = Date.now()): LocalBestCaseRecord {
@@ -322,7 +342,7 @@ export function buildLocalBestCaseRecord(summary: MatchSummary, at = Date.now())
   };
 }
 
-export function buildLocalBestCaseStatus(summary: MatchSummary, previous: LocalBestCaseRecord | null, at = Date.now()): LocalBestCaseStatus {
+export function buildLocalBestCaseStatus(summary: MatchSummary, previous: LocalBestCaseRecord | null, at = Date.now(), locale: Locale = "en"): LocalBestCaseStatus {
   const current = buildLocalBestCaseRecord(summary, at);
   const isNewBest = !previous || compareLocalBestCaseRecords(current, previous) >= 0;
   const best = isNewBest ? current : previous;
@@ -332,9 +352,9 @@ export function buildLocalBestCaseStatus(summary: MatchSummary, previous: LocalB
     previous,
     best,
     isNewBest,
-    title: isNewBest ? "New best case" : "Best case to beat",
-    detail: isNewBest ? formatLocalBestCaseDetail(current) : `Best ${previous.score} · current ${current.score}`,
-    delta: buildLocalBestDelta(current, previous, isNewBest)
+    title: isNewBest ? t(locale, "best.newBest") : t(locale, "best.toBeat"),
+    detail: isNewBest ? formatLocalBestCaseDetail(current, locale) : t(locale, "best.bestCurrent", { best: previous.score, current: current.score }),
+    delta: buildLocalBestDelta(current, previous, isNewBest, locale)
   };
 }
 
@@ -418,13 +438,13 @@ export function formatLocalBestCaseDetail(record: LocalBestCaseRecord, locale: L
   return t(locale, "best.detail", { score: record.score, rating: record.runRating, chain: record.lootChain, boost: boostDetail, breakout: breakoutDetail, denial: denialDetail });
 }
 
-function buildLocalBestDelta(current: LocalBestCaseRecord, previous: LocalBestCaseRecord | null, isNewBest: boolean): string {
-  if (!previous) return "First record saved";
-  if (isNewBest) return `+${Math.max(0, current.score - previous.score)} over previous`;
-  return `${previous.score - current.score + 1} points to beat`;
+function buildLocalBestDelta(current: LocalBestCaseRecord, previous: LocalBestCaseRecord | null, isNewBest: boolean, locale: Locale): string {
+  if (!previous) return t(locale, "best.firstSaved");
+  if (isNewBest) return t(locale, "best.overPrevious", { score: Math.max(0, current.score - previous.score) });
+  return t(locale, "best.pointsToBeat", { score: previous.score - current.score + 1 });
 }
 
-export function buildNextRunContracts(summary: MatchSummary): NextRunContract[] {
+export function buildNextRunContracts(summary: MatchSummary, locale: Locale = "en"): NextRunContract[] {
   const blueScore = summary.teamScores.find((score) => score.teamId === "blue");
   const redScore = summary.teamScores.find((score) => score.teamId === "red");
   const redWon = summary.winnerTeamId === "red" || (redScore?.total ?? 0) > (blueScore?.total ?? 0);
@@ -434,19 +454,19 @@ export function buildNextRunContracts(summary: MatchSummary): NextRunContract[] 
   if (redWon || redHasRelics) {
     return [
       {
-        label: "Carrier hunt",
-        title: "Deny Red loot",
-        detail: "Intercept the carrier before the Atrium Lift."
+        label: t(locale, "contract.carrierHunt.label"),
+        title: t(locale, "contract.carrierHunt.title"),
+        detail: t(locale, "contract.carrierHunt.detail")
       },
       {
-        label: "Tempo",
-        title: "Score first",
-        detail: "Steal Moon Pearl before rival routes wake."
+        label: t(locale, "contract.tempo.label"),
+        title: t(locale, "contract.tempo.title"),
+        detail: t(locale, "contract.tempo.detail")
       },
       {
-        label: "Cashout",
-        title: "Bank the swing",
-        detail: "Escape with recovered loot before lockdown."
+        label: t(locale, "contract.cashout.label"),
+        title: t(locale, "contract.cashout.title"),
+        detail: t(locale, "contract.cashout.detail")
       }
     ];
   }
@@ -454,19 +474,19 @@ export function buildNextRunContracts(summary: MatchSummary): NextRunContract[] 
   if (summary.carrierIntercepts && summary.carrierIntercepts > 0) {
     return [
       {
-        label: "Denial",
-        title: "Deny the lift again",
-        detail: "Bait Red into carrying loot, then intercept before Atrium Lift."
+        label: t(locale, "contract.denial.label"),
+        title: t(locale, "contract.denial.title"),
+        detail: t(locale, "contract.denial.detail")
       },
       {
-        label: "Cashout",
-        title: "Bank recovered loot",
-        detail: "Turn the stolen carrier relic into your own clean exit."
+        label: t(locale, "contract.cashout.label"),
+        title: t(locale, "contract.bankRecovered.title"),
+        detail: t(locale, "contract.bankRecovered.detail")
       },
       {
-        label: "Tempo",
-        title: "Score before bait",
-        detail: "Steal Moon Pearl early so Red has to answer your route."
+        label: t(locale, "contract.tempo.label"),
+        title: t(locale, "contract.scoreBeforeBait.title"),
+        detail: t(locale, "contract.scoreBeforeBait.detail")
       }
     ];
   }
@@ -474,19 +494,19 @@ export function buildNextRunContracts(summary: MatchSummary): NextRunContract[] 
   if (emptyEscape) {
     return [
       {
-        label: "Relic first",
-        title: "Steal before lift",
-        detail: "Grab Moon Pearl before calling the escape."
+        label: t(locale, "contract.relicFirst.label"),
+        title: t(locale, "contract.relicFirst.title"),
+        detail: t(locale, "contract.relicFirst.detail")
       },
       {
-        label: "Value",
-        title: "Bank one relic",
-        detail: "Turn the escape bonus into a real cashout."
+        label: t(locale, "contract.value.label"),
+        title: t(locale, "contract.value.title"),
+        detail: t(locale, "contract.value.detail")
       },
       {
-        label: "Route",
-        title: "Follow gold",
-        detail: "Use the target beam until the first score lands."
+        label: t(locale, "contract.route.label"),
+        title: t(locale, "contract.route.title"),
+        detail: t(locale, "contract.route.detail")
       }
     ];
   }
@@ -495,38 +515,38 @@ export function buildNextRunContracts(summary: MatchSummary): NextRunContract[] 
     if (summary.afterburnerExitBonus && summary.afterburnerExitBonus > 0) {
       return [
         {
-            label: "Boost",
-            title: "Afterburner encore",
-            detail: "Steal, trigger afterburner, and cashout before the boost dies."
+          label: t(locale, "contract.boost.label"),
+          title: t(locale, "contract.boost.title"),
+          detail: t(locale, "contract.boost.detail")
         },
         {
-          label: "Speedrun",
-          title: "Beat your case",
-          detail: "Cashout faster without losing the loot chain."
+          label: t(locale, "contract.speedrun.label"),
+          title: t(locale, "contract.speedrun.title"),
+          detail: t(locale, "contract.speedrun.detail")
         },
         {
-          label: "Clean play",
-          title: "No scan burns",
-          detail: "Jam or dodge every rival scan."
+          label: t(locale, "contract.cleanPlay.label"),
+          title: t(locale, "contract.cleanPlay.title"),
+          detail: t(locale, "contract.cleanPlay.detail")
         }
       ];
     }
 
     return [
       {
-        label: "Speedrun",
-        title: "Beat your case",
-        detail: "Cashout faster without losing the loot chain."
+        label: t(locale, "contract.speedrun.label"),
+        title: t(locale, "contract.speedrun.title"),
+        detail: t(locale, "contract.speedrun.detail")
       },
       {
-        label: "Clean play",
-        title: "No scan burns",
-        detail: "Jam or dodge every rival scan."
+        label: t(locale, "contract.cleanPlay.label"),
+        title: t(locale, "contract.cleanPlay.title"),
+        detail: t(locale, "contract.cleanPlay.detail")
       },
       {
-        label: "Encore",
-        title: "Greed route encore",
-        detail: "Press G after Moon Pearl and bank the chain again."
+        label: t(locale, "contract.encore.label"),
+        title: t(locale, "contract.encore.title"),
+        detail: t(locale, "contract.encore.detail")
       }
     ];
   }
@@ -534,90 +554,100 @@ export function buildNextRunContracts(summary: MatchSummary): NextRunContract[] 
   if (summary.runRating && summary.runRating !== "S-Rank") {
     return [
       {
-        label: "Rank push",
-        title: "Chase S-Rank",
-        detail: "Cashout faster and keep the alarm low."
+        label: t(locale, "contract.rankPush.label"),
+        title: t(locale, "contract.rankPush.title"),
+        detail: t(locale, "contract.rankPush.detail")
       },
       {
-        label: "Clean exit",
-        title: "Avoid scan burns",
-        detail: "Use alibi pulse before the meter spikes."
+        label: t(locale, "contract.cleanExit.label"),
+        title: t(locale, "contract.cleanExit.title"),
+        detail: t(locale, "contract.cleanExit.detail")
       },
       {
-        label: "Risk",
-        title: "Try greed route",
-        detail: "Press G after Moon Pearl for a louder case."
+        label: t(locale, "contract.risk.label"),
+        title: t(locale, "contract.risk.title"),
+        detail: t(locale, "contract.risk.detail")
       }
     ];
   }
 
   return [
     {
-      label: "Tempo",
-      title: "Score first",
-      detail: "Turn the opening route into immediate loot."
+      label: t(locale, "contract.tempo.label"),
+      title: t(locale, "contract.scoreFirst.title"),
+      detail: t(locale, "contract.scoreFirst.detail")
     },
     {
-      label: "Cashout",
-      title: "Run to lift",
-      detail: "Bank the relic before Red finds an angle."
+      label: t(locale, "contract.cashout.label"),
+      title: t(locale, "contract.runToLift.title"),
+      detail: t(locale, "contract.runToLift.detail")
     },
     {
-      label: "Style",
-      title: "Make it louder",
-      detail: "Chain one more relic or deny a carrier."
+      label: t(locale, "contract.style.label"),
+      title: t(locale, "contract.style.title"),
+      detail: t(locale, "contract.style.detail")
     }
   ];
 }
 
-export function buildCaseShareText(summary: MatchSummary): string {
+export function buildCaseShareText(summary: MatchSummary, locale: Locale = "en"): string {
   const lines = [summary.caseFile];
-  const highlightLines = buildShareHighlightLines(summary);
+  const highlightLines = buildShareHighlightLines(summary, locale);
 
   if (highlightLines.length) {
     lines.push(
       "",
-      "CASE HIGHLIGHTS",
+      t(locale, "final.shareHighlights"),
       ...highlightLines.map((line, index) => `${String(index + 1).padStart(2, "0")}. ${line}`)
     );
   }
 
-  lines.push("", "NEXT RUN", buildRematchHook(summary));
-  lines.push("", "PLAY", PUBLIC_PLAY_URL);
+  lines.push("", t(locale, "final.shareNextRun"), buildRematchHook(summary, locale));
+  lines.push("", t(locale, "final.sharePlay"), PUBLIC_PLAY_URL);
   return lines.join("\n");
 }
 
-function buildShareHighlightLines(summary: MatchSummary): string[] {
-  const baseLines = summary.highlightLines ?? [];
+function buildShareHighlightLines(summary: MatchSummary, locale: Locale): string[] {
+  const baseLines = (summary.highlightLines ?? []).map((line) => localizeText(locale, line));
   if (summary.carrierIntercepts && summary.carrierIntercepts > 0) {
-    const deniedLine = `Red denied: ${summary.interceptedRelicNames?.length ? summary.interceptedRelicNames.join(" + ") : "recovered loot"}`;
-    return [deniedLine, ...baseLines.filter((line) => line.toLowerCase() !== deniedLine.toLowerCase())];
+    const deniedLine = summary.interceptedRelicNames?.length
+      ? t(locale, "final.redDenied", { relics: relicList(summary.interceptedRelicNames, locale) })
+      : t(locale, "final.redDeniedRecovered");
+    return [deniedLine, ...baseLines.filter((line) => line.toLocaleLowerCase() !== deniedLine.toLocaleLowerCase())];
   }
 
   if (summary.comebackRoutesArmed && summary.comebackRoutesArmed > 0) {
-    const comebackLine = "Comeback cashout beat Red from behind";
-    return [comebackLine, ...baseLines.filter((line) => line.toLowerCase() !== comebackLine.toLowerCase())];
+    const comebackLine = t(locale, "final.comebackBeatRed");
+    return [comebackLine, ...baseLines.filter((line) => line.toLocaleLowerCase() !== comebackLine.toLocaleLowerCase())];
   }
 
   return baseLines;
 }
 
-export function buildCaseStamp(summary: MatchSummary) {
-  const winner = summary.winnerTeamId === "tie" ? "Tie run" : summary.winnerTeamId === "blue" ? "Blue Crew wins" : "Red Crew wins";
+export function buildCaseStamp(summary: MatchSummary, locale: Locale = "en") {
+  const winner = winningRunLabel(locale, summary.winnerTeamId);
   const resultParts = [winner];
   const deniedCarrierQuote =
     summary.carrierIntercepts && summary.carrierIntercepts > 0
-      ? `Red denied: ${summary.interceptedRelicNames?.length ? summary.interceptedRelicNames.join(" + ") : "recovered loot"}`
+      ? summary.interceptedRelicNames?.length
+        ? t(locale, "final.redDenied", { relics: relicList(summary.interceptedRelicNames, locale) })
+        : t(locale, "final.redDeniedRecovered")
       : null;
-  const comebackQuote = summary.comebackRoutesArmed && summary.comebackRoutesArmed > 0 ? "Comeback cashout beat Red from behind" : null;
-  const baseQuote = deniedCarrierQuote ?? comebackQuote ?? summary.highlightLines?.[0] ?? buildRematchHook(summary);
+  const comebackQuote = summary.comebackRoutesArmed && summary.comebackRoutesArmed > 0 ? t(locale, "final.comebackBeatRed") : null;
+  const baseQuote = deniedCarrierQuote ?? comebackQuote ?? localizeText(locale, summary.highlightLines?.[0]) ?? buildRematchHook(summary, locale);
   const quote =
     deniedCarrierQuote || comebackQuote
       ? baseQuote
       : summary.lockBreakCashoutBonus && summary.lockBreakCashoutBonus > 0
-        ? `Breakout cashout +${summary.lockBreakCashoutBonus}${baseQuote ? ` · ${baseQuote}` : ""}`
+        ? t(locale, "final.cashoutQuoteWithBase", {
+            prefix: t(locale, "final.breakoutCashoutQuote", { bonus: summary.lockBreakCashoutBonus }),
+            quote: baseQuote
+          })
         : summary.afterburnerExitBonus && summary.afterburnerExitBonus > 0
-          ? `Afterburner cashout +${summary.afterburnerExitBonus}${baseQuote ? ` · ${baseQuote}` : ""}`
+          ? t(locale, "final.cashoutQuoteWithBase", {
+              prefix: t(locale, "final.afterburnerCashoutQuote", { bonus: summary.afterburnerExitBonus }),
+              quote: baseQuote
+            })
           : baseQuote;
 
   if (summary.runRating) {
@@ -625,22 +655,22 @@ export function buildCaseStamp(summary: MatchSummary) {
   }
 
   if (summary.lootChain && summary.lootChain > 1) {
-    resultParts.push(`Loot chain x${summary.lootChain}`);
+    resultParts.push(t(locale, "final.lootChainCompact", { chain: summary.lootChain }));
   }
 
   return {
-    kicker: "Agent Alibi Case File",
+    kicker: t(locale, "final.caseStampKicker"),
     title: summary.title,
     result: resultParts.join(" · "),
     quote
   };
 }
 
-export function buildScoreMarginLabel(teamScores: TeamScore[]): string {
+export function buildScoreMarginLabel(teamScores: TeamScore[], locale: Locale = "en"): string {
   const blueTotal = teamScores.find((score) => score.teamId === "blue")?.total ?? 0;
   const redTotal = teamScores.find((score) => score.teamId === "red")?.total ?? 0;
   const margin = Math.abs(blueTotal - redTotal);
 
-  if (margin === 0) return "Tie game";
-  return blueTotal > redTotal ? `Blue by ${margin}` : `Red by ${margin}`;
+  if (margin === 0) return t(locale, "final.tieGame");
+  return blueTotal > redTotal ? t(locale, "final.blueBy", { margin }) : t(locale, "final.redBy", { margin });
 }
