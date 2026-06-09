@@ -101,7 +101,7 @@ export function MatchScreen({ match, soundEnabled = false, locale = "en", onLoca
     const visibleCashoutSurge = cashoutPayoff || hunterChase || lockBreakPayoff || alibiPayoff || visibleGhostStepBoost || visibleBreachSprint ? null : cashoutSurge;
     const visibleScorePopup = cashoutPayoff || lockBreakPayoff || alibiPayoff || visibleGhostStepBoost || firstStealCashoutMoment ? null : (hud?.scorePopup ?? null);
     const visibleSpotlight = cashoutPayoff || lockBreakPayoff || alibiPayoff || visibleGhostStepBoost || firstStealCashoutMoment ? null : (hud?.spotlight ?? null);
-    const visibleObjectiveBanner = cashoutPayoff || lockBreakPayoff || alibiPayoff || visibleGhostStepBoost || rivalCashoutEmergency || (firstStealCashoutMoment && hud?.objectiveBanner?.tone === "escape") ? null : (hud?.objectiveBanner ?? null);
+    const visibleObjectiveBanner = openingCommandMode || cashoutPayoff || lockBreakPayoff || alibiPayoff || visibleGhostStepBoost || rivalCashoutEmergency || (firstStealCashoutMoment && hud?.objectiveBanner?.tone === "escape") ? null : (hud?.objectiveBanner ?? null);
     const visibleRoutePulse = cashoutPayoff || lockBreakPayoff || alibiPayoff || (firstStealCashoutMoment && routePulse?.mode === "escape") ? null : routePulse;
     const cashoutChoice =
       stealComplete &&
@@ -144,7 +144,9 @@ export function MatchScreen({ match, soundEnabled = false, locale = "en", onLoca
       locale,
       rivalCashoutEmergency ? `Intercept ${rivalCashoutEmergency.agentName} before lift` : (hud?.objective ?? t(locale, "match.defaultObjective"))
     );
-    const displayedObjectiveCompass = rivalCashoutEmergency
+    const displayedObjectiveCompass = openingCommandMode
+      ? null
+      : rivalCashoutEmergency
       ? {
           tone: "danger" as const,
           verb: "INTERCEPT",
