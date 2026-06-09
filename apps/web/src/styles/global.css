@@ -3054,14 +3054,29 @@ p {
   display: none;
 }
 
+.arcade-shell.compact-opening .arcade-loot-stat,
+.arcade-shell.compact-opening .arcade-alarm,
+.arcade-shell.compact-opening .arcade-condition {
+  display: none;
+}
+
 .arcade-shell.compact-opening .arcade-objective {
-  width: min(700px, calc(100vw - 310px));
+  width: min(560px, calc(100vw - 330px));
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 4px 8px;
-  max-height: 218px;
-  padding: 7px 10px;
+  max-height: 112px;
+  padding: 7px 9px;
   border-color: rgba(255, 213, 106, 0.34);
   background: rgba(7, 16, 28, 0.78);
   box-shadow: 0 20px 54px rgba(0, 0, 0, 0.34), 0 0 26px rgba(255, 213, 106, 0.12);
+}
+
+.arcade-shell.compact-opening .arcade-objective > span {
+  font-size: 0.72rem;
+}
+
+.arcade-shell.compact-opening .arcade-objective > strong {
+  font-size: clamp(0.98rem, 1.35vw, 1.16rem);
 }
 
 .arcade-shell.compact-opening .arcade-mission-meta {

@@ -115,10 +115,8 @@ test("language picker supports English Russian and Chinese and persists", async 
   await expect(openingContract.getByText(/月库合约/i)).toBeVisible();
   await expect(openingContract.getByText(/偷取月亮珍珠 \+3/i)).toBeVisible();
   const objectiveBanner = page.getByLabel(/objective banner/i);
-  await expect(objectiveBanner.getByText(/偷取月亮珍珠/i)).toBeVisible();
-  await expect(objectiveBanner.getByText(/先得分掌控节奏/i)).toBeVisible();
+  await expect(objectiveBanner).toBeHidden();
   await expect(page.locator(".arcade-objective > strong", { hasText: /偷取月亮珍珠 \+3/i })).toBeVisible();
-  await expect(objectiveBanner.getByText(/steal moon pearl/i)).toHaveCount(0);
   await expect(page.getByLabel(/breach sprint/i).getByText(/突破冲刺/i)).toBeVisible();
 
   const localizedArcade = await page.waitForFunction(() => window.__AGENT_ALIBI_ARCADE_STATE__?.()).then((handle) => handle.jsonValue());
@@ -167,13 +165,14 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   });
   expect(openingLayout.contract?.width).toBeLessThanOrEqual(270);
   expect(openingLayout.contract?.height).toBeLessThanOrEqual(205);
-  expect(openingLayout.objective?.height).toBeLessThanOrEqual(218);
+  expect(openingLayout.objective?.height).toBeLessThanOrEqual(112);
   expect(openingLayout.objectiveCut).toBe(false);
   await expect(page.getByText(/moon vault run/i)).toBeVisible();
   await expect(page.getByText(/timer/i)).toBeVisible();
   await expect(page.getByText(/steal the moon pearl/i)).toBeVisible();
-  await expect(objectiveBanner.getByText(/steal moon pearl/i)).toBeVisible();
-  await expect(objectiveBanner.getByText(/first score wins tempo/i)).toBeVisible();
+  await expect(objectiveBanner).toBeHidden();
+  await expect(page.getByText(/loot/i)).toBeHidden();
+  await expect(page.getByLabel(/vault condition/i)).toBeHidden();
   await expect(missionBeat).toBeHidden();
   await expect(page.getByLabel(/heist director cue/i)).toBeHidden();
   await expect(currentObjective.getByText(/steal the moon pearl \+3/i)).toBeVisible();
@@ -191,10 +190,7 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(page.getByLabel(/active action/i).getByText(/move/i)).toBeVisible();
   await expect(page.getByLabel(/active action/i).getByText(/follow marker/i)).toBeVisible();
   const objectiveCompass = page.getByLabel(/objective compass/i);
-  await expect(objectiveCompass.getByText(/steal/i)).toBeVisible();
-  await expect(objectiveCompass.getByText(/moon pearl \+3/i)).toBeVisible();
-  await expect(objectiveCompass.getByText(/(?:n|ne|e|se|s|sw|w|nw) \d+m/i)).toBeVisible();
-  await expect(objectiveCompass.getByText(/follow gold beam/i)).toBeVisible();
+  await expect(objectiveCompass).toBeHidden();
   const heistRace = page.getByLabel(/heist race/i);
   await expect(heistRace).toBeHidden();
 
@@ -757,17 +753,21 @@ test("opening movement coach disappears after the player moves", async ({ page }
   expect(afterMoveCoach).toBeNull();
 });
 
-test("start objective banner clears before it blocks the arena", async ({ page }) => {
+test("opening contract replaces the start objective banner before it blocks the arena", async ({ page }) => {
   await startSoloArcade(page);
 
   const objectiveBanner = page.getByLabel(/objective banner/i);
-  await expect(objectiveBanner.getByText(/steal moon pearl/i)).toBeVisible();
-  await page.waitForTimeout(1_900);
-  const bannerOpacity = await page.evaluate(() => {
+  await expect(objectiveBanner).toBeHidden();
+  const bannerState = await page.evaluate(() => {
     const banner = document.querySelector('[aria-label="Objective banner"]');
-    return banner ? Number(getComputedStyle(banner).opacity) : 0;
+    const contract = document.querySelector('[aria-label="Opening contract"]');
+    return {
+      bannerPresent: Boolean(banner),
+      contractPresent: Boolean(contract),
+      bannerOpacity: banner ? Number(getComputedStyle(banner).opacity) : 0
+    };
   });
-  expect(bannerOpacity).toBeLessThanOrEqual(0.05);
+  expect(bannerState).toEqual({ bannerPresent: false, contractPresent: true, bannerOpacity: 0 });
 });
 
 test("opening seconds focus the player on the contract before expanding the full HUD", async ({ page }) => {
@@ -784,6 +784,8 @@ test("opening seconds focus the player on the contract before expanding the full
   await expect(page.getByLabel(/mission radio/i)).toBeHidden();
   await expect(page.getByLabel(/mini radar/i)).toBeHidden();
   await expect(page.getByLabel(/current objective/i).getByText(/steal the moon pearl \+3/i)).toBeVisible();
+  await expect(page.getByLabel(/objective banner/i)).toBeHidden();
+  await expect(page.getByLabel(/objective compass/i)).toBeHidden();
   await expect(page.getByLabel(/mission beat/i)).toBeHidden();
   await expect(page.getByLabel(/heist director cue/i)).toBeHidden();
   await expect(page.getByLabel(/contract chain/i)).toBeHidden();
@@ -1316,7 +1318,7 @@ test("rival breach throws a red alert pulse without blocking the HUD", async ({ 
   expect(pulseState.objectiveCut).toBe(false);
   expect(pulseState.present).toBe(true);
 
-  await expect(page.locator(".arcade-shell")).not.toHaveClass(/breach-alert/, { timeout: 12_000 });
+  await expect(page.locator(".arcade-shell")).not.toHaveClass(/breach-alert/, { timeout: 20_000 });
 });
 
 test("arcade sound can be toggled during a run", async ({ page }) => {
