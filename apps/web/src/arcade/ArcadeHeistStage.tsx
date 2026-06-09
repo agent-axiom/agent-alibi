@@ -27,7 +27,7 @@ declare global {
   }
 }
 
-export function ArcadeHeistStage({ state, runId, onHudUpdate, onFinish, hud }: ArcadeHeistStageProps) {
+export function ArcadeHeistStage({ state, runId, locale, onHudUpdate, onFinish, hud }: ArcadeHeistStageProps) {
   const hostRef = useRef<HTMLDivElement | null>(null);
   const gameRef = useRef<Phaser.Game | null>(null);
   const sceneRef = useRef<ArcadeHeistScene | null>(null);
@@ -101,11 +101,12 @@ export function ArcadeHeistStage({ state, runId, onHudUpdate, onFinish, hud }: A
     sceneRef.current?.setMissionConfig({
       state,
       runId,
+      locale,
       onHudUpdate: (hud) => onHudUpdateRef.current(hud),
       onFinish: (result) => onFinishRef.current(result)
     });
     hostRef.current?.focus({ preventScroll: true });
-  }, [runId, state]);
+  }, [locale, runId, state]);
 
   const pressDirection = (direction: "up" | "down" | "left" | "right") => (event: PointerEvent<HTMLButtonElement>) => {
     event.preventDefault();

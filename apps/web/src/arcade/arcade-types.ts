@@ -1,4 +1,5 @@
 import type { GameState } from "@agent-alibi/shared";
+import type { Locale } from "../i18n";
 import type { ArcadeMissionResult } from "./arcade-rules";
 import type { DirectorCue } from "./director-cue";
 import type { ActiveActionHint, ArcadeLoopStep, ObjectiveCompass, RivalPressureLevel } from "./guidance";
@@ -215,6 +216,7 @@ export type ArcadeHudState = {
 export type ArcadeMissionConfig = {
   state: GameState;
   runId: string;
+  locale: Locale;
   onHudUpdate: (hud: ArcadeHudState) => void;
   onFinish: (result: ArcadeMissionResult) => void;
 };

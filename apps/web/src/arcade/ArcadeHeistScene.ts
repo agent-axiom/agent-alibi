@@ -1,5 +1,7 @@
 import Phaser from "phaser";
 import type { ArtifactState, GameState, PlayerState, Room, TeamId } from "@agent-alibi/shared";
+import type { Locale } from "../i18n";
+import { localizeText } from "../i18n";
 import { ALIBI_PULSE_COOLDOWN_MS, buildAlibiPulseStatus, canUseAlibiPulse } from "./alibi-pulse";
 import { rateArcadeRun } from "./arcade-rules";
 import {
@@ -307,6 +309,7 @@ type HeldDirection = "up" | "down" | "left" | "right";
 
 export class ArcadeHeistScene extends Phaser.Scene {
   private config?: ArcadeMissionConfig;
+  private locale: Locale = "en";
   private state?: GameState;
   private rooms = new Map<string, { room: Room; x: number; y: number }>();
   private arenaRoomLabelCount = 0;
@@ -511,6 +514,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
 
   setMissionConfig(config: ArcadeMissionConfig) {
     this.config = config;
+    this.locale = config.locale;
     if (this.sys.isActive()) {
       this.startMission(config);
     }
@@ -809,6 +813,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
 
   private startMission(config: ArcadeMissionConfig) {
     this.config = config;
+    this.locale = config.locale;
     this.state = config.state;
     this.rooms.clear();
     this.arenaRoomLabelCount = 0;
@@ -836,7 +841,11 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.lastLootChainAtMs = Number.NEGATIVE_INFINITY;
     this.aiLootValue = 0;
     this.lastHudAt = -1;
-    this.feed = ["Moon Vault breach started.", "Rival agents wait for your first score.", "Move fast. Steal clean. Escape before lockdown."];
+    this.feed = [
+      "Moon Vault breach started.",
+      "Rival agents wait for your first score.",
+      "Move fast. Steal clean. Escape before lockdown."
+    ];
     this.spotlight = null;
     this.spotlightUntilMs = 0;
     this.scorePopup = null;
@@ -1053,7 +1062,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     panel.setStrokeStyle(3, accent, 0.7);
 
     this.add
-      .text(x, y - height / 2 - 22, room.name.toUpperCase(), {
+      .text(x, y - height / 2 - 22, this.sceneUpper(room.name), {
         color: "#dffcff",
         fontFamily: "Inter, Arial, sans-serif",
         fontSize: "15px",
@@ -1074,11 +1083,12 @@ export class ArcadeHeistScene extends Phaser.Scene {
   }
 
   private createZoneBadge(x: number, y: number, text: string, color: number) {
-    this.arenaZoneBeacons.add(text);
-    const width = Math.max(76, text.length * 8 + 18);
+    const labelText = this.sceneText(text);
+    this.arenaZoneBeacons.add(labelText);
+    const width = Math.max(76, labelText.length * 8 + 18);
     const plate = this.add.rectangle(0, 0, width, 24, 0x050811, 0.78).setStrokeStyle(2, color, 0.72);
     const label = this.add
-      .text(0, 0, text, {
+      .text(0, 0, labelText, {
         color: `#${color.toString(16).padStart(6, "0")}`,
         fontFamily: "Inter, Arial, sans-serif",
         fontSize: "11px",
@@ -1135,9 +1145,9 @@ export class ArcadeHeistScene extends Phaser.Scene {
     const atrium = this.rooms.get("atrium");
     if (!atrium) return;
     const ring = this.add.circle(0, 0, EXIT_RADIUS, 0x4cf4f0, 0.07).setStrokeStyle(4, 0x7effdf, 0.52);
-    this.arenaZoneBeacons.add("EXTRACT");
+    this.arenaZoneBeacons.add(this.sceneText("EXTRACT"));
     const extract = this.add
-      .text(0, -EXIT_RADIUS - 24, "EXTRACT", {
+      .text(0, -EXIT_RADIUS - 24, this.sceneText("EXTRACT"), {
         color: "#7effdf",
         fontFamily: "Inter, Arial, sans-serif",
         fontSize: "12px",
@@ -1147,7 +1157,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
     const label = this.add
-      .text(0, EXIT_RADIUS + 24, "ESCAPE LIFT", {
+      .text(0, EXIT_RADIUS + 24, this.sceneText("ESCAPE LIFT"), {
         color: "#7effdf",
         fontFamily: "Inter, Arial, sans-serif",
         fontSize: "16px",
@@ -1158,7 +1168,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       .setOrigin(0.5);
     const badgePlate = this.add.rectangle(0, 0, 126, 30, 0x07101c, 0.86).setStrokeStyle(2, 0x7effdf, 0.82);
     this.escapePayoutBadgeLabel = this.add
-      .text(0, 0, "CASHOUT +0", {
+      .text(0, 0, this.sceneUpper("CASHOUT +0"), {
         color: "#d9fff6",
         fontFamily: "Inter, Arial, sans-serif",
         fontSize: "13px",
@@ -1195,7 +1205,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     const visor = this.add.rectangle(6, -4, 16, 5, 0x050811, 0.58);
     const ship = this.add.container(0, 0, [dot, visor]);
     const label = this.add
-      .text(0, 32, controlled ? "YOU" : player.name.toUpperCase(), {
+      .text(0, 32, controlled ? this.sceneText("YOU") : player.name.toUpperCase(), {
         color: controlled ? "#ffd56a" : "#f8fdff",
         fontFamily: "Inter, Arial, sans-serif",
         fontSize: controlled ? "15px" : "12px",
@@ -1465,7 +1475,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       visible: true,
       agentName: hunter.name,
       status: this.rivalsAreActive() ? "hunting" : "waking",
-      targetLabel: "YOU",
+      targetLabel: this.sceneText("YOU"),
       distanceMeters: Math.max(0, Math.round(Phaser.Math.Distance.Between(this.player.x, this.player.y, hunter.x, hunter.y) / 8))
     };
   }
@@ -1929,7 +1939,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       agent.body.setAlpha(standby ? 0.46 : 1);
       agent.body.setDepth(standby ? 10 : 12);
       agent.ship.setScale(standby ? 0.86 : 1);
-      agent.label.setText(standby ? "STANDBY" : agent.name.toUpperCase());
+      agent.label.setText(standby ? this.sceneText("STANDBY") : agent.name.toUpperCase());
       agent.label.setColor(standby ? "#ff9fbd" : "#f8fdff");
     }
   }
@@ -2480,8 +2490,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
       return;
     }
 
-    const label = `Cashout +${this.currentCashoutValue()}`;
-    this.escapePayoutBadgeLabel.setText(label.toUpperCase());
+    const label = this.sceneText(`Cashout +${this.currentCashoutValue()}`);
+    this.escapePayoutBadgeLabel.setText(this.sceneUpper(label));
     this.escapePayoutBadge.setVisible(true);
     this.escapePayoutBadge.setData("visible", true);
     this.escapePayoutBadge.setData("label", label);
@@ -3161,7 +3171,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.hunterLockOn.setData("visible", true);
     this.hunterLockOn.setData("label", "HUNTER LOCK");
     this.hunterLockOn.setData("agentName", hunter.name);
-    this.hunterLockOn.setData("targetLabel", "YOU");
+    this.hunterLockOn.setData("targetLabel", this.sceneText("YOU"));
     this.hunterLockOn.setData("status", status);
     this.hunterLockOn.setData("distanceMeters", distanceMeters);
     this.hunterLockOn.setData("beamCount", beamCount);
@@ -3794,7 +3804,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       const relic = carrier.carriedRelics.at(-1);
       return {
         key: "E / Space",
-        label: relic ? `Recover ${relic.name} +${relic.value}` : "Intercept carrier",
+        label: this.sceneText(relic ? `Recover ${relic.name} +${relic.value}` : "Intercept carrier"),
         x: carrier.x,
         y: carrier.y
       };
@@ -3804,7 +3814,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     if (artifact) {
       return {
         key: "E / Space",
-        label: `Steal ${artifact.name} +${artifact.value}`,
+        label: this.sceneText(`Steal ${artifact.name} +${artifact.value}`),
         x: artifact.x,
         y: artifact.y
       };
@@ -3814,7 +3824,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       const target = this.escapeZone ?? this.rooms.get("atrium");
       return {
         key: "E / Space",
-        label: this.lootValue > 0 ? `Cashout +${this.currentCashoutValue()}` : "Escape",
+        label: this.sceneText(this.lootValue > 0 ? `Cashout +${this.currentCashoutValue()}` : "Escape"),
         x: target?.x ?? this.player?.x ?? WORLD_WIDTH / 2,
         y: target?.y ?? this.player?.y ?? WORLD_HEIGHT / 2
       };
@@ -3965,7 +3975,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       return {
         color: 0x7effdf,
         cue: ready ? "E / SPACE" : "APPROACH",
-        label: this.lootValue > 0 ? "CASHOUT" : "ESCAPE",
+        label: this.sceneUpper(this.lootValue > 0 ? "CASHOUT" : "ESCAPE"),
         radius: EXIT_RADIUS,
         state: ready ? "ready" : "approach"
       };
@@ -3974,7 +3984,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       return {
         color: 0xff4f7b,
         cue: ready ? "E / SPACE" : "CHASE",
-        label: "INTERCEPT",
+        label: this.sceneUpper("INTERCEPT"),
         radius: INTERCEPT_RADIUS,
         state: ready ? "ready" : "approach"
       };
@@ -3982,7 +3992,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     return {
       color: 0xffd56a,
       cue: ready ? "E / SPACE" : "APPROACH",
-      label: "STEAL",
+      label: this.sceneUpper("STEAL"),
       radius: PICKUP_RADIUS + 18,
       state: ready ? "ready" : "approach"
     };
@@ -4026,23 +4036,23 @@ export class ArcadeHeistScene extends Phaser.Scene {
       return;
     }
 
-    const label = `Risk +${artifact.value}`;
+    const label = this.sceneText(`Risk +${artifact.value}`);
     this.greedRouteHint.setPosition(artifact.x, artifact.y);
     this.greedRouteHintLabel.setText(label);
-    this.greedRouteHintTarget.setText(artifact.name.toUpperCase());
+    this.greedRouteHintTarget.setText(this.sceneUpper(artifact.name));
     this.greedRouteHint.setAlpha(0.94);
     this.greedRouteHint.setData("visible", true);
     this.greedRouteHint.setData("hintKey", hintKey);
     this.greedRouteHint.setData("label", label);
-    this.greedRouteHint.setData("cue", "PRESS G");
-    this.greedRouteHint.setData("target", artifact.name);
+    this.greedRouteHint.setData("cue", this.sceneText("PRESS G"));
+    this.greedRouteHint.setData("target", this.sceneText(artifact.name));
   }
 
   private createGreedRouteHint(artifact: RuntimeArtifact) {
     const outer = this.add.circle(0, 0, PICKUP_RADIUS + 32, 0xbda9ff, 0.05).setStrokeStyle(3, 0xbda9ff, 0.58);
     const badge = this.add.rectangle(0, -58, 82, 28, 0x050811, 0.9).setStrokeStyle(2, 0xffd56a, 0.82);
     const cue = this.add
-      .text(0, -58, "PRESS G", {
+      .text(0, -58, this.sceneText("PRESS G"), {
         color: "#ffd56a",
         fontFamily: "Inter, Arial, sans-serif",
         fontSize: "11px",
@@ -4052,7 +4062,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
     const label = this.add
-      .text(0, PICKUP_RADIUS + 48, `Risk +${artifact.value}`, {
+      .text(0, PICKUP_RADIUS + 48, this.sceneText(`Risk +${artifact.value}`), {
         color: "#eee8ff",
         fontFamily: "Inter, Arial, sans-serif",
         fontSize: "12px",
@@ -4062,7 +4072,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
     const target = this.add
-      .text(0, PICKUP_RADIUS + 64, artifact.name.toUpperCase(), {
+      .text(0, PICKUP_RADIUS + 64, this.sceneUpper(artifact.name), {
         color: "#d9f7ff",
         fontFamily: "Inter, Arial, sans-serif",
         fontSize: "10px",
@@ -4130,8 +4140,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
   }
 
   private targetMarkerLabel(target: ArcadeObjectiveTarget): string {
-    if (target.kind === "escape" && this.lootValue > 0) return `Cashout +${this.currentCashoutValue()}`;
-    if (target.kind !== "carrier") return target.label;
+    if (target.kind === "escape" && this.lootValue > 0) return this.sceneText(`Cashout +${this.currentCashoutValue()}`);
+    if (target.kind !== "carrier") return this.sceneText(target.label);
     const carrier = this.aiAgents.find((agent) => agent.id === target.id);
     if (!carrier) return target.label;
     const carriedRelic = carrier.carriedRelics.at(-1);
@@ -4170,8 +4180,8 @@ export class ArcadeHeistScene extends Phaser.Scene {
 
     if (target.kind === "carrier") {
       return {
-        laneLabel: "INTERCEPT ROUTE",
-        detail: `${distanceMeters}m to carrier`,
+        laneLabel: this.sceneText("INTERCEPT ROUTE"),
+        detail: this.sceneText(`${distanceMeters}m to carrier`),
         pulseCount,
         laneWidth
       };
@@ -4180,24 +4190,24 @@ export class ArcadeHeistScene extends Phaser.Scene {
     if (target.kind === "escape") {
       if (this.breakoutRushActive() && this.lootValue > 0) {
         return {
-          laneLabel: "BREAKOUT RUSH",
-          detail: `Bank +${this.currentCashoutValue()} at lift - ${distanceMeters}m`,
+          laneLabel: this.sceneText("BREAKOUT RUSH"),
+          detail: this.sceneText(`Bank +${this.currentCashoutValue()} at lift - ${distanceMeters}m`),
           pulseCount,
           laneWidth
         };
       }
 
       return {
-        laneLabel: this.lootValue > 0 ? `BANK +${this.currentCashoutValue()}` : "EXIT ROUTE",
-        detail: `${distanceMeters}m to lift`,
+        laneLabel: this.lootValue > 0 ? this.sceneText(`BANK +${this.currentCashoutValue()}`) : this.sceneText("EXIT ROUTE"),
+        detail: this.sceneText(`${distanceMeters}m to lift`),
         pulseCount,
         laneWidth
       };
     }
 
     return {
-      laneLabel: this.aiLootValue > this.lootValue ? "COMEBACK ROUTE" : "STEAL ROUTE",
-      detail: `${distanceMeters}m to relic`,
+      laneLabel: this.aiLootValue > this.lootValue ? this.sceneText("COMEBACK ROUTE") : this.sceneText("STEAL ROUTE"),
+      detail: this.sceneText(`${distanceMeters}m to relic`),
       pulseCount,
       laneWidth
     };
@@ -4407,7 +4417,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
 
     this.routeSignalLabel.setText(lane.laneLabel);
     this.routeSignalLabel.setColor(this.hexCss(color));
-    this.routeSignalDetail.setText(lane.detail.toUpperCase());
+    this.routeSignalDetail.setText(this.sceneUpper(lane.detail));
     this.routeSignalPlate.setSize(width, 46);
     this.routeSignalPlate.setStrokeStyle(1, color, target.kind === "carrier" ? 0.8 : 0.56);
     this.routeSignal.setPosition(Phaser.Math.Clamp(labelX, 112, WORLD_WIDTH - 112), Phaser.Math.Clamp(labelY, 104, WORLD_HEIGHT - 104));
@@ -4420,7 +4430,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private createRouteSignal() {
     const plate = this.add.rectangle(0, 0, 150, 46, 0x050811, 0.82).setStrokeStyle(1, 0x7effdf, 0.56);
     const label = this.add
-      .text(0, -8, "STEAL ROUTE", {
+      .text(0, -8, this.sceneText("STEAL ROUTE"), {
         color: "#ffd56a",
         fontFamily: "Inter, Arial, sans-serif",
         fontSize: "12px",
@@ -4429,7 +4439,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
     const detail = this.add
-      .text(0, 10, "0M TO RELIC", {
+      .text(0, 10, this.sceneUpper("0m to relic"), {
         color: "#d9f7ff",
         fontFamily: "Inter, Arial, sans-serif",
         fontSize: "10px",
@@ -4463,6 +4473,15 @@ export class ArcadeHeistScene extends Phaser.Scene {
       x: Math.round(this.routeSignal.x),
       y: Math.round(this.routeSignal.y)
     };
+  }
+
+  private sceneText(text: string): string {
+    return localizeText(this.locale, text);
+  }
+
+  private sceneUpper(text: string): string {
+    const localized = this.sceneText(text);
+    return this.locale === "zh" ? localized : localized.toLocaleUpperCase(this.locale);
   }
 
   private hexCss(color: number) {

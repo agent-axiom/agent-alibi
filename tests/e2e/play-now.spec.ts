@@ -15,6 +15,22 @@ async function startSoloArcade(page: Page) {
   await expect(page.getByLabel(/playable moon vault arcade scene/i)).toBeVisible();
 }
 
+async function expectFirstCashoutChoice(
+  page: Page,
+  options: {
+    greedRelic?: RegExp;
+    projectedCashout?: RegExp;
+  } = {}
+) {
+  const cashoutChoice = page.getByLabel(/cashout choice/i);
+  await expect(cashoutChoice.getByText(/bank now/i)).toBeVisible();
+  await expect(cashoutChoice.getByText(/cashout \+5/i)).toBeVisible();
+  await expect(cashoutChoice.getByText(/safe exit with \+3 loot/i)).toBeVisible();
+  await expect(cashoutChoice.getByText(/greed route/i)).toBeVisible();
+  await expect(cashoutChoice.getByText(options.greedRelic ?? /argent crown \+3/i)).toBeVisible();
+  await expect(cashoutChoice.getByText(options.projectedCashout ?? /press g for cashout \+8/i)).toBeVisible();
+}
+
 test("home screen surfaces the saved best case target", async ({ page }) => {
   await page.goto("/");
   await page.evaluate(() => {
@@ -104,6 +120,14 @@ test("language picker supports English Russian and Chinese and persists", async 
   await expect(page.locator(".arcade-objective > strong", { hasText: /偷取月亮珍珠 \+3/i })).toBeVisible();
   await expect(objectiveBanner.getByText(/steal moon pearl/i)).toHaveCount(0);
   await expect(page.getByLabel(/breach sprint/i).getByText(/突破冲刺/i)).toBeVisible();
+
+  const localizedArcade = await page.waitForFunction(() => window.__AGENT_ALIBI_ARCADE_STATE__?.()).then((handle) => handle.jsonValue());
+  expect(localizedArcade?.targetMarker?.label).toBe("月亮珍珠 +3");
+  expect(localizedArcade?.routeGuide?.laneLabel).toBe("偷取路线");
+  expect(localizedArcade?.routeSignal?.laneLabel).toBe("偷取路线");
+  expect(localizedArcade?.arenaLabels?.zoneBeacons).toEqual(expect.arrayContaining(["高价值", "撤离", "对手入口"]));
+  expect(localizedArcade?.arenaLabels?.zoneBeacons).not.toEqual(expect.arrayContaining(["HIGH VALUE", "EXTRACT", "RIVAL ENTRY"]));
+  expect(localizedArcade?.rivals?.[0]?.visualLabel).toBe("待命");
 });
 
 test("solo match starts and reaches final case file", async ({ page }) => {
@@ -263,25 +287,26 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(page.locator(".arcade-shell")).toHaveClass(/chase-compact/);
   await expect(page.getByLabel(/mission radio/i).getByText(/rival agents entered the vault/i)).toBeVisible();
   const rivalObjective = page.getByLabel(/rival objective/i);
-  await expect(rivalObjective.getByText(/rook marks you/i)).toBeVisible();
-  await expect(rivalObjective.getByText(/cashout before red carriers score/i)).toBeVisible();
-  await expect(page.getByLabel(/route choice/i).getByText(/bank \+5 now/i)).toBeVisible();
+  await expect(rivalObjective).toBeHidden();
+  const cashoutChoice = page.getByLabel(/cashout choice/i);
+  await expect(cashoutChoice.getByText(/bank now/i)).toBeVisible();
+  await expect(cashoutChoice.getByText(/cashout \+5/i)).toBeVisible();
+  await expect(cashoutChoice.getByText(/greed route/i)).toBeVisible();
+  await expect(cashoutChoice.getByText(/argent crown \+3/i)).toBeVisible();
+  await expect(cashoutChoice.getByText(/press g for cashout \+8/i)).toBeVisible();
+  await expect(page.getByLabel(/mission beat/i)).toBeHidden();
+  await expect(page.getByLabel(/heist race/i)).toBeHidden();
+  await expect(page.getByLabel(/route choice/i)).toBeHidden();
   await expect(page.locator(".arcade-spotlight")).toBeHidden();
   const stealImpact = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().lastImpact);
   expect(stealImpact?.kind).toBe("steal");
   expect(stealImpact?.count).toBeGreaterThan(0);
   await expect(page.getByLabel(/objective compass/i).getByText(/follow cyan ring/i)).toBeVisible();
-  await expect(page.getByLabel(/route choice/i).getByText(/risk \+3: argent crown/i)).toBeVisible();
-  await expect(page.getByLabel(/route choice/i).getByText(/press g for cashout \+8/i)).toBeVisible();
   await expect(page.locator(".arcade-shell")).not.toHaveClass(/breach-alert/);
   const lootChainWindow = page.getByLabel(/loot chain window/i);
-  await expect(lootChainWindow.getByText(/loot chain x1/i)).toBeVisible();
-  await expect(lootChainWindow.getByText(/next relic keeps streak/i)).toBeVisible();
-  await expect(lootChainWindow.getByText(/\d+s left/i)).toBeVisible();
+  await expect(lootChainWindow).toBeHidden();
   const routeChoice = page.getByLabel(/route choice/i);
-  await expect(routeChoice.getByText(/bank \+5 now/i)).toBeVisible();
-  await expect(routeChoice.getByText(/risk \+3: argent crown/i)).toBeVisible();
-  await expect(routeChoice.getByText(/press g for cashout \+8 · \d+m detour/i)).toBeVisible();
+  await expect(routeChoice).toBeHidden();
   const greedRouteHint = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().greedRouteHint);
   expect(greedRouteHint).toEqual(
     expect.objectContaining({
@@ -796,8 +821,8 @@ test("cashout chase keeps the current heist step explicit", async ({ page }) => 
   await expect(page.locator(".arcade-shell")).toHaveClass(/chase-compact/);
   await expect(contractChain).toBeHidden();
   await expect(page.getByLabel(/objective compass/i).getByText(/\+5 at atrium lift/i)).toBeVisible();
-  await expect(page.getByLabel(/route choice/i).getByText(/bank \+5 now/i)).toBeVisible();
-  await expect(page.getByLabel(/route choice/i).getByText(/risk \+3: argent crown/i)).toBeVisible();
+  await expectFirstCashoutChoice(page);
+  await expect(page.getByLabel(/route choice/i)).toBeHidden();
 });
 
 test("first steal cashout surge owns the center stage", async ({ page }) => {
@@ -866,6 +891,10 @@ test("momentum meter turns clean runs and loot chains into one readable payoff",
   await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget());
   await page.keyboard.press("Space");
 
+  await expectFirstCashoutChoice(page);
+  await expect(momentumMeter).toBeHidden();
+  await page.keyboard.press("KeyG");
+  await expect(page.getByLabel(/route pulse/i)).toBeHidden({ timeout: 5_000 });
   await expect(momentumMeter.getByText(/loot chain x1/i)).toBeVisible();
   await expect(momentumMeter.getByText(/next relic keeps streak/i)).toBeVisible();
   await expect(momentumMeter.getByText(/\d+s to chain or cashout/i)).toBeVisible();
@@ -896,10 +925,8 @@ test("rival agents stay visually staged until the breach starts", async ({ page 
   expect(breached?.rivalIntentRoutes?.routeCount).toBeGreaterThanOrEqual(3);
   expect(breached?.rivalIntentRoutes?.targetLabels).toEqual(expect.arrayContaining([expect.stringMatching(/rook -> /i)]));
   expect(breached?.rivalIntentRoutes?.targetLabels).toEqual(expect.arrayContaining([expect.stringMatching(/rook -> you/i)]));
-  const rivalObjective = page.getByLabel(/rival objective/i);
-  await expect(rivalObjective.getByText(/rook marks you/i)).toBeVisible();
-  await expect(rivalObjective.getByText(/gremlin \/ anchor raid relics/i)).toBeVisible();
-  await expect(rivalObjective.getByText(/cashout before red carriers score/i)).toBeVisible();
+  await expectFirstCashoutChoice(page);
+  await expect(page.getByLabel(/rival objective/i)).toBeHidden();
   expect(breached?.rivalHunter).toEqual(
     expect.objectContaining({
       visible: true,
@@ -1453,7 +1480,8 @@ test("on-screen arcade controls move, dash, interact, and switch route", async (
   await controls.getByRole("button", { name: /interact/i }).click();
   await expect(page.locator(".arcade-spotlight")).toBeHidden();
   await expect(page.getByLabel(/cashout surge/i).getByText(/bank \+5/i)).toBeVisible();
-  await expect(page.getByLabel(/route choice/i).getByText(/press g/i)).toBeVisible();
+  await expectFirstCashoutChoice(page);
+  await expect(page.getByLabel(/route choice/i)).toBeHidden();
   await controls.getByRole("button", { name: /switch route/i }).click();
   await expect(page.getByLabel(/current objective/i).getByText(/greed route: steal argent crown \+3/i)).toBeVisible();
   const afterRoute = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().routeMode);
@@ -1778,7 +1806,11 @@ test("rival carriers only score after cashout", async ({ page }) => {
   await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget());
   await expect(page.getByLabel(/active action/i).getByText(/steal/i)).toBeVisible();
   await page.keyboard.press("KeyE");
-  await expect(missionBeat.getByText(/cashout beats red by 2/i)).toBeVisible();
+  await expectFirstCashoutChoice(page, {
+    greedRelic: /silver key \+1/i,
+    projectedCashout: /press g for cashout \+6/i
+  });
+  await expect(missionBeat).toBeHidden();
   const comebackPulse = page.getByLabel(/route pulse/i);
   await expect(comebackPulse.getByText(/comeback live/i)).toBeVisible();
   await expect(comebackPulse.getByText(/bank \+5 beats red/i)).toBeVisible();

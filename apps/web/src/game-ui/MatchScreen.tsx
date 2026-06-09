@@ -103,6 +103,24 @@ export function MatchScreen({ match, soundEnabled = false, locale = "en", onLoca
     const visibleSpotlight = cashoutPayoff || lockBreakPayoff || alibiPayoff || visibleGhostStepBoost || firstStealCashoutMoment ? null : (hud?.spotlight ?? null);
     const visibleObjectiveBanner = cashoutPayoff || lockBreakPayoff || alibiPayoff || visibleGhostStepBoost || rivalCashoutEmergency || (firstStealCashoutMoment && hud?.objectiveBanner?.tone === "escape") ? null : (hud?.objectiveBanner ?? null);
     const visibleRoutePulse = cashoutPayoff || lockBreakPayoff || alibiPayoff || (firstStealCashoutMoment && routePulse?.mode === "escape") ? null : routePulse;
+    const cashoutChoice =
+      stealComplete &&
+      (hud?.artifactsStolen ?? 0) === 1 &&
+      carriedLoot &&
+      routeChoice?.mode === "escape" &&
+      !cashoutPayoff &&
+      !lockBreakPayoff &&
+      !alibiPayoff
+        ? {
+            bankCashout: routeChoice.cashoutNow,
+            carriedLoot: carriedLoot.loot,
+            projectedCashout: routeChoice.projectedCashout,
+            greedRelicName: routeChoice.greedRelicName,
+            greedRelicValue: routeChoice.greedRelicValue,
+            greedDistanceMeters: routeChoice.greedDistanceMeters
+          }
+        : null;
+    const focusedCommandMode = openingCommandMode || Boolean(cashoutChoice);
     const afterburnerActive = hud?.lootSpeedSurge?.label === "Afterburner";
     const breachSprintActive = Boolean(visibleBreachSprint);
     const ghostStepActive = Boolean(visibleGhostStepBoost);
@@ -193,6 +211,7 @@ export function MatchScreen({ match, soundEnabled = false, locale = "en", onLoca
             hud={hud}
             state={state}
             runId={match.arcade.runId}
+            locale={locale}
             onHudUpdate={match.arcade.updateHud}
             onFinish={match.arcade.finishMission}
           />
@@ -452,7 +471,23 @@ export function MatchScreen({ match, soundEnabled = false, locale = "en", onLoca
               <small>{localizeText(locale, displayedObjectiveCompass.detail)}</small>
             </div>
           ) : null}
-          {!openingCommandMode && hud?.rivalObjective ? (
+          {cashoutChoice ? (
+            <div className="arcade-cashout-choice" aria-label="Cashout choice">
+              <div className="bank">
+                <span>{t(locale, "match.bankNow")}</span>
+                <strong>{t(locale, "match.cashoutValue", { cashout: cashoutChoice.bankCashout })}</strong>
+                <small>{t(locale, "match.safeExitLoot", { loot: cashoutChoice.carriedLoot })}</small>
+              </div>
+              <div className="greed">
+                <span>{t(locale, "match.greedRoute")}</span>
+                <strong>
+                  {localizeText(locale, cashoutChoice.greedRelicName)} +{cashoutChoice.greedRelicValue}
+                </strong>
+                <small>{t(locale, "match.pressGForCashout", { cashout: cashoutChoice.projectedCashout, distance: cashoutChoice.greedDistanceMeters })}</small>
+              </div>
+            </div>
+          ) : null}
+          {!focusedCommandMode && hud?.rivalObjective ? (
             <div className={`arcade-rival-objective ${hud.rivalObjective.tone}`} aria-label="Rival objective">
               <span>{localizeText(locale, hud.rivalObjective.label)}</span>
               <strong>{localizeText(locale, hud.rivalObjective.title)}</strong>
@@ -460,7 +495,7 @@ export function MatchScreen({ match, soundEnabled = false, locale = "en", onLoca
               <em>{localizeText(locale, hud.rivalObjective.action)}</em>
             </div>
           ) : null}
-          {!openingCommandMode && hud?.missionBeat ? (
+          {!focusedCommandMode && hud?.missionBeat ? (
             <div className={`arcade-mission-beat ${hud.missionBeat.tone}`} aria-label="Mission beat">
               <span>{localizeText(locale, hud.missionBeat.kicker)}</span>
               <strong>{localizeText(locale, hud.missionBeat.title)}</strong>
@@ -476,14 +511,14 @@ export function MatchScreen({ match, soundEnabled = false, locale = "en", onLoca
               ) : null}
             </div>
           ) : null}
-          {!openingCommandMode && hud?.threatCue ? (
+          {!focusedCommandMode && hud?.threatCue ? (
             <div className={`arcade-threat-cue ${hud.threatCue.tone}`} aria-label="Threat vector">
               <strong>{localizeText(locale, hud.threatCue.label)}</strong>
               <span>{localizeText(locale, hud.threatCue.detail)}</span>
               <small>{localizeText(locale, hud.threatCue.action)}</small>
             </div>
           ) : null}
-          {!openingCommandMode ? (
+          {!focusedCommandMode ? (
             <div className="arcade-steps" aria-label="Contract chain">
               {contractSteps.map((step) => (
                 <span
@@ -497,7 +532,7 @@ export function MatchScreen({ match, soundEnabled = false, locale = "en", onLoca
               ))}
             </div>
           ) : null}
-          {!openingCommandMode ? (
+          {!focusedCommandMode ? (
             <div className="arcade-mission-meta">
             <div className={`arcade-race ${raceTone}`} aria-label="Heist race">
               <span>{t(locale, "match.heistRace")}</span>
