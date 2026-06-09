@@ -3155,6 +3155,63 @@ p {
   grid-column: auto;
 }
 
+.arcade-cashout-choice {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 7px;
+}
+
+.arcade-cashout-choice > div {
+  min-width: 0;
+  border: 1px solid rgba(216, 252, 255, 0.24);
+  border-radius: 7px;
+  padding: 8px 10px;
+  background: rgba(5, 8, 17, 0.72);
+  box-shadow: inset 0 0 22px rgba(216, 252, 255, 0.08);
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.arcade-cashout-choice > .bank {
+  border-color: rgba(57, 229, 192, 0.76);
+  background: linear-gradient(135deg, rgba(57, 229, 192, 0.2), rgba(5, 8, 17, 0.78));
+}
+
+.arcade-cashout-choice > .greed {
+  border-color: rgba(255, 213, 106, 0.68);
+  background: linear-gradient(135deg, rgba(255, 213, 106, 0.18), rgba(189, 169, 255, 0.12));
+}
+
+.arcade-cashout-choice span,
+.arcade-cashout-choice strong,
+.arcade-cashout-choice small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.arcade-cashout-choice span {
+  color: #ffd56a;
+  font-size: 0.67rem;
+  font-weight: 950;
+}
+
+.arcade-cashout-choice strong {
+  margin-top: 4px;
+  color: #fffaf2;
+  font-size: 0.9rem;
+  font-weight: 950;
+}
+
+.arcade-cashout-choice small {
+  margin-top: 5px;
+  color: #d8fcff;
+  font-size: 0.68rem;
+  font-weight: 900;
+}
+
 .arcade-shell.chase-compact .arcade-rival-objective {
   min-height: 34px;
   grid-template-columns: auto minmax(0, 1fr) auto;
