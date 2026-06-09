@@ -60,7 +60,7 @@ describe("selectMissionStinger", () => {
     expect(
       selectMissionStinger(
         { lootValue: 3, aiLootValue: 0, phase: "stealth", spotlight: null, summaryTitle: null, routePulseTitle: null },
-        { lootValue: 3, aiLootValue: 0, phase: "stealth", spotlight: null, summaryTitle: null, routePulseTitle: "Greed route locked" }
+        { lootValue: 3, aiLootValue: 0, phase: "stealth", spotlight: null, summaryTitle: null, routePulseTitle: "Greed route armed" }
       )
     ).toBe("route-lock");
   });

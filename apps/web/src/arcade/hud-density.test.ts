@@ -33,6 +33,7 @@ function hud(overrides: Partial<ArcadeHudState> = {}): ArcadeHudState {
     lastRivalSteal: null,
     rivalIntercept: null,
     rivalObjective: null,
+    rivalIntelCards: [],
     vaultCondition: {
       tone: "stable",
       label: "Vault Stable",

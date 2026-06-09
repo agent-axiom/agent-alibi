@@ -353,7 +353,7 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   );
   await expect(page.locator(".arcade-shell")).toHaveClass(/route-pulse-active/);
   const routePulse = page.getByLabel(/route pulse/i);
-  await expect(routePulse.getByText(/greed route locked/i)).toBeVisible();
+  await expect(routePulse.getByText(/greed route armed/i)).toBeVisible();
   await expect(routePulse.getByText(/cashout \+8 if you survive/i)).toBeVisible();
   await expect(routePulse.getByText(/argent crown marker live/i)).toBeVisible();
   const routePulseState = await page.evaluate(() => {
@@ -987,6 +987,36 @@ test("rival agents stay visually staged until the breach starts", async ({ page 
   await expect(ambushCard.getByText(/rival ambush dashed/i)).toBeVisible();
   await expect(page.getByLabel(/case highlights/i).getByText(/dashed through rival ambush x1/i)).toBeVisible();
   await expect(page.getByText(/ambush dodges: 1/i)).toBeVisible();
+});
+
+test("rival intel cards turn AI markers into named intent reads", async ({ page }) => {
+  await startSoloArcade(page);
+  await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_STATE__ === "function");
+
+  await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget());
+  await page.keyboard.press("KeyE");
+  await expectFirstCashoutChoice(page);
+  await page.keyboard.press("KeyG");
+
+  const intel = page.getByLabel(/rival intel/i);
+  await expect(intel).toBeVisible();
+  await expect(intel.locator(".arcade-rival-intel-card")).toHaveCount(3);
+  await expect(intel.getByText(/rook/i)).toBeVisible();
+  await expect(intel.getByText(/hunter/i)).toBeVisible();
+  await expect(intel.getByText(/marks you/i)).toBeVisible();
+  await expect(intel.getByText(/use the head start|dash or break line/i)).toBeVisible();
+  await expect(intel.getByText(/raiding/i).first()).toBeVisible();
+
+  const debug = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());
+  expect(debug?.rivalIntelCards).toHaveLength(3);
+  expect(debug?.rivalIntelCards?.[0]).toEqual(
+    expect.objectContaining({
+      agentName: "Rook",
+      role: "Hunter",
+      status: "Marks you"
+    })
+  );
+  expect(debug?.rivalIntelCards?.map((card) => card.role)).toEqual(expect.arrayContaining(["Hunter", "Raider"]));
 });
 
 test("hunter lock-on telegraphs Rook's pursuit", async ({ page }) => {
