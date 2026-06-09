@@ -30,6 +30,7 @@ import { buildDirectorCue } from "./director-cue";
 import { nextMovementImpulse, selectMovementVector, type MovementImpulse, type MovementVector } from "./movement";
 import { buildObjectiveDirectionLabel } from "./navigation";
 import { buildRivalBarkLine } from "./rival-barks";
+import { buildRivalIntelCards } from "./rival-intel";
 import { buildRivalScanStatus, updateRivalScan as advanceRivalScan, type RivalScanState } from "./rival-scan";
 
 const WORLD_WIDTH = 1680;
@@ -554,6 +555,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
   getDebugState() {
     const target = this.currentObjectiveTarget();
     const nearestRival = this.nearestRivalScan();
+    const rivalPressure = this.rivalPressure(nearestRival);
     const routeGuide = this.routeGuideDebug(target);
     return {
       player: this.player ? { x: this.player.x, y: this.player.y } : null,
@@ -596,6 +598,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       threatHalo: this.threatHaloDebug(),
       carrierCashoutRoute: this.carrierCashoutRouteDebug(),
       rivalIntentRoutes: this.rivalIntentRoutesDebug(),
+      rivalIntelCards: this.rivalIntelCards(nearestRival, rivalPressure),
       securitySweep: this.securitySweepDebug(),
       carrierBadges: this.carrierBadgesDebug(),
       escapeZoneBadge: this.escapeZoneBadgeDebug(),
@@ -2322,6 +2325,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       lastRivalSteal: this.lastRivalSteal,
       rivalIntercept,
       rivalObjective: this.rivalObjective(rivalIntercept, nearestRival, rivalPressure),
+      rivalIntelCards: this.rivalIntelCards(nearestRival, rivalPressure),
       vaultCondition: this.vaultCondition(),
       escapePayout,
       extractionCue: this.extractionCue(escapePayout),
@@ -2725,6 +2729,32 @@ export class ArcadeHeistScene extends Phaser.Scene {
     return null;
   }
 
+  private rivalIntelCards(nearestRival: RivalScan | null, rivalPressure: RivalPressure) {
+    if (!this.player) return [];
+    const hunter = this.rivalHunterDebug();
+    return buildRivalIntelCards({
+      rivalsActive: this.rivalsAreActive(),
+      wakeHoldMs: Math.max(0, this.aiWakeHoldMs),
+      nearestRivalName: nearestRival?.name ?? null,
+      rivalPressureLevel: rivalPressure.level,
+      hunterName: hunter.visible ? hunter.agentName : null,
+      hunterStatus: hunter.visible ? hunter.status : null,
+      agents: this.aiAgents.map((agent) => {
+        const carriedRelic = agent.carriedRelics.at(-1) ?? null;
+        const targetRoom = this.rooms.get(agent.targetRoomId)?.room.name ?? null;
+        const distanceMeters = Math.max(0, Math.round(Phaser.Math.Distance.Between(this.player!.x, this.player!.y, agent.x, agent.y) / 8));
+        return {
+          id: agent.id,
+          name: agent.name,
+          distanceMeters,
+          targetLabel: carriedRelic ? "Atrium Lift" : this.isRivalHunter(agent) ? "You" : targetRoom,
+          carriedRelic,
+          cashoutSeconds: carriedRelic ? this.carrierCashoutSeconds(agent) : null
+        };
+      })
+    });
+  }
+
   private threatCue(
     rivalIntercept: ArcadeRivalIntercept | null,
     alibiPulseReady: boolean,
@@ -2833,13 +2863,13 @@ export class ArcadeHeistScene extends Phaser.Scene {
       this.routeMode === "greed" && targetArtifact && escapePayout
         ? {
             mode: "greed",
-            title: "Greed route locked",
+            title: "Greed route armed",
             detail: `Cashout +${escapePayout.cashout + targetArtifact.value} if you survive`,
             action: `${targetArtifact.name} marker live`
           }
         : {
             mode: "escape",
-            title: "Cashout route locked",
+            title: "Cashout route armed",
             detail: `Bank +${escapePayout?.cashout ?? this.lootValue} at Atrium Lift`,
             action: "Atrium Lift marker live"
           }

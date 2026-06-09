@@ -2721,6 +2721,7 @@ p {
 
 .arcade-topbar,
 .arcade-roster,
+.arcade-rival-intel,
 .arcade-feed,
 .arcade-radar,
 .arcade-objective,
@@ -2748,6 +2749,7 @@ p {
 .arcade-alarm,
 .arcade-condition,
 .arcade-agent,
+.arcade-rival-intel,
 .arcade-radar,
 .arcade-feed,
 .arcade-objective {
@@ -3046,6 +3048,7 @@ p {
 }
 
 .arcade-shell.compact-opening .arcade-roster,
+.arcade-shell.compact-opening .arcade-rival-intel,
 .arcade-shell.compact-opening .arcade-feed,
 .arcade-shell.compact-opening .arcade-radar {
   display: none;
@@ -3524,6 +3527,132 @@ p {
   width: 178px;
   display: grid;
   gap: 8px;
+}
+
+.arcade-rival-intel {
+  top: 344px;
+  left: 14px;
+  width: 236px;
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  background: rgba(7, 16, 28, 0.82);
+}
+
+.arcade-rival-intel .console-heading {
+  margin-bottom: 0;
+}
+
+.arcade-rival-intel-card {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 4px 8px;
+  align-items: center;
+  border: 1px solid rgba(216, 252, 255, 0.18);
+  border-radius: 7px;
+  padding: 7px;
+  background: rgba(216, 252, 255, 0.06);
+  box-shadow: inset 0 0 18px rgba(76, 244, 240, 0.06);
+}
+
+.arcade-rival-intel-card.warning {
+  border-color: rgba(255, 213, 106, 0.42);
+  background: rgba(255, 213, 106, 0.08);
+}
+
+.arcade-rival-intel-card.danger {
+  border-color: rgba(255, 79, 123, 0.56);
+  background: rgba(255, 79, 123, 0.12);
+  box-shadow: 0 0 18px rgba(255, 79, 123, 0.14), inset 0 0 18px rgba(255, 213, 106, 0.06);
+}
+
+.arcade-rival-intel-card > span {
+  grid-row: 1 / span 3;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: #ff4f7b;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.arcade-rival-intel-card div {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 3px 6px;
+  align-items: baseline;
+}
+
+.arcade-rival-intel-card small,
+.arcade-rival-intel-card strong,
+.arcade-rival-intel-card em,
+.arcade-rival-intel-card p,
+.arcade-rival-intel-card b {
+  min-width: 0;
+  line-height: 1.08;
+}
+
+.arcade-rival-intel-card small {
+  color: #ffd56a;
+  font-size: 0.58rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.arcade-rival-intel-card strong {
+  overflow: hidden;
+  color: #f8fdff;
+  font-size: 0.78rem;
+  font-weight: 950;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.arcade-rival-intel-card em {
+  grid-column: 1 / -1;
+  overflow-wrap: anywhere;
+  color: #d8fcff;
+  font-size: 0.68rem;
+  font-style: normal;
+  font-weight: 880;
+}
+
+.arcade-rival-intel-card p {
+  grid-column: 2;
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: #a9bfcb;
+  font-size: 0.66rem;
+  font-weight: 760;
+}
+
+.arcade-rival-intel-card b {
+  grid-column: 2;
+  width: fit-content;
+  border-radius: 999px;
+  padding: 4px 7px;
+  background: rgba(216, 252, 255, 0.12);
+  color: #d8fcff;
+  font-size: 0.58rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.arcade-rival-intel-card.warning b {
+  background: rgba(255, 213, 106, 0.18);
+  color: #ffd56a;
+}
+
+.arcade-rival-intel-card.danger b {
+  background: #ff4f7b;
+  color: #fff4f7;
 }
 
 .arcade-radar {
@@ -4934,6 +5063,13 @@ p {
     display: none;
   }
 
+  .arcade-rival-intel {
+    top: 148px;
+    right: 14px;
+    left: auto;
+    width: min(300px, calc(100vw - 180px));
+  }
+
   .arcade-radar {
     top: 148px;
     left: 14px;
@@ -5022,6 +5158,10 @@ p {
   .arcade-roster {
     top: 86px;
     grid-template-columns: repeat(4, 1fr);
+  }
+
+  .arcade-rival-intel {
+    display: none;
   }
 
   .arcade-radar {

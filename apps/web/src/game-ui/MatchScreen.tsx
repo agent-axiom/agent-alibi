@@ -121,6 +121,7 @@ export function MatchScreen({ match, soundEnabled = false, locale = "en", onLoca
           }
         : null;
     const focusedCommandMode = openingCommandMode || Boolean(cashoutChoice);
+    const rivalIntelCards = focusedCommandMode || cashoutPayoff || lockBreakPayoff || alibiPayoff ? [] : (hud?.rivalIntelCards ?? []);
     const afterburnerActive = hud?.lootSpeedSurge?.label === "Afterburner";
     const breachSprintActive = Boolean(visibleBreachSprint);
     const ghostStepActive = Boolean(visibleGhostStepBoost);
@@ -445,6 +446,27 @@ export function MatchScreen({ match, soundEnabled = false, locale = "en", onLoca
             </button>
           ))}
         </aside>
+
+        {rivalIntelCards.length > 0 ? (
+          <aside className="arcade-rival-intel" aria-label={t(locale, "match.rivalIntel")}>
+            <div className="console-heading">
+              <Shield size={16} />
+              <span>{t(locale, "match.rivalIntel")}</span>
+            </div>
+            {rivalIntelCards.map((card) => (
+              <div className={`arcade-rival-intel-card ${card.tone}`} key={card.id}>
+                <span>{shortName(card.agentName)}</span>
+                <div>
+                  <small>{localizeText(locale, card.role)}</small>
+                  <strong>{card.agentName}</strong>
+                  <em>{localizeText(locale, card.status)}</em>
+                </div>
+                <p>{localizeText(locale, card.detail)}</p>
+                <b>{localizeText(locale, card.action)}</b>
+              </div>
+            ))}
+          </aside>
+        ) : null}
 
         <aside className="arcade-feed" aria-label="Mission radio">
           <div className="console-heading">

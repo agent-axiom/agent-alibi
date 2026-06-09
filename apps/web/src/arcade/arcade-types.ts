@@ -3,6 +3,7 @@ import type { Locale } from "../i18n";
 import type { ArcadeMissionResult } from "./arcade-rules";
 import type { DirectorCue } from "./director-cue";
 import type { ActiveActionHint, ArcadeLoopStep, ObjectiveCompass, RivalPressureLevel } from "./guidance";
+import type { ArcadeRivalIntelCard } from "./rival-intel";
 import type { RivalScanStatus } from "./rival-scan";
 
 export const ARCADE_MISSION_DURATION_MS = 150_000;
@@ -181,6 +182,7 @@ export type ArcadeHudState = {
   lastRivalSteal: string | null;
   rivalIntercept: ArcadeRivalIntercept | null;
   rivalObjective: ArcadeRivalObjective | null;
+  rivalIntelCards: ArcadeRivalIntelCard[];
   vaultCondition: ArcadeVaultCondition;
   escapePayout: ArcadeEscapePayout | null;
   extractionCue: ArcadeExtractionCue | null;

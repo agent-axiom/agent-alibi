@@ -265,6 +265,7 @@ function makeInitialArcadeHud(state: GameState): ArcadeHudState {
     lastRivalSteal: null,
     rivalIntercept: null,
     rivalObjective: null,
+    rivalIntelCards: [],
     vaultCondition: {
       tone: "stable",
       label: "Vault Stable",
