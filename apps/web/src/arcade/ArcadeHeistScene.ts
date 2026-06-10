@@ -561,13 +561,16 @@ export class ArcadeHeistScene extends Phaser.Scene {
     const nearestRival = this.nearestRivalScan();
     const rivalPressure = this.rivalPressure(nearestRival);
     const routeGuide = this.routeGuideDebug(target);
+    const camera = this.cameras?.main;
     return {
       player: this.player ? { x: this.player.x, y: this.player.y } : null,
-      camera: {
-        scrollX: this.cameras.main.scrollX,
-        scrollY: this.cameras.main.scrollY,
-        zoom: this.cameras.main.zoom
-      },
+      camera: camera
+        ? {
+            scrollX: camera.scrollX,
+            scrollY: camera.scrollY,
+            zoom: camera.zoom
+          }
+        : null,
       cameraLookahead: this.cameraLookahead,
       lootValue: this.lootValue,
       aiLootValue: this.aiLootValue,
@@ -1157,7 +1160,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     detail.lineBetween(x - width / 2 + 24, y, x + width / 2 - 24, y);
     this.floorDetailCount += 2;
 
-    const shouldLabelRoom = room.id === "inner-vault" || room.id === "atrium" || room.id === "vault-door";
+    const shouldLabelRoom = false;
     if (shouldLabelRoom) {
       this.add
         .text(x, y - height / 2 - 20, this.sceneUpper(room.name), {
@@ -1197,21 +1200,11 @@ export class ArcadeHeistScene extends Phaser.Scene {
   }
 
   private createZoneBadge(x: number, y: number, text: string, color: number) {
-    const labelText = this.sceneText(text);
     this.recordZoneBeacon(text);
-    const width = Math.max(58, labelText.length * 6.2 + 14);
-    const plate = this.add.rectangle(0, 0, width, 18, 0x050811, 0.58).setStrokeStyle(1, color, 0.46);
-    const label = this.add
-      .text(0, 0, labelText, {
-        color: `#${color.toString(16).padStart(6, "0")}`,
-        fontFamily: "Inter, Arial, sans-serif",
-        fontSize: "9px",
-        fontStyle: "900",
-        stroke: "#050811",
-        strokeThickness: 2
-      })
-      .setOrigin(0.5);
-    this.add.container(x, y, [plate, label]).setDepth(9).setAlpha(0.78);
+    const plate = this.add.rectangle(0, 0, 54, 8, 0x050811, 0.5).setStrokeStyle(1, color, 0.38);
+    const left = this.add.circle(-18, 0, 3, color, 0.46);
+    const right = this.add.circle(18, 0, 3, color, 0.46);
+    this.add.container(x, y, [plate, left, right]).setDepth(9).setAlpha(0.68);
   }
 
   private createArtifacts(state: GameState) {
@@ -1260,26 +1253,6 @@ export class ArcadeHeistScene extends Phaser.Scene {
     if (!atrium) return;
     const ring = this.add.circle(0, 0, EXIT_RADIUS, 0x4cf4f0, 0.07).setStrokeStyle(4, 0x7effdf, 0.52);
     this.arenaZoneBeacons.add(this.sceneText("EXTRACT"));
-    const extract = this.add
-      .text(0, -EXIT_RADIUS - 24, this.sceneText("EXTRACT"), {
-        color: "#7effdf",
-        fontFamily: "Inter, Arial, sans-serif",
-        fontSize: "12px",
-        fontStyle: "900",
-        stroke: "#050811",
-        strokeThickness: 5
-      })
-      .setOrigin(0.5);
-    const label = this.add
-      .text(0, EXIT_RADIUS + 24, this.sceneText("ESCAPE LIFT"), {
-        color: "#7effdf",
-        fontFamily: "Inter, Arial, sans-serif",
-        fontSize: "16px",
-        fontStyle: "900",
-        stroke: "#050811",
-        strokeThickness: 5
-      })
-      .setOrigin(0.5);
     const badgePlate = this.add.rectangle(0, 0, 126, 30, 0x07101c, 0.86).setStrokeStyle(2, 0x7effdf, 0.82);
     this.escapePayoutBadgeLabel = this.add
       .text(0, 0, this.sceneUpper("CASHOUT +0"), {
@@ -1292,7 +1265,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       })
       .setOrigin(0.5);
     this.escapePayoutBadge = this.add.container(0, -EXIT_RADIUS - 58, [badgePlate, this.escapePayoutBadgeLabel]).setVisible(false);
-    this.escapeZone = this.add.container(atrium.x, atrium.y + 92, [ring, extract, label, this.escapePayoutBadge]);
+    this.escapeZone = this.add.container(atrium.x, atrium.y + 92, [ring, this.escapePayoutBadge]);
   }
 
   private createActors(state: GameState) {
@@ -3843,7 +3816,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     const arrowDown = this.add.triangle(0, 53, 0, 18, -13, -8, 13, -8, 0x7efcff, 0.72).setRotation(Math.PI);
     const arrowLeft = this.add.triangle(-52, 0, -18, 0, 8, -13, 8, 13, 0x7effdf, 0.78).setRotation(-Math.PI / 2);
     const label = this.add
-      .text(0, 0, "MOVE", {
+      .text(0, 0, "", {
         color: "#f8fdff",
         fontFamily: "Inter, Arial, sans-serif",
         fontSize: "13px",
@@ -4058,9 +4031,11 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.actionRingInner.setRadius(ringState.state === "ready" ? 24 : 18);
     this.actionRingInner.setStrokeStyle(2, ringState.color, ringState.state === "ready" ? 0.78 : 0.38);
     this.actionRingInner.setFillStyle(ringState.color, ringState.state === "ready" ? 0.16 : 0.06);
-    this.actionRingLabel.setText(ringState.label);
+    const visualLabel = ringState.state === "ready" ? ringState.label : "";
+    const visualCue = ringState.state === "ready" ? "E" : "";
+    this.actionRingLabel.setText(visualLabel);
     this.actionRingLabel.setColor(this.hexCss(ringState.color));
-    this.actionRingCue.setText(ringState.cue);
+    this.actionRingCue.setText(visualCue);
     this.actionRingCue.setColor(ringState.state === "ready" ? "#ffffff" : "#d9f7ff");
     this.actionRing.setAlpha(ringState.state === "ready" ? 1 : 0.78);
     this.actionRing.setData("visible", true);
