@@ -2,7 +2,7 @@ import Phaser from "phaser";
 import { ARCADE_MISSION_DURATION_MS, type ArcadeHudState, type ArcadeMissionConfig } from "../arcade/arcade-types";
 import { buildObjectiveCompass } from "../arcade/guidance";
 import type { ArcadeMissionOutcome } from "../arcade/arcade-rules";
-import { buildGetawayMissionResult, selectGetawayObjective } from "./getaway-rules";
+import { buildGetawayMissionResult, selectGetawayObjective, updateGetawayChasePressure, type GetawayChasePressure } from "./getaway-rules";
 
 type Point = { x: number; y: number };
 type Direction = "up" | "down" | "left" | "right";
@@ -33,6 +33,8 @@ export type GetawayDebugState = {
   roadSegments: number;
   hazardCount: number;
   rivalCount: number;
+  chasePressure: GetawayChasePressure;
+  rivalContactMs: number;
 };
 
 const WORLD = { width: 1800, height: 1040 };
@@ -43,6 +45,8 @@ const INTERACT_RADIUS = 82;
 const MAX_SPEED = 310;
 const DASH_SPEED = 560;
 const DASH_COOLDOWN_MS = 1600;
+const RIVAL_CAPTURE_RADIUS = 58;
+const RIVAL_CAPTURE_HOLD_MS = 650;
 
 const ROAD_PATHS: Point[][] = [
   [
@@ -133,6 +137,8 @@ export class MoonGetawayScene extends Phaser.Scene {
   private lastHudEmitMs = -1;
   private dashCooldownUntilMs = 0;
   private alibiPulsesUsed = 0;
+  private rivalContactMs = 0;
+  private chasePressure: GetawayChasePressure = "clear";
   private hasRelic = false;
   private rivalsReleased = false;
   private finished = false;
@@ -189,6 +195,7 @@ export class MoonGetawayScene extends Phaser.Scene {
     if (this.keyJustDown(this.keyShift)) this.tryDash();
     this.updateMovement(delta);
     this.updateRivals(delta);
+    this.updateChasePressure(delta);
     this.playerTarget?.setPosition(this.player.x, this.player.y);
     this.drawWorld();
     this.emitHud();
@@ -237,7 +244,9 @@ export class MoonGetawayScene extends Phaser.Scene {
       },
       roadSegments: ROAD_PATHS.length,
       hazardCount: HAZARDS.length,
-      rivalCount: this.rivals.length
+      rivalCount: this.rivals.length,
+      chasePressure: this.chasePressure,
+      rivalContactMs: Math.round(this.rivalContactMs)
     };
   }
 
@@ -275,6 +284,19 @@ export class MoonGetawayScene extends Phaser.Scene {
     this.emitHud(true);
   }
 
+  forceRivalPressureForDebug(distanceMeters = 2): void {
+    this.forceChaseForDebug();
+    const rival = this.rivals[0];
+    if (!rival) return;
+    const distancePixels = Math.max(8, distanceMeters * 10);
+    rival.x = this.player.x - distancePixels;
+    rival.y = this.player.y;
+    rival.released = true;
+    this.rivalContactMs = 0;
+    this.chasePressure = "warning";
+    this.emitHud(true);
+  }
+
   setVirtualDirection(direction: Direction, active: boolean): void {
     this.virtualDirections[direction] = active;
   }
@@ -309,6 +331,8 @@ export class MoonGetawayScene extends Phaser.Scene {
     this.lastHudEmitMs = -1;
     this.dashCooldownUntilMs = 0;
     this.alibiPulsesUsed = 0;
+    this.rivalContactMs = 0;
+    this.chasePressure = "clear";
     this.hasRelic = false;
     this.rivalsReleased = false;
     this.finished = false;
@@ -371,6 +395,23 @@ export class MoonGetawayScene extends Phaser.Scene {
     }
   }
 
+  private updateChasePressure(delta: number): void {
+    const pressure = updateGetawayChasePressure({
+      hasRelic: this.hasRelic,
+      rivalsReleased: this.rivalsReleased,
+      nearestRivalDistance: this.nearestRivalDistance(),
+      previousContactMs: this.rivalContactMs,
+      deltaMs: delta,
+      captureRadius: RIVAL_CAPTURE_RADIUS,
+      captureHoldMs: RIVAL_CAPTURE_HOLD_MS
+    });
+    this.rivalContactMs = pressure.contactMs;
+    this.chasePressure = pressure.pressure;
+    if (pressure.caught) {
+      this.finishRun("caught");
+    }
+  }
+
   private tryDash(): void {
     const now = this.sceneNow();
     if (now < this.dashCooldownUntilMs) return;
@@ -409,6 +450,8 @@ export class MoonGetawayScene extends Phaser.Scene {
     this.rivals.forEach((rival) => {
       rival.released = true;
     });
+    this.rivalContactMs = 0;
+    this.chasePressure = "clear";
   }
 
   private finishRun(outcome: ArcadeMissionOutcome): void {
@@ -489,7 +532,7 @@ export class MoonGetawayScene extends Phaser.Scene {
         ? {
             agentName: "Rook",
             distanceMeters: Math.round(this.nearestRivalDistance() / 10),
-            beamCount: 2
+            beamCount: this.chasePressure === "critical" ? 4 : 2
           }
         : null,
       lockBreakPayoff: null,
@@ -505,11 +548,11 @@ export class MoonGetawayScene extends Phaser.Scene {
       targetDistanceLabel: `${targetDistance}m`,
       rivalStatus: this.rivalsReleased ? "Rivals chasing" : "Rivals asleep",
       rivalDistanceLabel: this.rivalsReleased ? `${Math.round(this.nearestRivalDistance() / 10)}m` : null,
-      rivalPressureLevel: this.rivalsReleased ? "closing" : "standby",
+      rivalPressureLevel: this.chasePressure === "critical" ? "danger" : this.rivalsReleased ? "closing" : "standby",
       rivalScanStatus: {
-        label: this.rivalsReleased ? "Chase" : "Clear",
-        tone: this.rivalsReleased ? "charging" : "idle",
-        progress: this.rivalsReleased ? 45 : 0
+        label: this.chasePressure === "critical" ? "Capture lock" : this.rivalsReleased ? "Chase" : "Clear",
+        tone: this.chasePressure === "critical" ? "charging" : this.rivalsReleased ? "charging" : "idle",
+        progress: this.chasePressure === "critical" ? 85 : this.chasePressure === "warning" ? 45 : this.rivalsReleased ? 20 : 0
       },
       alibiPulseStatus: "Alibi ready",
       paceStatus: timeLeftMs > 90_000 ? "S-Rank pace" : "Move",
@@ -552,6 +595,7 @@ export class MoonGetawayScene extends Phaser.Scene {
     this.drawHangars(graphics);
     this.drawHazards(graphics);
     this.drawRoute(graphics);
+    this.drawCaptureRisk(graphics);
     this.drawExtraction(graphics);
     this.drawRelic(graphics);
     this.drawRivals(graphics);
@@ -662,6 +706,15 @@ export class MoonGetawayScene extends Phaser.Scene {
         graphics.lineBetween(rival.x, rival.y, this.player.x, this.player.y);
       }
     }
+  }
+
+  private drawCaptureRisk(graphics: Phaser.GameObjects.Graphics): void {
+    if (!this.hasRelic || this.chasePressure === "clear") return;
+    const danger = this.chasePressure === "critical";
+    graphics.fillStyle(danger ? 0xff2f5f : 0xff9f2f, danger ? 0.14 : 0.08);
+    graphics.fillCircle(this.player.x, this.player.y, RIVAL_CAPTURE_RADIUS + (danger ? 24 : 12));
+    graphics.lineStyle(danger ? 5 : 3, danger ? 0xff2f5f : 0xffb34a, danger ? 0.75 : 0.45);
+    graphics.strokeCircle(this.player.x, this.player.y, RIVAL_CAPTURE_RADIUS);
   }
 
   private drawPlayer(graphics: Phaser.GameObjects.Graphics): void {
