@@ -1,36 +1,34 @@
 import { useEffect, useRef, type PointerEvent } from "react";
 import Phaser from "phaser";
 import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, Hand, Route, Zap } from "lucide-react";
-import { ArcadeHeistScene } from "./ArcadeHeistScene";
-import type { ArcadeHudState, ArcadeMissionConfig } from "./arcade-types";
+import type { ArcadeHudState, ArcadeMissionConfig } from "../arcade/arcade-types";
+import { MoonGetawayScene } from "./MoonGetawayScene";
 
-type ArcadeHeistStageProps = ArcadeMissionConfig & {
+type MoonGetawayStageProps = ArcadeMissionConfig & {
   hud?: ArcadeHudState | null;
 };
 
-declare global {
-  interface Window {
-    __AGENT_ALIBI_FINISH_ARCADE__?: () => void;
-    __AGENT_ALIBI_ARCADE_STATE__?: () => unknown;
-    __AGENT_ALIBI_ARCADE_DEBUG__?: {
-      teleportToTarget: () => void;
-      teleportToExit: () => void;
-      forceRivalsActive: () => void;
-      forceRivalPressure: (distanceMeters?: number) => void;
-      forceRivalSteal: () => void;
-      forceRivalCashout: () => void;
-      forceRivalNearCashout: () => void;
-      forceLockdown: () => void;
-      forceSecuritySweep: () => void;
-      forceSecuritySweepWarning: () => void;
-    };
-  }
-}
+type DebugWindow = Window & {
+  __AGENT_ALIBI_FINISH_ARCADE__?: () => void;
+  __AGENT_ALIBI_ARCADE_STATE__?: () => ReturnType<MoonGetawayScene["getDebugState"]>;
+  __AGENT_ALIBI_ARCADE_DEBUG__?: {
+    teleportToTarget: () => void;
+    teleportToExit: () => void;
+    forceRivalsActive: () => void;
+    forceRivalPressure: (distanceMeters?: number) => void;
+    forceRivalSteal: () => void;
+    forceRivalCashout: () => void;
+    forceRivalNearCashout: () => void;
+    forceLockdown: () => void;
+    forceSecuritySweep: () => void;
+    forceSecuritySweepWarning: () => void;
+  };
+};
 
-export function ArcadeHeistStage({ state, runId, locale, onHudUpdate, onFinish, hud }: ArcadeHeistStageProps) {
+export function MoonGetawayStage({ state, runId, locale, onHudUpdate, onFinish, hud }: MoonGetawayStageProps) {
   const hostRef = useRef<HTMLDivElement | null>(null);
   const gameRef = useRef<Phaser.Game | null>(null);
-  const sceneRef = useRef<ArcadeHeistScene | null>(null);
+  const sceneRef = useRef<MoonGetawayScene | null>(null);
   const onHudUpdateRef = useRef(onHudUpdate);
   const onFinishRef = useRef(onFinish);
 
@@ -45,12 +43,13 @@ export function ArcadeHeistStage({ state, runId, locale, onHudUpdate, onFinish, 
   useEffect(() => {
     if (!hostRef.current || gameRef.current) return;
 
-    const scene = new ArcadeHeistScene();
+    const scene = new MoonGetawayScene();
+    const debugWindow = window as DebugWindow;
     sceneRef.current = scene;
     gameRef.current = new Phaser.Game({
       type: Phaser.AUTO,
       parent: hostRef.current,
-      backgroundColor: "#050811",
+      backgroundColor: "#03060d",
       scale: {
         mode: Phaser.Scale.RESIZE,
         autoCenter: Phaser.Scale.CENTER_BOTH,
@@ -63,34 +62,30 @@ export function ArcadeHeistStage({ state, runId, locale, onHudUpdate, onFinish, 
       },
       scene
     });
+
     if (import.meta.env.DEV) {
-      window.__AGENT_ALIBI_FINISH_ARCADE__ = () => scene.finishForDebug();
-      window.__AGENT_ALIBI_ARCADE_STATE__ = () => scene.getDebugState();
-      window.__AGENT_ALIBI_ARCADE_DEBUG__ = {
-        teleportToTarget: () => scene.teleportToTargetForDebug(),
-        teleportToExit: () => scene.teleportToExitForDebug(),
-        forceRivalsActive: () => scene.forceRivalsActiveForDebug(),
-        forceRivalPressure: (distanceMeters?: number) => scene.forceRivalPressureForDebug(distanceMeters),
-        forceRivalSteal: () => scene.forceRivalStealForDebug(),
-        forceRivalCashout: () => scene.forceRivalCashoutForDebug(),
-        forceRivalNearCashout: () => scene.forceRivalNearCashoutForDebug(),
-        forceLockdown: () => scene.forceLockdownForDebug(),
-        forceSecuritySweep: () => scene.forceSecuritySweepForDebug(),
-        forceSecuritySweepWarning: () => scene.forceSecuritySweepWarningForDebug()
+      debugWindow.__AGENT_ALIBI_FINISH_ARCADE__ = () => scene.finishForDebug();
+      debugWindow.__AGENT_ALIBI_ARCADE_STATE__ = () => scene.getDebugState();
+      debugWindow.__AGENT_ALIBI_ARCADE_DEBUG__ = {
+        teleportToTarget: () => scene.teleportToRelicForDebug(),
+        teleportToExit: () => scene.teleportToExtractionForDebug(),
+        forceRivalsActive: () => scene.forceChaseForDebug(),
+        forceRivalPressure: () => scene.forceChaseForDebug(),
+        forceRivalSteal: () => scene.forceChaseForDebug(),
+        forceRivalCashout: () => scene.finishForDebug("caught"),
+        forceRivalNearCashout: () => scene.forceChaseForDebug(),
+        forceLockdown: () => scene.finishForDebug("sealed"),
+        forceSecuritySweep: () => scene.forceChaseForDebug(),
+        forceSecuritySweepWarning: () => scene.forceChaseForDebug()
       };
     }
+
     hostRef.current.focus({ preventScroll: true });
 
     return () => {
-      if (window.__AGENT_ALIBI_FINISH_ARCADE__) {
-        delete window.__AGENT_ALIBI_FINISH_ARCADE__;
-      }
-      if (window.__AGENT_ALIBI_ARCADE_STATE__) {
-        delete window.__AGENT_ALIBI_ARCADE_STATE__;
-      }
-      if (window.__AGENT_ALIBI_ARCADE_DEBUG__) {
-        delete window.__AGENT_ALIBI_ARCADE_DEBUG__;
-      }
+      delete debugWindow.__AGENT_ALIBI_FINISH_ARCADE__;
+      delete debugWindow.__AGENT_ALIBI_ARCADE_STATE__;
+      delete debugWindow.__AGENT_ALIBI_ARCADE_DEBUG__;
       gameRef.current?.destroy(true);
       gameRef.current = null;
       sceneRef.current = null;
@@ -102,7 +97,7 @@ export function ArcadeHeistStage({ state, runId, locale, onHudUpdate, onFinish, 
       state,
       runId,
       locale,
-      onHudUpdate: (hud) => onHudUpdateRef.current(hud),
+      onHudUpdate: (nextHud) => onHudUpdateRef.current(nextHud),
       onFinish: (result) => onFinishRef.current(result)
     });
     hostRef.current?.focus({ preventScroll: true });
@@ -142,18 +137,11 @@ export function ArcadeHeistStage({ state, runId, locale, onHudUpdate, onFinish, 
   const dashLabel = hud?.dashReady === false ? "Dash cooling" : "Dash ready";
   const canInteract = Boolean(hud?.activeAction.key.toLowerCase().startsWith("e"));
   const interactLabel = canInteract ? `Interact: ${hud?.activeAction.label ?? "action"}` : "Interact";
-  const routeArmed = Boolean(hud?.greedStatus?.toLowerCase().startsWith("greed route"));
-  const routeAvailable = Boolean(hud?.greedStatus && !routeArmed);
-  const cashoutRouteLabel = hud?.escapePayout ? `cashout +${hud.escapePayout.cashout}` : "cashout";
-  const routeLabel = routeArmed
-    ? `Switch route: greed route armed / ${cashoutRouteLabel}`
-    : routeAvailable
-      ? `Switch route: ${cashoutRouteLabel} or greed route available`
-      : "Switch route";
+  const routeLabel = "Alibi pulse";
 
   return (
     <>
-      <div className="arcade-stage" ref={hostRef} aria-label="Playable Moon Vault arcade scene" tabIndex={0} />
+      <div className="arcade-stage moon-getaway-stage" ref={hostRef} aria-label="Playable Moon Getaway arcade scene" tabIndex={0} />
       <div className="arcade-touch-controls" aria-label="Arcade touch controls">
         <div className="arcade-touch-dpad" aria-label="Movement pad">
           <button
@@ -212,13 +200,7 @@ export function ArcadeHeistStage({ state, runId, locale, onHudUpdate, onFinish, 
           <button aria-label={interactLabel} className={canInteract ? "ready" : ""} onClick={tapInteract} title={interactLabel} type="button">
             <Hand size={20} />
           </button>
-          <button
-            aria-label={routeLabel}
-            className={routeArmed ? "route-armed" : routeAvailable ? "route-available" : ""}
-            onClick={tapRoute}
-            title={routeLabel}
-            type="button"
-          >
+          <button aria-label={routeLabel} className="route-available" onClick={tapRoute} title={routeLabel} type="button">
             <Route size={20} />
           </button>
         </div>

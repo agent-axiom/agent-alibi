@@ -5482,3 +5482,185 @@ p {
     font-size: 0.72rem;
   }
 }
+
+.arcade-shell.moon-getaway {
+  background:
+    radial-gradient(circle at 52% 46%, rgba(75, 255, 221, 0.08), transparent 32%),
+    linear-gradient(135deg, #03060d 0%, #07101b 48%, #03060d 100%);
+}
+
+.arcade-shell.moon-getaway .arcade-roster,
+.arcade-shell.moon-getaway .arcade-rival-intel,
+.arcade-shell.moon-getaway .arcade-feed,
+.arcade-shell.moon-getaway .arcade-radar,
+.arcade-shell.moon-getaway .arcade-objective-banner,
+.arcade-shell.moon-getaway .arcade-spotlight,
+.arcade-shell.moon-getaway .arcade-score-popup,
+.arcade-shell.moon-getaway .arcade-rival-bark,
+.arcade-shell.moon-getaway .arcade-cashout-surge,
+.arcade-shell.moon-getaway .arcade-hunter-chase,
+.arcade-shell.moon-getaway .arcade-rival-cashout-emergency,
+.arcade-shell.moon-getaway .arcade-lock-break-payoff,
+.arcade-shell.moon-getaway .arcade-alibi-payoff,
+.arcade-shell.moon-getaway .arcade-breakout-cashout,
+.arcade-shell.moon-getaway .arcade-scan-lock-pulse,
+.arcade-shell.moon-getaway .arcade-countdown-pulse,
+.arcade-shell.moon-getaway .arcade-route-pulse,
+.arcade-shell.moon-getaway .arcade-mission-beat,
+.arcade-shell.moon-getaway .arcade-director-cue,
+.arcade-shell.moon-getaway .arcade-threat-cue,
+.arcade-shell.moon-getaway .arcade-rival-objective,
+.arcade-shell.moon-getaway .arcade-steps,
+.arcade-shell.moon-getaway .arcade-mission-meta,
+.arcade-shell.moon-getaway .arcade-objective-compass,
+.arcade-shell.moon-getaway .arcade-cashout-choice,
+.arcade-shell.moon-getaway .arcade-objective > small,
+.arcade-shell.moon-getaway .arcade-objective > span,
+.arcade-shell.moon-getaway .arcade-loot-stat,
+.arcade-shell.moon-getaway .arcade-alarm,
+.arcade-shell.moon-getaway .arcade-condition,
+.arcade-shell.moon-getaway .mission-title > span,
+.arcade-shell.moon-getaway .mission-title > strong,
+.arcade-shell.moon-getaway .arcade-stat > span {
+  display: none !important;
+}
+
+.arcade-shell.moon-getaway .arcade-vignette {
+  background:
+    radial-gradient(circle at center, transparent 48%, rgba(0, 0, 0, 0.48) 100%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.36));
+  pointer-events: none;
+}
+
+.arcade-shell.moon-getaway .arcade-stage {
+  inset: 0;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.arcade-shell.moon-getaway .arcade-stage canvas {
+  filter: saturate(1.12) contrast(1.06);
+}
+
+.arcade-shell.moon-getaway .arcade-topbar {
+  align-items: center;
+  background: rgba(3, 8, 16, 0.58);
+  border: 1px solid rgba(155, 246, 255, 0.24);
+  border-radius: 999px;
+  box-shadow: 0 16px 42px rgba(0, 0, 0, 0.24);
+  display: flex;
+  gap: 10px;
+  left: auto;
+  padding: 7px 9px 7px 14px;
+  right: max(14px, env(safe-area-inset-right));
+  top: max(14px, env(safe-area-inset-top));
+  width: auto;
+}
+
+.arcade-shell.moon-getaway .mission-title {
+  display: contents;
+}
+
+.arcade-shell.moon-getaway .arcade-sound-toggle {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  height: 34px;
+  margin: 0;
+  width: 34px;
+}
+
+.arcade-shell.moon-getaway .arcade-stat {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  min-width: 45px;
+  padding: 0;
+}
+
+.arcade-shell.moon-getaway .arcade-stat strong {
+  color: #f6fcff;
+  font-size: 0.92rem;
+  letter-spacing: 0;
+}
+
+.arcade-shell.moon-getaway .arcade-objective {
+  align-items: center;
+  background: rgba(3, 8, 16, 0.62);
+  border: 1px solid rgba(255, 214, 86, 0.38);
+  border-radius: 999px;
+  bottom: max(30px, env(safe-area-inset-bottom));
+  box-shadow: 0 18px 52px rgba(0, 0, 0, 0.34), 0 0 42px rgba(255, 214, 86, 0.12);
+  display: flex;
+  gap: 9px;
+  left: 50%;
+  max-height: none;
+  max-width: min(260px, calc(100vw - 36px));
+  min-height: 44px;
+  overflow: visible;
+  padding: 8px 12px 8px 18px;
+  right: auto;
+  text-align: center;
+  top: auto;
+  transform: translateX(-50%);
+  width: auto;
+}
+
+.arcade-shell.moon-getaway .arcade-objective > strong {
+  color: #ffe48c;
+  font-size: 1rem;
+  letter-spacing: 0;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.arcade-shell.moon-getaway .arcade-active-action {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  box-shadow: none;
+  display: inline-flex;
+  gap: 6px;
+  margin: 0;
+  padding: 4px 8px;
+}
+
+.arcade-shell.moon-getaway .arcade-active-action kbd {
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  color: #ffffff;
+  font-size: 0.72rem;
+  min-width: 22px;
+  padding: 2px 6px;
+}
+
+.arcade-shell.moon-getaway .arcade-active-action span {
+  color: #f6fcff;
+  font-size: 0.74rem;
+  white-space: nowrap;
+}
+
+.arcade-shell.moon-getaway .arcade-touch-controls {
+  bottom: max(18px, env(safe-area-inset-bottom));
+  left: max(18px, env(safe-area-inset-left));
+  right: max(18px, env(safe-area-inset-right));
+}
+
+@media (max-width: 720px) {
+  .arcade-shell.moon-getaway .arcade-topbar {
+    padding: 6px 8px 6px 12px;
+    right: 12px;
+    top: 12px;
+  }
+
+  .arcade-shell.moon-getaway .arcade-objective {
+    bottom: 196px;
+    max-width: 226px;
+    min-height: 42px;
+    padding: 8px 12px;
+  }
+
+  .arcade-shell.moon-getaway .arcade-objective > strong {
+    font-size: 0.92rem;
+  }
+}

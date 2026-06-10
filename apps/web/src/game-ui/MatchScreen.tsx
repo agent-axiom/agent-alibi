@@ -27,8 +27,8 @@ const KIND_ICONS: Record<ActionKind, typeof Footprints> = {
   escape: Zap
 };
 
-const ArcadeHeistStage = lazy(() =>
-  import("../arcade/ArcadeHeistStage").then((module) => ({ default: module.ArcadeHeistStage }))
+const MoonGetawayStage = lazy(() =>
+  import("../getaway/MoonGetawayStage").then((module) => ({ default: module.MoonGetawayStage }))
 );
 const HeistStage = lazy(() => import("../heist/HeistStage").then((module) => ({ default: module.HeistStage })));
 
@@ -209,6 +209,7 @@ export function MatchScreen({ match, soundEnabled = false, locale = "en", onLoca
           });
     const arcadeShellClassName = [
       "arcade-shell",
+      "moon-getaway",
       "neon-heist-chase",
       hud?.phase ?? "stealth",
       hudDensity === "opening" ? "compact-opening" : "",
@@ -247,7 +248,7 @@ export function MatchScreen({ match, soundEnabled = false, locale = "en", onLoca
             </div>
           }
         >
-          <ArcadeHeistStage
+          <MoonGetawayStage
             hud={hud}
             state={state}
             runId={match.arcade.runId}
