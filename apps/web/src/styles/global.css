@@ -3064,23 +3064,78 @@ p {
   display: none;
 }
 
+.arcade-shell.compact-opening .arcade-topbar {
+  left: auto;
+  right: 14px;
+  width: auto;
+  min-height: 48px;
+  grid-template-columns: 48px 78px;
+}
+
+.arcade-shell.compact-opening .mission-title,
+.arcade-shell.compact-opening .arcade-stat {
+  min-height: 48px;
+  padding: 6px;
+}
+
+.arcade-shell.compact-opening .mission-title {
+  min-width: 48px;
+  padding-right: 6px;
+}
+
+.arcade-shell.compact-opening .mission-title > span,
+.arcade-shell.compact-opening .mission-title > strong,
+.arcade-shell.compact-opening .arcade-stat span {
+  display: none;
+}
+
+.arcade-shell.compact-opening .arcade-sound-toggle {
+  position: static;
+  width: 34px;
+  height: 34px;
+  transform: none;
+}
+
+.arcade-shell.compact-opening .arcade-stat strong {
+  font-size: 1rem;
+}
+
 .arcade-shell.compact-opening .arcade-objective {
-  width: min(560px, calc(100vw - 330px));
+  width: auto;
+  min-width: 124px;
+  max-width: min(240px, calc(100vw - 130px));
   grid-template-columns: minmax(0, 1fr) auto;
-  gap: 4px 8px;
-  max-height: 112px;
-  padding: 7px 9px;
+  gap: 4px 6px;
+  max-height: 58px;
+  padding: 8px 10px;
   border-color: rgba(255, 213, 106, 0.34);
   background: rgba(7, 16, 28, 0.78);
   box-shadow: 0 20px 54px rgba(0, 0, 0, 0.34), 0 0 26px rgba(255, 213, 106, 0.12);
 }
 
 .arcade-shell.compact-opening .arcade-objective > span {
-  font-size: 0.72rem;
+  display: none;
 }
 
 .arcade-shell.compact-opening .arcade-objective > strong {
-  font-size: clamp(0.98rem, 1.35vw, 1.16rem);
+  font-size: clamp(0.95rem, 1.4vw, 1.16rem);
+  white-space: nowrap;
+}
+
+.arcade-shell.compact-opening .arcade-active-action {
+  min-height: 30px;
+  gap: 5px;
+  padding: 4px 6px;
+}
+
+.arcade-shell.compact-opening .arcade-active-action kbd {
+  min-width: 28px;
+  padding: 4px 6px;
+}
+
+.arcade-shell.compact-opening .arcade-active-action span {
+  font-size: 0.68rem;
+  white-space: nowrap;
 }
 
 .arcade-shell.compact-opening .arcade-mission-meta {

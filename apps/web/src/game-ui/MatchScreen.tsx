@@ -92,7 +92,7 @@ export function MatchScreen({ match, soundEnabled = false, locale = "en", onLoca
     const alibiPayoff = cashoutPayoff || lockBreakPayoff ? null : (hud?.alibiPayoff ?? null);
     const breachSprint = hud?.lootSpeedSurge?.label === "Breach Sprint" && (hud?.artifactsStolen ?? 0) === 0 ? hud.lootSpeedSurge : null;
     const ghostStepBoost = hud?.lootSpeedSurge?.label === "Ghost Step" ? hud.lootSpeedSurge : null;
-    const visibleBreachSprint = cashoutPayoff || lockBreakPayoff || alibiPayoff ? null : breachSprint;
+    const visibleBreachSprint = openingCommandMode || cashoutPayoff || lockBreakPayoff || alibiPayoff ? null : breachSprint;
     const visibleGhostStepBoost = cashoutPayoff || lockBreakPayoff || alibiPayoff ? null : ghostStepBoost;
     const hunterChase = cashoutPayoff || lockBreakPayoff || alibiPayoff ? null : (hud?.hunterChaseCue ?? null);
     const rivalCashoutEmergency = cashoutPayoff || lockBreakPayoff || alibiPayoff || hunterChase ? null : hud?.rivalIntercept?.urgency === "critical" ? hud.rivalIntercept : null;
@@ -144,6 +144,14 @@ export function MatchScreen({ match, soundEnabled = false, locale = "en", onLoca
       locale,
       rivalCashoutEmergency ? `Intercept ${rivalCashoutEmergency.agentName} before lift` : (hud?.objective ?? t(locale, "match.defaultObjective"))
     );
+    const openingInteractReady = openingCommandMode && /^(e|space)/i.test(displayedActiveAction?.key ?? "");
+    const currentObjectivePrompt = openingCommandMode ? "" : localizeText(locale, displayedPrompt);
+    const currentObjectiveTitle = openingCommandMode ? t(locale, "match.stealShort") : displayedObjective;
+    const currentActiveAction = openingCommandMode
+      ? openingInteractReady
+        ? { key: "E", label: t(locale, "match.stealShort"), tone: displayedActiveAction?.tone ?? "neutral" }
+        : null
+      : displayedActiveAction;
     const displayedObjectiveCompass = openingCommandMode
       ? null
       : rivalCashoutEmergency
@@ -198,7 +206,6 @@ export function MatchScreen({ match, soundEnabled = false, locale = "en", onLoca
             cleanBonusWindow: hud?.cleanBonusWindow ?? null,
             lootChainWindow: hud?.lootChainWindow ?? null
           });
-    const openingTargetRoute = localizeText(locale, hud?.targetDistanceLabel?.replace(new RegExp("^Target\\s+", "i"), "") ?? "gold marker");
     return (
       <main
         className={`arcade-shell ${hud?.phase ?? "stealth"} ${hudDensity === "opening" ? "compact-opening" : ""} ${hudDensity === "chase" ? "chase-compact" : ""} ${firstStealCashoutMoment ? "first-steal-cashout-moment" : ""} ${cashoutPayoff ? "cashout-payoff-active" : ""} ${hunterChase ? "hunter-chase-active" : ""} ${alibiPayoff ? "alibi-payoff-active" : ""} ${lockBreakPayoff ? "lock-break-payoff-active" : ""} ${breachAlert ? "breach-alert" : ""} ${visibleRoutePulse ? "route-pulse-active" : ""} ${visibleRoutePulse?.mode === "alibi" ? "alibi-pulse-active" : ""} ${visibleRoutePulse?.mode === "comeback" ? "comeback-pulse-active" : ""} ${breakoutCashoutWindow ? "breakout-cashout-active" : ""} ${rivalCashoutEmergency ? "rival-cashout-emergency-active" : ""} ${scanLockActive ? "scan-lock-active" : ""} ${threatCueActive ? "threat-cue-active" : ""} ${denseThreatActive ? "dense-threat-active" : ""} ${countdownPulseActive ? "countdown-pulse-active" : ""} ${afterburnerActive ? "afterburner-active" : ""} ${breachSprintActive ? "breach-sprint-active" : ""} ${ghostStepActive ? "ghost-step-active" : ""} ${rivalPressureActive ? "rival-pressure-active" : ""}`}
@@ -333,25 +340,6 @@ export function MatchScreen({ match, soundEnabled = false, locale = "en", onLoca
           </div>
         ) : null}
 
-        {openingCommandMode ? (
-          <aside className="arcade-opening-contract" aria-label="Opening contract">
-            <span>{t(locale, "match.openingContract")}</span>
-            <strong>{t(locale, "match.stealMoonPearl")}</strong>
-            <div>
-              <small>1</small>
-              <b>{t(locale, "match.moonPearlRoute", { route: openingTargetRoute })}</b>
-            </div>
-            <div>
-              <small>2</small>
-              <b>{t(locale, "match.cashoutAtrium")}</b>
-            </div>
-            <div>
-              <small>3</small>
-              <b>{t(locale, "match.pressAtRelic")}</b>
-            </div>
-          </aside>
-        ) : null}
-
         {visibleObjectiveBanner ? (
           <div className={`arcade-objective-banner ${visibleObjectiveBanner.tone}`} aria-label="Objective banner" aria-live="polite">
             <span>{visibleObjectiveBanner.tone === "greed" ? t(locale, "match.optionalRisk") : visibleObjectiveBanner.tone === "escape" ? t(locale, "match.cashoutWindow") : t(locale, "match.primaryTarget")}</span>
@@ -481,12 +469,14 @@ export function MatchScreen({ match, soundEnabled = false, locale = "en", onLoca
         </aside>
 
         <section className="arcade-objective" aria-label="Current objective">
-          <span>{localizeText(locale, displayedPrompt)}</span>
-          <strong>{displayedObjective}</strong>
-          <div className={`arcade-active-action ${displayedActiveAction?.tone ?? "neutral"}`} aria-label="Active action">
-            <kbd>{localizeText(locale, displayedActiveAction?.key ?? t(locale, "match.move"))}</kbd>
-            <span>{localizeText(locale, displayedActiveAction?.label ?? "Follow marker")}</span>
-          </div>
+          <span>{currentObjectivePrompt}</span>
+          <strong>{currentObjectiveTitle}</strong>
+          {currentActiveAction ? (
+            <div className={`arcade-active-action ${currentActiveAction.tone ?? "neutral"}`} aria-label="Active action">
+              <kbd>{localizeText(locale, currentActiveAction.key)}</kbd>
+              <span>{localizeText(locale, currentActiveAction.label)}</span>
+            </div>
+          ) : null}
           {displayedObjectiveCompass ? (
             <div className={`arcade-objective-compass ${displayedObjectiveCompass.tone}`} aria-label="Objective compass">
               <span>{localizeText(locale, displayedObjectiveCompass.verb)}</span>

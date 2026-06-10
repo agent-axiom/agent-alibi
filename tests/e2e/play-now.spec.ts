@@ -15,6 +15,30 @@ async function startSoloArcade(page: Page) {
   await expect(page.getByLabel(/playable moon vault arcade scene/i)).toBeVisible();
 }
 
+async function visibleText(page: Page, selector: string) {
+  return page.evaluate((rootSelector) => {
+    const root = document.querySelector(rootSelector);
+    if (!root) return "";
+    const pieces: string[] = [];
+    const isVisible = (element: Element) => {
+      const style = getComputedStyle(element);
+      const rect = element.getBoundingClientRect();
+      return style.display !== "none" && style.visibility !== "hidden" && Number(style.opacity) > 0.05 && rect.width > 0 && rect.height > 0;
+    };
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    let node = walker.nextNode();
+    while (node) {
+      const text = node.textContent?.replace(/\s+/g, " ").trim();
+      const parent = node.parentElement;
+      if (text && parent && isVisible(parent)) {
+        pieces.push(text);
+      }
+      node = walker.nextNode();
+    }
+    return pieces.join(" ").replace(/\s+/g, " ").trim();
+  }, selector);
+}
+
 async function expectFirstCashoutChoice(
   page: Page,
   options: {
@@ -111,22 +135,25 @@ test("language picker supports English Russian and Chinese and persists", async 
   await expect(page.getByRole("button", { name: /立即对战 AI/i })).toBeVisible();
   await page.getByRole("button", { name: /立即对战 AI/i }).click();
 
-  const openingContract = page.getByLabel(/opening contract/i);
-  await expect(openingContract.getByText(/月库合约/i)).toBeVisible();
-  await expect(openingContract.getByText(/偷取月亮珍珠 \+3/i)).toBeVisible();
+  await expect(page.getByLabel(/opening contract/i)).toBeHidden();
   const objectiveBanner = page.getByLabel(/objective banner/i);
   await expect(objectiveBanner).toBeHidden();
-  await expect(page.locator(".arcade-objective > strong", { hasText: /偷取月亮珍珠 \+3/i })).toBeVisible();
-  await expect(page.getByLabel(/breach sprint/i).getByText(/突破冲刺/i)).toBeVisible();
+  await expect(page.locator(".arcade-objective > strong", { hasText: /偷 \+3/i })).toBeVisible();
+  await expect(page.getByLabel(/breach sprint/i)).toBeHidden();
 
-  const localizedArcade = await page.waitForFunction(() => window.__AGENT_ALIBI_ARCADE_STATE__?.()).then((handle) => handle.jsonValue());
+  const localizedArcade = await page
+    .waitForFunction(() => {
+      const state = window.__AGENT_ALIBI_ARCADE_STATE__?.();
+      return state?.targetMarker?.label ? state : null;
+    })
+    .then((handle) => handle.jsonValue());
   expect(localizedArcade?.targetMarker?.label).toBe("月亮珍珠 +3");
   expect(localizedArcade?.routeGuide?.laneLabel).toBe("偷取路线");
   expect(localizedArcade?.routeSignal?.laneLabel).toBe("偷取路线");
   expect(localizedArcade?.arenaLabels?.zoneBeacons).toEqual(expect.arrayContaining(["高价值", "撤离", "对手入口"]));
   expect(localizedArcade?.arenaLabels?.zoneBeacons).not.toEqual(expect.arrayContaining(["HIGH VALUE", "EXTRACT", "RIVAL ENTRY"]));
   expect(localizedArcade?.worldPresentation?.style).toBe("arcade-heist");
-  expect(localizedArcade?.worldPresentation?.visibleRoomLabels).toBeLessThanOrEqual(3);
+  expect(localizedArcade?.worldPresentation?.visibleRoomLabels).toBe(0);
   expect(localizedArcade?.rivals?.[0]?.visualLabel).toBe("待命");
 });
 
@@ -150,11 +177,13 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   const miniRadar = page.getByLabel(/mini radar/i);
   await expect(page.locator(".arcade-shell")).toHaveClass(/compact-opening/);
   const openingContract = page.getByLabel(/opening contract/i);
-  await expect(openingContract.getByText(/moon vault contract/i)).toBeVisible();
-  await expect(openingContract.getByText(/steal moon pearl \+3/i)).toBeVisible();
-  await expect(openingContract.getByText(/moon pearl - (?:n|ne|e|se|s|sw|w|nw|here) \d+m/i)).toBeVisible();
-  await expect(openingContract.getByText(/cashout at atrium lift/i)).toBeVisible();
-  await expect(openingContract.getByText(/press e \/ space at relic/i)).toBeVisible();
+  await expect(openingContract).toBeHidden();
+  await expect(page.getByLabel(/breach sprint/i)).toBeHidden();
+  const openingHudText = await visibleText(page, ".arcade-shell");
+  expect(openingHudText.length).toBeLessThanOrEqual(90);
+  expect(openingHudText).toMatch(/steal \+3/i);
+  expect(openingHudText).toMatch(/2:30/);
+  expect(openingHudText).not.toMatch(/moon vault contract|cashout at atrium|press e|breach sprint|follow gold runway|follow marker|moon vault run/i);
   const openingLayout = await page.evaluate(() => {
     const contract = document.querySelector(`[aria-label="Opening contract"]`)?.getBoundingClientRect();
     const objective = document.querySelector(`[aria-label="Current objective"]`)?.getBoundingClientRect();
@@ -165,19 +194,18 @@ test("solo match starts and reaches final case file", async ({ page }) => {
       objectiveCut: objectiveElement ? objectiveElement.scrollHeight > objectiveElement.clientHeight + 2 : true
     };
   });
-  expect(openingLayout.contract?.width).toBeLessThanOrEqual(224);
-  expect(openingLayout.contract?.height).toBeLessThanOrEqual(132);
-  expect(openingLayout.objective?.height).toBeLessThanOrEqual(112);
+  expect(openingLayout.contract).toBeNull();
+  expect(openingLayout.objective?.height).toBeLessThanOrEqual(58);
   expect(openingLayout.objectiveCut).toBe(false);
-  await expect(page.getByText(/moon vault run/i)).toBeVisible();
-  await expect(page.getByText(/timer/i)).toBeVisible();
-  await expect(page.getByText(/steal the moon pearl/i)).toBeVisible();
+  await expect(page.getByText(/moon vault run/i)).toBeHidden();
+  await expect(page.getByText(/timer/i)).toBeHidden();
+  await expect(page.getByText(/steal the moon pearl/i)).toBeHidden();
   await expect(objectiveBanner).toBeHidden();
   await expect(page.getByText(/loot/i)).toBeHidden();
   await expect(page.getByLabel(/vault condition/i)).toBeHidden();
   await expect(missionBeat).toBeHidden();
   await expect(page.getByLabel(/heist director cue/i)).toBeHidden();
-  await expect(currentObjective.getByText(/steal the moon pearl \+3/i)).toBeVisible();
+  await expect(currentObjective.getByText(/steal \+3/i)).toBeVisible();
   await expect(page.getByLabel(/mission loop/i)).toBeHidden();
   await expect(page.getByText(/target (?:n|ne|e|se|s|sw|w|nw|here) \d+m/i)).toBeHidden();
   await expect(page.getByText(/rivals wake after first score or \d+s/i)).toBeHidden();
@@ -189,8 +217,8 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(page.getByLabel(/clean bonus window/i)).toBeHidden();
   await expect(page.getByText(/dash ready/i)).toBeHidden();
   await expect(page.getByLabel(/contract chain/i)).toBeHidden();
-  await expect(page.getByLabel(/active action/i).getByText(/move/i)).toBeVisible();
-  await expect(page.getByLabel(/active action/i).getByText(/follow marker/i)).toBeVisible();
+  await expect(page.getByLabel(/active action/i).getByText(/move/i)).toBeHidden();
+  await expect(page.getByLabel(/active action/i).getByText(/follow marker/i)).toBeHidden();
   const objectiveCompass = page.getByLabel(/objective compass/i);
   await expect(objectiveCompass).toBeHidden();
   const heistRace = page.getByLabel(/heist race/i);
@@ -227,7 +255,7 @@ test("solo match starts and reaches final case file", async ({ page }) => {
       routeSignalMode: "minimal"
     })
   );
-  expect(initialTarget?.worldPresentation?.visibleRoomLabels).toBeLessThanOrEqual(3);
+  expect(initialTarget?.worldPresentation?.visibleRoomLabels).toBe(0);
   expect(initialTarget?.worldPresentation?.ambientLightCount).toBeGreaterThanOrEqual(10);
   expect(initialTarget?.worldPresentation?.floorDetailCount).toBeGreaterThanOrEqual(24);
   expect(initialTarget?.arenaLabels?.zoneBeacons).toEqual(expect.arrayContaining(["HIGH VALUE", "EXTRACT", "RIVAL ENTRY"]));
@@ -243,9 +271,9 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   expect(afterMove?.x).toBeGreaterThan((beforeMove?.x ?? 0) + 15);
 
   await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget());
-  await expect(page.getByText(/press e \/ space to steal/i)).toBeVisible();
-  await expect(page.getByLabel(/active action/i).getByText(/e \/ space/i)).toBeVisible();
-  await expect(page.getByLabel(/active action/i).getByText(/steal moon pearl \+3/i)).toBeVisible();
+  await expect(page.getByText(/press e \/ space to steal/i)).toBeHidden();
+  await expect(page.getByLabel(/active action/i).getByText(/^e$/i)).toBeVisible();
+  await expect(page.getByLabel(/active action/i).getByText(/steal \+3/i)).toBeVisible();
   const stealPrompt = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().interactionPrompt);
   expect(stealPrompt).toEqual(
     expect.objectContaining({
@@ -438,7 +466,8 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(shareStamp.getByText(/blue crew wins/i)).toBeVisible();
   await expect(shareStamp.getByText(/[as]-rank/i)).toBeVisible();
   await expect(shareStamp.getByText(/loot chain x2/i)).toBeVisible();
-  await expect(shareStamp.getByText(/stole moon pearl \+ argent crown/i)).toBeVisible();
+  await expect(shareStamp).toContainText(/moon pearl/i);
+  await expect(shareStamp).toContainText(/argent crown/i);
   const finalScores = page.getByLabel(/final scores/i);
   await expect(finalScores).toBeVisible();
   await expect(finalScores.getByText(/score margin/i)).toBeVisible();
@@ -489,7 +518,8 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await expect(runItBack).toBeVisible();
   await expect(runItBack).toContainText(/afterburner encore|chase s-rank/i);
   await runItBack.click();
-  await expect(page.getByLabel(/opening contract/i).getByText(/moon vault contract/i)).toBeVisible();
+  await expect(page.getByLabel(/opening contract/i)).toBeHidden();
+  await expect(page.getByLabel(/current objective/i).getByText(/steal \+3/i)).toBeVisible();
   await expect(page.getByLabel(/final scores/i)).toBeHidden();
 });
 
@@ -655,11 +685,9 @@ test("opening run starts with a Breach Sprint to the first relic", async ({ page
   expect(opening?.vaultRush?.laneWidth).toBeGreaterThan(opening?.routeGuide?.laneWidth ?? 0);
   expect(opening?.vaultRush?.pulseCount).toBeGreaterThan(opening?.routeGuide?.pulseCount ?? 0);
   expect(opening?.motionTrail?.active).toBe(false);
-  await expect(page.locator(".arcade-shell")).toHaveClass(/breach-sprint-active/);
+  await expect(page.locator(".arcade-shell")).not.toHaveClass(/breach-sprint-active/);
   const sprint = page.getByLabel(/breach sprint/i);
-  await expect(sprint.getByText(/breach sprint/i)).toBeVisible();
-  await expect(sprint.getByText(/moon pearl/i)).toBeVisible();
-  await expect(sprint.getByText(/follow gold runway/i)).toBeVisible();
+  await expect(sprint).toBeHidden();
 
   const beforeSprintMove = opening?.player;
   const beforeSprintX = beforeSprintMove?.x ?? 0;
@@ -683,7 +711,7 @@ test("Breach Sprint yields to the clean bonus window", async ({ page }) => {
   await startSoloArcade(page);
   await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_STATE__ === "function");
 
-  await expect(page.getByLabel(/breach sprint/i)).toBeVisible();
+  await expect(page.getByLabel(/breach sprint/i)).toBeHidden();
   await page.waitForFunction(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().lootSpeedSurge === null, { timeout: 16_000 });
 
   await expect(page.getByLabel(/breach sprint/i)).toBeHidden();
@@ -793,23 +821,23 @@ test("opening contract replaces the start objective banner before it blocks the 
       bannerOpacity: banner ? Number(getComputedStyle(banner).opacity) : 0
     };
   });
-  expect(bannerState).toEqual({ bannerPresent: false, contractPresent: true, bannerOpacity: 0 });
+  expect(bannerState).toEqual({ bannerPresent: false, contractPresent: false, bannerOpacity: 0 });
 });
 
-test("opening seconds focus the player on the contract before expanding the full HUD", async ({ page }) => {
+test("opening seconds keep HUD minimal before expanding after the first steal", async ({ page }) => {
   await startSoloArcade(page);
 
   await expect(page.locator(".arcade-shell")).toHaveClass(/compact-opening/);
   const openingContract = page.getByLabel(/opening contract/i);
-  await expect(openingContract.getByText(/moon vault contract/i)).toBeVisible();
-  await expect(openingContract.getByText(/steal moon pearl \+3/i)).toBeVisible();
-  await expect(openingContract.getByText(/moon pearl - (?:n|ne|e|se|s|sw|w|nw|here) \d+m/i)).toBeVisible();
-  await expect(openingContract.getByText(/cashout at atrium lift/i)).toBeVisible();
-  await expect(openingContract.getByText(/press e \/ space at relic/i)).toBeVisible();
+  await expect(openingContract).toBeHidden();
+  const openingHudText = await visibleText(page, ".arcade-shell");
+  expect(openingHudText.length).toBeLessThanOrEqual(90);
+  expect(openingHudText).toMatch(/steal \+3/i);
+  expect(openingHudText).not.toMatch(/moon vault contract|cashout at atrium|press e|breach sprint|follow marker/i);
   await expect(page.getByLabel(/live agents/i)).toBeHidden();
   await expect(page.getByLabel(/mission radio/i)).toBeHidden();
   await expect(page.getByLabel(/mini radar/i)).toBeHidden();
-  await expect(page.getByLabel(/current objective/i).getByText(/steal the moon pearl \+3/i)).toBeVisible();
+  await expect(page.getByLabel(/current objective/i).getByText(/steal \+3/i)).toBeVisible();
   await expect(page.getByLabel(/objective banner/i)).toBeHidden();
   await expect(page.getByLabel(/objective compass/i)).toBeHidden();
   await expect(page.getByLabel(/mission beat/i)).toBeHidden();
@@ -1534,7 +1562,9 @@ test("on-screen arcade controls move, dash, interact, and switch route", async (
   expect(afterDash?.lastCameraKick?.kind).toBe("dash");
 
   await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget());
-  await expect(page.getByText(/press e \/ space to steal/i)).toBeVisible();
+  await expect(page.getByText(/press e \/ space to steal/i)).toBeHidden();
+  await expect(page.getByLabel(/active action/i).getByText(/^e$/i)).toBeVisible();
+  await expect(page.getByLabel(/active action/i).getByText(/steal \+3/i)).toBeVisible();
   await controls.getByRole("button", { name: /interact/i }).click();
   await expect(page.locator(".arcade-spotlight")).toBeHidden();
   await expect(page.getByLabel(/cashout surge/i).getByText(/bank \+5/i)).toBeVisible();
