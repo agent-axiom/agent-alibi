@@ -2973,22 +2973,23 @@ p {
 
 .arcade-opening-contract {
   top: 98px;
-  left: 24px;
-  width: min(260px, calc(100vw - 48px));
+  left: 18px;
+  width: min(218px, calc(100vw - 36px));
   display: grid;
-  gap: 6px;
+  gap: 4px;
   border: 1px solid rgba(255, 213, 106, 0.54);
   border-radius: 8px;
-  padding: 10px;
-  background: rgba(7, 16, 28, 0.78);
-  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.32), 0 0 30px rgba(255, 213, 106, 0.14);
+  padding: 8px;
+  background: rgba(7, 16, 28, 0.66);
+  box-shadow: 0 16px 42px rgba(0, 0, 0, 0.28), 0 0 22px rgba(255, 213, 106, 0.11);
   backdrop-filter: blur(14px);
   animation: arcade-contract-in 520ms ease both;
+  overflow: hidden;
 }
 
 .arcade-opening-contract > span {
   color: #ffd56a;
-  font-size: 0.66rem;
+  font-size: 0.58rem;
   font-weight: 950;
   line-height: 1;
   text-transform: uppercase;
@@ -2996,42 +2997,45 @@ p {
 
 .arcade-opening-contract > strong {
   color: #f8fdff;
-  font-size: clamp(1.05rem, 1.7vw, 1.38rem);
+  font-size: clamp(0.92rem, 1.2vw, 1.02rem);
   line-height: 0.98;
   white-space: nowrap;
   text-transform: uppercase;
 }
 
 .arcade-opening-contract div {
-  min-height: 28px;
+  min-height: 21px;
   display: grid;
-  grid-template-columns: 22px minmax(0, 1fr);
+  grid-template-columns: 18px minmax(0, 1fr);
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   border: 1px solid rgba(216, 252, 255, 0.18);
   border-radius: 7px;
-  padding: 5px;
+  padding: 2px 5px;
   background: rgba(216, 252, 255, 0.08);
 }
 
 .arcade-opening-contract small {
-  width: 20px;
-  height: 20px;
+  width: 17px;
+  height: 17px;
   display: grid;
   place-items: center;
   border-radius: 5px;
   background: #ffd56a;
   color: #07101c;
-  font-size: 0.66rem;
+  font-size: 0.58rem;
   font-weight: 950;
 }
 
 .arcade-opening-contract b {
   min-width: 0;
   color: #dffcff;
-  font-size: 0.68rem;
+  font-size: 0.58rem;
   line-height: 1.05;
   overflow-wrap: anywhere;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   text-transform: uppercase;
 }
 
