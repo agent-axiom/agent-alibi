@@ -1,3 +1,4 @@
+import { inflateSync } from "node:zlib";
 import { expect, test, type Page } from "@playwright/test";
 
 const FINAL_CASE_TIMEOUT_MS = 15_000;
@@ -37,6 +38,95 @@ async function visibleText(page: Page, selector: string) {
     }
     return pieces.join(" ").replace(/\s+/g, " ").trim();
   }, selector);
+}
+
+async function canvasSignal(page: Page) {
+  const canvas = page.locator(".arcade-stage canvas");
+  const box = await canvas.boundingBox();
+  if (!box) return { exists: false, width: 0, height: 0, coloredPixels: 0, brightPixels: 0 };
+  return pngSignal(await canvas.screenshot({ type: "png" }));
+}
+
+function pngSignal(png: Buffer) {
+  const signature = png.subarray(0, 8).toString("hex");
+  if (signature !== "89504e470d0a1a0a") return { exists: true, width: 0, height: 0, coloredPixels: 0, brightPixels: 0 };
+
+  let offset = 8;
+  let width = 0;
+  let height = 0;
+  let bitDepth = 0;
+  let colorType = 0;
+  const idat: Buffer[] = [];
+
+  while (offset < png.length) {
+    const length = png.readUInt32BE(offset);
+    const type = png.subarray(offset + 4, offset + 8).toString("ascii");
+    const data = png.subarray(offset + 8, offset + 8 + length);
+    if (type === "IHDR") {
+      width = data.readUInt32BE(0);
+      height = data.readUInt32BE(4);
+      bitDepth = data[8] ?? 0;
+      colorType = data[9] ?? 0;
+    } else if (type === "IDAT") {
+      idat.push(data);
+    } else if (type === "IEND") {
+      break;
+    }
+    offset += length + 12;
+  }
+
+  const bytesPerPixel = colorType === 6 ? 4 : colorType === 2 ? 3 : 0;
+  if (width <= 0 || height <= 0 || bitDepth !== 8 || bytesPerPixel === 0) {
+    return { exists: true, width, height, coloredPixels: 0, brightPixels: 0 };
+  }
+
+  const inflated = inflateSync(Buffer.concat(idat));
+  const rowBytes = width * bytesPerPixel;
+  const pixels = Buffer.alloc(rowBytes * height);
+  let inputOffset = 0;
+
+  for (let row = 0; row < height; row += 1) {
+    const filter = inflated[inputOffset] ?? 0;
+    inputOffset += 1;
+    const rowStart = row * rowBytes;
+    const prevRowStart = rowStart - rowBytes;
+    for (let column = 0; column < rowBytes; column += 1) {
+      const raw = inflated[inputOffset + column] ?? 0;
+      const left = column >= bytesPerPixel ? pixels[rowStart + column - bytesPerPixel] ?? 0 : 0;
+      const up = row > 0 ? pixels[prevRowStart + column] ?? 0 : 0;
+      const upLeft = row > 0 && column >= bytesPerPixel ? pixels[prevRowStart + column - bytesPerPixel] ?? 0 : 0;
+      pixels[rowStart + column] = (raw + pngFilterValue(filter, left, up, upLeft)) & 0xff;
+    }
+    inputOffset += rowBytes;
+  }
+
+  let coloredPixels = 0;
+  let brightPixels = 0;
+  for (let index = 0; index < pixels.length; index += bytesPerPixel) {
+    const red = pixels[index] ?? 0;
+    const green = pixels[index + 1] ?? 0;
+    const blue = pixels[index + 2] ?? 0;
+    const alpha = bytesPerPixel === 4 ? pixels[index + 3] ?? 0 : 255;
+    if (alpha > 20 && Math.max(red, green, blue) - Math.min(red, green, blue) > 24) coloredPixels += 1;
+    if (alpha > 20 && red + green + blue > 140) brightPixels += 1;
+  }
+
+  return { exists: true, width, height, coloredPixels, brightPixels };
+}
+
+function pngFilterValue(filter: number, left: number, up: number, upLeft: number) {
+  if (filter === 1) return left;
+  if (filter === 2) return up;
+  if (filter === 3) return Math.floor((left + up) / 2);
+  if (filter !== 4) return 0;
+
+  const estimate = left + up - upLeft;
+  const leftDistance = Math.abs(estimate - left);
+  const upDistance = Math.abs(estimate - up);
+  const upLeftDistance = Math.abs(estimate - upLeft);
+  if (leftDistance <= upDistance && leftDistance <= upLeftDistance) return left;
+  if (upDistance <= upLeftDistance) return up;
+  return upLeft;
 }
 
 async function expectFirstCashoutChoice(
@@ -138,6 +228,7 @@ test("language picker supports English Russian and Chinese and persists", async 
   await expect(page.getByLabel(/opening contract/i)).toBeHidden();
   const objectiveBanner = page.getByLabel(/objective banner/i);
   await expect(objectiveBanner).toBeHidden();
+  await expect(page.locator(".arcade-shell")).toHaveClass(/neon-chase-opening/);
   await expect(page.locator(".arcade-objective > strong", { hasText: /偷 \+3/i })).toBeVisible();
   await expect(page.getByLabel(/breach sprint/i)).toBeHidden();
 
@@ -147,14 +238,41 @@ test("language picker supports English Russian and Chinese and persists", async 
       return state?.targetMarker?.label ? state : null;
     })
     .then((handle) => handle.jsonValue());
-  expect(localizedArcade?.targetMarker?.label).toBe("月亮珍珠 +3");
+  expect(localizedArcade?.targetMarker?.label).toBe("+3");
   expect(localizedArcade?.routeGuide?.laneLabel).toBe("偷取路线");
-  expect(localizedArcade?.routeSignal?.laneLabel).toBe("偷取路线");
+  expect(localizedArcade?.routeSignal?.laneLabel).toBe("");
   expect(localizedArcade?.arenaLabels?.zoneBeacons).toEqual(expect.arrayContaining(["高价值", "撤离", "对手入口"]));
   expect(localizedArcade?.arenaLabels?.zoneBeacons).not.toEqual(expect.arrayContaining(["HIGH VALUE", "EXTRACT", "RIVAL ENTRY"]));
-  expect(localizedArcade?.worldPresentation?.style).toBe("arcade-heist");
+  expect(localizedArcade?.worldPresentation?.style).toBe("neon-heist-chase");
   expect(localizedArcade?.worldPresentation?.visibleRoomLabels).toBe(0);
   expect(localizedArcade?.rivals?.[0]?.visualLabel).toBe("待命");
+});
+
+test("mobile opening keeps controls away from objective and canvas", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await startSoloArcade(page);
+
+  const layout = await page.evaluate(() => {
+    const controls = document.querySelector(`[aria-label="Arcade touch controls"]`)?.getBoundingClientRect();
+    const objective = document.querySelector(`[aria-label="Current objective"]`)?.getBoundingClientRect();
+    const topbar = document.querySelector(`[aria-label="Live mission status"]`)?.getBoundingClientRect();
+    const overlaps = (a?: DOMRect, b?: DOMRect) =>
+      Boolean(a && b && a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top);
+    return {
+      controls: controls ? { width: controls.width, height: controls.height, bottom: window.innerHeight - controls.bottom } : null,
+      objective: objective ? { width: objective.width, height: objective.height } : null,
+      topbar: topbar ? { width: topbar.width, height: topbar.height } : null,
+      controlsOverlapObjective: overlaps(controls, objective),
+      topbarOverlapObjective: overlaps(topbar, objective)
+    };
+  });
+
+  expect(layout.controls).not.toBeNull();
+  expect(layout.objective).not.toBeNull();
+  expect(layout.topbar).not.toBeNull();
+  expect(layout.controlsOverlapObjective).toBe(false);
+  expect(layout.topbarOverlapObjective).toBe(false);
+  expect(layout.objective?.width).toBeLessThanOrEqual(220);
 });
 
 test("solo match starts and reaches final case file", async ({ page }) => {
@@ -175,15 +293,21 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   const objectiveBanner = page.getByLabel(/objective banner/i);
   const missionBeat = page.getByLabel(/mission beat/i);
   const miniRadar = page.getByLabel(/mini radar/i);
-  await expect(page.locator(".arcade-shell")).toHaveClass(/compact-opening/);
+  await expect(page.locator(".arcade-shell")).toHaveClass(/neon-chase-opening/);
   const openingContract = page.getByLabel(/opening contract/i);
   await expect(openingContract).toBeHidden();
   await expect(page.getByLabel(/breach sprint/i)).toBeHidden();
   const openingHudText = await visibleText(page, ".arcade-shell");
-  expect(openingHudText.length).toBeLessThanOrEqual(90);
-  expect(openingHudText).toMatch(/steal \+3/i);
+  expect(openingHudText.length).toBeLessThanOrEqual(48);
   expect(openingHudText).toMatch(/2:30/);
-  expect(openingHudText).not.toMatch(/moon vault contract|cashout at atrium|press e|breach sprint|follow gold runway|follow marker|moon vault run/i);
+  expect(openingHudText).toMatch(/\+3/i);
+  expect(openingHudText).not.toMatch(/mission|contract|briefing|rivals|alarm|loot|route|follow|press|cashout|scan|director/i);
+  const signal = await canvasSignal(page);
+  expect(signal.exists).toBe(true);
+  expect(signal.width).toBeGreaterThan(600);
+  expect(signal.height).toBeGreaterThan(360);
+  expect(signal.coloredPixels).toBeGreaterThan(800);
+  expect(signal.brightPixels).toBeGreaterThan(400);
   const openingLayout = await page.evaluate(() => {
     const contract = document.querySelector(`[aria-label="Opening contract"]`)?.getBoundingClientRect();
     const objective = document.querySelector(`[aria-label="Current objective"]`)?.getBoundingClientRect();
@@ -227,7 +351,7 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   await page.waitForFunction(() => typeof window.__AGENT_ALIBI_ARCADE_STATE__ === "function");
   const initialTarget = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());
   expect(initialTarget?.target?.kind).toBe("artifact");
-  expect(initialTarget?.targetMarker?.label).toBe("Moon Pearl +3");
+  expect(initialTarget?.targetMarker?.label).toBe("+3");
   expect(initialTarget?.hasTargetBeam).toBe(true);
   expect(initialTarget?.routeGuide?.kind).toBe("artifact");
   expect(initialTarget?.routeGuide?.chevronCount).toBeGreaterThan(1);
@@ -237,27 +361,32 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   expect(initialTarget?.routeSignal).toEqual(
     expect.objectContaining({
       visible: true,
-      laneLabel: "STEAL ROUTE",
+      laneLabel: "",
+      detail: "",
       labelVisible: false,
-      detailVisible: false
+      detailVisible: false,
+      plateHeight: expect.any(Number)
     })
   );
-  expect(initialTarget?.routeSignal?.plateHeight).toBeLessThanOrEqual(16);
+  expect(initialTarget?.routeSignal?.plateHeight).toBeLessThanOrEqual(12);
   expect(initialTarget?.cameraLookahead?.targetKind).toBe("artifact");
   expect(initialTarget?.cameraLookahead?.magnitude).toBeGreaterThan(15);
   expect(initialTarget?.nearestRival?.distanceMeters).toBeGreaterThan(0);
   expect(initialTarget?.worldPresentation).toEqual(
     expect.objectContaining({
-      style: "arcade-heist",
-      visibleRoomLabels: expect.any(Number),
+      style: "neon-heist-chase",
+      visibleRoomLabels: 0,
       ambientLightCount: expect.any(Number),
       floorDetailCount: expect.any(Number),
-      routeSignalMode: "minimal"
+      routeSignalMode: "iconic",
+      openingTextMode: "minimal",
+      playerVisual: "hover-agent",
+      cashoutForkVisible: false
     })
   );
   expect(initialTarget?.worldPresentation?.visibleRoomLabels).toBe(0);
-  expect(initialTarget?.worldPresentation?.ambientLightCount).toBeGreaterThanOrEqual(10);
-  expect(initialTarget?.worldPresentation?.floorDetailCount).toBeGreaterThanOrEqual(24);
+  expect(initialTarget?.worldPresentation?.ambientLightCount).toBeGreaterThanOrEqual(18);
+  expect(initialTarget?.worldPresentation?.floorDetailCount).toBeGreaterThanOrEqual(40);
   expect(initialTarget?.arenaLabels?.zoneBeacons).toEqual(expect.arrayContaining(["HIGH VALUE", "EXTRACT", "RIVAL ENTRY"]));
   await page.waitForTimeout(1_600);
   const graceState = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());
@@ -286,7 +415,7 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   const afterStealState = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());
   expect(afterStealState?.rivalsReleased).toBe(true);
   expect(afterStealState?.rivalWakeHoldMs).toBeLessThanOrEqual(4_000);
-  expect(afterStealState?.worldPresentation?.routeSignalMode).toBe("tactical");
+  expect(afterStealState?.worldPresentation?.routeSignalMode).toBe("forked");
   const stealBurst = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().impactBurst);
   expect(stealBurst).toEqual(
     expect.objectContaining({
@@ -424,7 +553,7 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   const greedTarget = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().target);
   expect(greedTarget?.kind).toBe("artifact");
   const greedMarker = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().targetMarker);
-  expect(greedMarker?.label).toBe("Argent Crown +3");
+  expect(greedMarker?.label).toBe("+3");
   await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget());
   await expect(page.getByText(/press e \/ space to steal/i)).toBeVisible();
   await page.keyboard.press("KeyE");

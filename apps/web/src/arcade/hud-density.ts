@@ -23,8 +23,8 @@ export function selectArcadeHudDensity(hud: ArcadeHudState | null | undefined): 
   const cashoutChase =
     hud.phase === "stealth" &&
     hud.lootValue > 0 &&
+    hud.artifactsStolen > 0 &&
     hud.canEscape &&
-    Boolean(hud.escapePayout) &&
     !hud.rivalIntercept &&
     !hud.lastRivalSteal &&
     !heavyThreat;

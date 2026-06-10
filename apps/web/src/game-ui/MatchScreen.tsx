@@ -50,6 +50,7 @@ export function MatchScreen({ match, soundEnabled = false, locale = "en", onLoca
     const routeChoice = hud?.routeChoice ?? null;
     const hudDensity = selectArcadeHudDensity(hud);
     const openingCommandMode = hudDensity === "opening";
+    const neonOpening = openingCommandMode && (hud?.artifactsStolen ?? 0) === 0;
     const cashoutStepLabel = hud?.escapePayout ? t(locale, "match.cashoutStep", { cashout: hud.escapePayout.cashout }) : t(locale, "match.escape");
     const carriedLoot = hud && hud.lootValue > 0 && hud.escapePayout ? { loot: hud.lootValue, cashout: hud.escapePayout.cashout } : null;
     const blueRaceLabel = carriedLoot ? t(locale, "match.blueCarrying", { loot: carriedLoot.loot }) : t(locale, "match.blueScore", { loot: blueLoot });
@@ -146,7 +147,7 @@ export function MatchScreen({ match, soundEnabled = false, locale = "en", onLoca
     );
     const openingInteractReady = openingCommandMode && /^(e|space)/i.test(displayedActiveAction?.key ?? "");
     const currentObjectivePrompt = openingCommandMode ? "" : localizeText(locale, displayedPrompt);
-    const currentObjectiveTitle = openingCommandMode ? t(locale, "match.stealShort") : displayedObjective;
+    const currentObjectiveTitle = openingCommandMode ? t(locale, "match.stealValue", { value: 3 }) : displayedObjective;
     const currentActiveAction = openingCommandMode
       ? openingInteractReady
         ? { key: "E", label: t(locale, "match.stealShort"), tone: displayedActiveAction?.tone ?? "neutral" }
@@ -206,9 +207,38 @@ export function MatchScreen({ match, soundEnabled = false, locale = "en", onLoca
             cleanBonusWindow: hud?.cleanBonusWindow ?? null,
             lootChainWindow: hud?.lootChainWindow ?? null
           });
+    const arcadeShellClassName = [
+      "arcade-shell",
+      "neon-heist-chase",
+      hud?.phase ?? "stealth",
+      hudDensity === "opening" ? "compact-opening" : "",
+      neonOpening ? "neon-chase-opening" : "",
+      hudDensity === "chase" ? "chase-compact neon-chase-active" : "",
+      firstStealCashoutMoment ? "first-steal-cashout-moment" : "",
+      cashoutPayoff ? "cashout-payoff-active" : "",
+      hunterChase ? "hunter-chase-active" : "",
+      alibiPayoff ? "alibi-payoff-active" : "",
+      lockBreakPayoff ? "lock-break-payoff-active" : "",
+      breachAlert ? "breach-alert" : "",
+      visibleRoutePulse ? "route-pulse-active" : "",
+      visibleRoutePulse?.mode === "alibi" ? "alibi-pulse-active" : "",
+      visibleRoutePulse?.mode === "comeback" ? "comeback-pulse-active" : "",
+      breakoutCashoutWindow ? "breakout-cashout-active" : "",
+      rivalCashoutEmergency ? "rival-cashout-emergency-active" : "",
+      scanLockActive ? "scan-lock-active" : "",
+      threatCueActive ? "threat-cue-active" : "",
+      denseThreatActive ? "dense-threat-active" : "",
+      countdownPulseActive ? "countdown-pulse-active" : "",
+      afterburnerActive ? "afterburner-active" : "",
+      breachSprintActive ? "breach-sprint-active" : "",
+      ghostStepActive ? "ghost-step-active" : "",
+      rivalPressureActive ? "rival-pressure-active" : ""
+    ]
+      .filter(Boolean)
+      .join(" ");
     return (
       <main
-        className={`arcade-shell ${hud?.phase ?? "stealth"} ${hudDensity === "opening" ? "compact-opening" : ""} ${hudDensity === "chase" ? "chase-compact" : ""} ${firstStealCashoutMoment ? "first-steal-cashout-moment" : ""} ${cashoutPayoff ? "cashout-payoff-active" : ""} ${hunterChase ? "hunter-chase-active" : ""} ${alibiPayoff ? "alibi-payoff-active" : ""} ${lockBreakPayoff ? "lock-break-payoff-active" : ""} ${breachAlert ? "breach-alert" : ""} ${visibleRoutePulse ? "route-pulse-active" : ""} ${visibleRoutePulse?.mode === "alibi" ? "alibi-pulse-active" : ""} ${visibleRoutePulse?.mode === "comeback" ? "comeback-pulse-active" : ""} ${breakoutCashoutWindow ? "breakout-cashout-active" : ""} ${rivalCashoutEmergency ? "rival-cashout-emergency-active" : ""} ${scanLockActive ? "scan-lock-active" : ""} ${threatCueActive ? "threat-cue-active" : ""} ${denseThreatActive ? "dense-threat-active" : ""} ${countdownPulseActive ? "countdown-pulse-active" : ""} ${afterburnerActive ? "afterburner-active" : ""} ${breachSprintActive ? "breach-sprint-active" : ""} ${ghostStepActive ? "ghost-step-active" : ""} ${rivalPressureActive ? "rival-pressure-active" : ""}`}
+        className={arcadeShellClassName}
       >
         <Suspense
           fallback={

@@ -3181,6 +3181,66 @@ p {
   min-height: 32px;
 }
 
+.arcade-shell.neon-heist-chase {
+  background: #03060d;
+  color: #f8fdff;
+}
+
+.arcade-shell.neon-chase-opening .arcade-topbar {
+  left: auto;
+  right: clamp(12px, 2vw, 22px);
+  top: clamp(10px, 2vw, 18px);
+  width: auto;
+  min-height: 44px;
+  display: inline-grid;
+  grid-template-columns: 42px 72px;
+  gap: 8px;
+  padding: 7px;
+  border: 1px solid rgba(126, 255, 223, 0.24);
+  border-radius: 8px;
+  background: rgba(3, 6, 13, 0.46);
+  backdrop-filter: blur(12px);
+}
+
+.arcade-shell.neon-chase-opening .mission-title,
+.arcade-shell.neon-chase-opening .arcade-stat {
+  min-height: 34px;
+  padding: 4px;
+  border-radius: 7px;
+}
+
+.arcade-shell.neon-chase-opening .arcade-objective {
+  left: 50%;
+  right: auto;
+  bottom: clamp(18px, 4vh, 42px);
+  transform: translateX(-50%);
+  width: auto;
+  min-width: 0;
+  max-width: min(220px, calc(100vw - 132px));
+  display: inline-grid;
+  grid-template-columns: minmax(0, auto);
+  align-items: center;
+  gap: 0;
+  padding: 9px 13px;
+  border: 1px solid rgba(255, 213, 106, 0.34);
+  border-radius: 8px;
+  background: rgba(3, 6, 13, 0.58);
+  box-shadow: 0 0 28px rgba(255, 213, 106, 0.12);
+}
+
+.arcade-shell.neon-chase-opening .arcade-objective > span {
+  display: none;
+}
+
+.arcade-shell.neon-chase-opening .arcade-objective > strong {
+  display: block;
+  color: #ffd56a;
+  font-size: clamp(0.88rem, 1.8vw, 1.02rem);
+  line-height: 1;
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
 .arcade-shell.chase-compact .arcade-objective {
   width: min(760px, calc(100vw - 500px));
   gap: 5px 8px;

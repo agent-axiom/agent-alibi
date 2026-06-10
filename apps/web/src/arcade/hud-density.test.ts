@@ -90,6 +90,14 @@ function hud(overrides: Partial<ArcadeHudState> = {}): ArcadeHudState {
 }
 
 describe("selectArcadeHudDensity", () => {
+  it("uses the neon chase opening while the player has no loot and no rival pressure", () => {
+    expect(selectArcadeHudDensity(hud())).toBe("opening");
+  });
+
+  it("leaves opening mode after the first steal so the cashout fork can appear", () => {
+    expect(selectArcadeHudDensity(hud({ lootValue: 3, artifactsStolen: 1, canEscape: true }))).toBe("chase");
+  });
+
   it("keeps the first no-score seconds in a compact opening contract", () => {
     expect(selectArcadeHudDensity(hud())).toBe("opening");
   });
@@ -99,6 +107,7 @@ describe("selectArcadeHudDensity", () => {
       selectArcadeHudDensity(
         hud({
           lootValue: 3,
+          artifactsStolen: 1,
           canEscape: true,
           loopStep: "escape",
           objective: "Escape with 3 loot",
