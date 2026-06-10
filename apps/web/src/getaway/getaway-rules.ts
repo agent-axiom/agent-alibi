@@ -22,6 +22,24 @@ export type GetawayMissionResultInput = {
   alibiPulsesUsed: number;
 };
 
+export type GetawayChasePressure = "clear" | "warning" | "critical";
+
+export type GetawayChasePressureInput = {
+  hasRelic: boolean;
+  rivalsReleased: boolean;
+  nearestRivalDistance: number;
+  previousContactMs: number;
+  deltaMs: number;
+  captureRadius?: number;
+  captureHoldMs?: number;
+};
+
+export type GetawayChasePressureUpdate = {
+  contactMs: number;
+  caught: boolean;
+  pressure: GetawayChasePressure;
+};
+
 export function selectGetawayObjective(input: GetawayObjectiveInput): GetawayObjective {
   if (input.escaped || input.caught) return { phase: "finished", label: "Case closed" };
   if (input.hasRelic) return { phase: "escape", label: "Escape +5" };
@@ -46,4 +64,26 @@ export function buildGetawayMissionResult(input: GetawayMissionResultInput): Arc
     carrierIntercepts: 0,
     ambushNearMisses: 0
   };
+}
+
+export function updateGetawayChasePressure(input: GetawayChasePressureInput): GetawayChasePressureUpdate {
+  const captureRadius = input.captureRadius ?? 58;
+  const captureHoldMs = input.captureHoldMs ?? 650;
+  if (!input.hasRelic || !input.rivalsReleased) {
+    return { contactMs: 0, caught: false, pressure: "clear" };
+  }
+
+  const inCaptureRange = input.nearestRivalDistance <= captureRadius;
+  const contactMs = inCaptureRange
+    ? Math.max(0, input.previousContactMs) + input.deltaMs
+    : Math.max(0, input.previousContactMs - input.deltaMs * 1.7);
+  const caught = contactMs >= captureHoldMs;
+
+  if (caught || contactMs >= captureHoldMs * 0.66) {
+    return { contactMs: Math.round(contactMs), caught, pressure: "critical" };
+  }
+  if (contactMs > 0) {
+    return { contactMs: Math.round(contactMs), caught: false, pressure: "warning" };
+  }
+  return { contactMs: 0, caught: false, pressure: "clear" };
 }

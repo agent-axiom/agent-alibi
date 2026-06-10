@@ -29,6 +29,7 @@ type AgentAlibiWindow = Window & {
     teleportToTarget?: () => void;
     teleportToExit?: () => void;
     forceRivalsActive?: () => void;
+    forceRivalPressure?: (distanceMeters?: number) => void;
   };
 };
 
@@ -275,8 +276,22 @@ test("moon getaway supports movement, relic pickup, chase, and extraction", asyn
   await page.evaluate(() => (window as AgentAlibiWindow).__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToExit?.());
   await page.keyboard.press("Space");
   await expectFinalCaseFile(page);
-  await expect(page.getByLabel(/share case stamp/i).getByText(/blue crew wins|tie/i)).toBeVisible();
+  await expect(page.locator(".case-file pre")).toContainText(/Winner: Blue Crew/i);
+  await expect(page.locator(".case-file pre")).toContainText(/escaped with 1 relic/i);
   await expect(page.locator(".case-file")).toContainText(/Moon Pearl/i);
+});
+
+test("moon getaway rivals can catch a greedy player", async ({ page }) => {
+  await startSoloArcade(page);
+  await page.evaluate(() => (window as AgentAlibiWindow).__AGENT_ALIBI_ARCADE_DEBUG__?.teleportToTarget?.());
+  await page.keyboard.press("Space");
+  await waitForGetawayState(page, (state) => state.objective === "escape");
+
+  await page.evaluate(() => (window as AgentAlibiWindow).__AGENT_ALIBI_ARCADE_DEBUG__?.forceRivalPressure?.(2));
+
+  await expectFinalCaseFile(page);
+  await expect(page.locator(".case-file")).toContainText(/caught in the alarm wash/i);
+  await expect(page.locator(".case-file")).not.toContainText(/escaped with 1 relic/i);
 });
 
 test("mobile moon getaway keeps controls away from objective and canvas", async ({ page }) => {

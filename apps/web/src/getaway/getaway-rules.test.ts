@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildGetawayMissionResult, selectGetawayObjective } from "./getaway-rules";
+import { buildGetawayMissionResult, selectGetawayObjective, updateGetawayChasePressure } from "./getaway-rules";
 
 describe("selectGetawayObjective", () => {
   it("starts by sending the player to steal the Moon Pearl", () => {
@@ -65,6 +65,56 @@ describe("buildGetawayMissionResult", () => {
       stolenRelicNames: [],
       aiLootValue: 0,
       alarm: 5
+    });
+  });
+});
+
+describe("updateGetawayChasePressure", () => {
+  it("does not build capture pressure before the relic is stolen", () => {
+    expect(
+      updateGetawayChasePressure({
+        hasRelic: false,
+        rivalsReleased: true,
+        nearestRivalDistance: 20,
+        previousContactMs: 500,
+        deltaMs: 200
+      })
+    ).toEqual({
+      contactMs: 0,
+      caught: false,
+      pressure: "clear"
+    });
+  });
+
+  it("catches the player when a rival stays close during the getaway", () => {
+    expect(
+      updateGetawayChasePressure({
+        hasRelic: true,
+        rivalsReleased: true,
+        nearestRivalDistance: 42,
+        previousContactMs: 520,
+        deltaMs: 160
+      })
+    ).toEqual({
+      contactMs: 680,
+      caught: true,
+      pressure: "critical"
+    });
+  });
+
+  it("lets the player break contact by leaving the capture radius", () => {
+    expect(
+      updateGetawayChasePressure({
+        hasRelic: true,
+        rivalsReleased: true,
+        nearestRivalDistance: 120,
+        previousContactMs: 500,
+        deltaMs: 200
+      })
+    ).toEqual({
+      contactMs: 160,
+      caught: false,
+      pressure: "warning"
     });
   });
 });
