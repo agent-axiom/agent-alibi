@@ -319,6 +319,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private arenaZoneBeacons = new Set<string>();
   private ambientLightCount = 0;
   private floorDetailCount = 0;
+  private neonLaneCount = 0;
   private artifacts: RuntimeArtifact[] = [];
   private aiAgents: RuntimeAgent[] = [];
   private player?: RuntimeAgent;
@@ -832,6 +833,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.arenaZoneBeacons.clear();
     this.ambientLightCount = 0;
     this.floorDetailCount = 0;
+    this.neonLaneCount = 0;
     this.artifacts = [];
     this.aiAgents = [];
     this.player = undefined;
@@ -1073,6 +1075,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       if (!from || !to) continue;
       corridors.lineBetween(from.x, from.y, to.x, to.y);
       this.drawDoorPad(from.x, from.y, to.x, to.y);
+      this.neonLaneCount += 1;
     }
 
     for (const { room, x, y } of this.rooms.values()) {
@@ -1096,7 +1099,13 @@ export class ArcadeHeistScene extends Phaser.Scene {
       { x: 830, y: 500, w: 430, h: 250, color: 0xffd56a, alpha: 0.034 },
       { x: 160, y: 520, w: 260, h: 180, color: 0x7effdf, alpha: 0.036 },
       { x: 1510, y: 520, w: 240, h: 170, color: 0x4cf4f0, alpha: 0.036 },
-      { x: 840, y: 120, w: 180, h: 120, color: 0xffffff, alpha: 0.025 }
+      { x: 840, y: 120, w: 180, h: 120, color: 0xffffff, alpha: 0.025 },
+      { x: 420, y: 135, w: 180, h: 96, color: 0xffd56a, alpha: 0.045 },
+      { x: 1185, y: 142, w: 190, h: 104, color: 0x4cf4f0, alpha: 0.042 },
+      { x: 506, y: 930, w: 210, h: 112, color: 0xff4f7b, alpha: 0.04 },
+      { x: 1110, y: 914, w: 220, h: 118, color: 0x7effdf, alpha: 0.04 },
+      { x: 86, y: 118, w: 130, h: 88, color: 0x4cf4f0, alpha: 0.04 },
+      { x: 1588, y: 908, w: 140, h: 92, color: 0xffd56a, alpha: 0.04 }
     ];
 
     for (const light of lights) {
@@ -1138,27 +1147,52 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.floorDetailCount += 1;
   }
 
+  private chamberPoints(x: number, y: number, width: number, height: number, cut: number) {
+    const left = x - width / 2;
+    const right = x + width / 2;
+    const top = y - height / 2;
+    const bottom = y + height / 2;
+    return [
+      new Phaser.Math.Vector2(left + cut, top),
+      new Phaser.Math.Vector2(right - cut, top),
+      new Phaser.Math.Vector2(right, top + cut),
+      new Phaser.Math.Vector2(right, bottom - cut),
+      new Phaser.Math.Vector2(right - cut, bottom),
+      new Phaser.Math.Vector2(left + cut, bottom),
+      new Phaser.Math.Vector2(left, bottom - cut),
+      new Phaser.Math.Vector2(left, top + cut)
+    ];
+  }
+
   private drawRoom(room: Room, x: number, y: number) {
     const danger = Phaser.Math.Clamp(room.danger, 0, 4);
     const accent = danger >= 3 ? 0xff4f7b : room.id.includes("vault") ? 0xffd56a : 0x4cf4f0;
     const width = room.id === "inner-vault" ? 230 : 190;
     const height = room.id === "inner-vault" ? 138 : 112;
+    const cut = room.id === "inner-vault" ? 30 : 24;
+    const outer = this.chamberPoints(x, y, width + 46, height + 40, cut + 8);
+    const panelPoints = this.chamberPoints(x, y, width, height, cut);
+    const inner = this.chamberPoints(x, y, width - 28, height - 28, Math.max(12, cut - 8));
 
-    const shadow = this.add.rectangle(x + 10, y + 12, width + 48, height + 46, 0x020711, 0.5);
-    shadow.setStrokeStyle(1, 0x000000, 0.12);
-
-    const halo = this.add.rectangle(x, y, width + 44, height + 42, accent, room.id === "atrium" ? 0.095 : 0.065);
-    halo.setStrokeStyle(2, accent, room.id === "inner-vault" ? 0.38 : 0.22);
-
-    const panel = this.add.rectangle(x, y, width, height, 0x101827, 0.94);
-    panel.setStrokeStyle(room.id === "inner-vault" ? 4 : 2, accent, room.id === "inner-vault" ? 0.76 : 0.48);
-
-    const detail = this.add.graphics();
-    detail.lineStyle(1, accent, 0.16);
-    detail.strokeRect(x - width / 2 + 14, y - height / 2 + 14, width - 28, height - 28);
-    detail.lineStyle(2, 0xffffff, 0.05);
-    detail.lineBetween(x - width / 2 + 24, y, x + width / 2 - 24, y);
-    this.floorDetailCount += 2;
+    const platform = this.add.graphics().setDepth(3);
+    platform.fillStyle(0x020711, 0.44);
+    platform.fillPoints(outer.map((point) => new Phaser.Math.Vector2(point.x + 10, point.y + 12)), true);
+    platform.lineStyle(2, accent, room.id === "inner-vault" ? 0.22 : 0.14);
+    platform.strokePoints(outer, true);
+    platform.fillStyle(accent, room.id === "atrium" ? 0.078 : 0.052);
+    platform.fillPoints(outer, true);
+    platform.fillStyle(0x101827, 0.82);
+    platform.fillPoints(panelPoints, true);
+    platform.lineStyle(room.id === "inner-vault" ? 4 : 2, accent, room.id === "inner-vault" ? 0.72 : 0.42);
+    platform.strokePoints(panelPoints, true);
+    platform.lineStyle(1, accent, 0.16);
+    platform.strokePoints(inner, true);
+    platform.lineStyle(2, 0xffffff, 0.045);
+    platform.lineBetween(x - width / 2 + 28, y, x + width / 2 - 28, y);
+    platform.lineStyle(1, accent, 0.11);
+    platform.lineBetween(x - width / 2 + cut, y - height / 2 + 10, x + width / 2 - cut, y + height / 2 - 10);
+    platform.lineBetween(x - width / 2 + cut, y + height / 2 - 10, x + width / 2 - cut, y - height / 2 + 10);
+    this.floorDetailCount += 4;
 
     const shouldLabelRoom = false;
     if (shouldLabelRoom) {
@@ -3722,11 +3756,15 @@ export class ArcadeHeistScene extends Phaser.Scene {
 
   private worldPresentationDebug() {
     return {
-      style: "arcade-heist",
+      style: "neon-heist-chase",
       visibleRoomLabels: this.visibleRoomLabelCount,
       ambientLightCount: this.ambientLightCount,
       floorDetailCount: this.floorDetailCount,
-      routeSignalMode: this.artifactsStolen === 0 ? "minimal" : "tactical"
+      neonLaneCount: this.neonLaneCount,
+      routeSignalMode: this.artifactsStolen === 0 ? "iconic" : "forked",
+      openingTextMode: this.artifactsStolen === 0 ? "minimal" : "chase",
+      playerVisual: "hover-agent",
+      cashoutForkVisible: this.lootValue > 0 && this.canGreedRoute()
     };
   }
 
@@ -4268,6 +4306,10 @@ export class ArcadeHeistScene extends Phaser.Scene {
 
   private targetMarkerLabel(target: ArcadeObjectiveTarget): string {
     if (target.kind === "escape" && this.lootValue > 0) return this.sceneText(`Cashout +${this.currentCashoutValue()}`);
+    if (target.kind === "artifact") {
+      const artifact = this.artifacts.find((candidate) => candidate.id === target.id);
+      return artifact ? `+${artifact.value}` : "+3";
+    }
     if (target.kind !== "carrier") return this.sceneText(target.label);
     const carrier = this.aiAgents.find((agent) => agent.id === target.id);
     if (!carrier) return target.label;
@@ -4540,22 +4582,22 @@ export class ArcadeHeistScene extends Phaser.Scene {
     const progress = distance < 180 ? 0.5 : 0.42;
     const labelX = Phaser.Math.Linear(this.player.x, target.x, progress) + normalX * 42;
     const labelY = Phaser.Math.Linear(this.player.y, target.y, progress) + normalY * 42;
-    const minimal = this.artifactsStolen === 0 && target.kind === "artifact";
+    const iconic = this.artifactsStolen === 0 && target.kind === "artifact";
     const width = Math.max(144, lane.laneLabel.length * 8.5 + 34, lane.detail.length * 7 + 26);
 
-    this.routeSignalLabel.setText(minimal ? "" : lane.laneLabel);
+    this.routeSignalLabel.setText(iconic ? "" : lane.laneLabel);
     this.routeSignalLabel.setColor(this.hexCss(color));
-    this.routeSignalLabel.setAlpha(minimal ? 0 : 1);
-    this.routeSignalDetail.setText(minimal ? "" : this.sceneUpper(lane.detail));
-    this.routeSignalDetail.setAlpha(minimal ? 0 : 0.72);
-    this.routeSignalPlate.setSize(minimal ? 82 : width, minimal ? 14 : 46);
-    this.routeSignalPlate.setFillStyle(0x050811, minimal ? 0.2 : 0.82);
-    this.routeSignalPlate.setStrokeStyle(1, color, minimal ? 0.18 : target.kind === "carrier" ? 0.8 : 0.56);
+    this.routeSignalLabel.setAlpha(iconic ? 0 : 1);
+    this.routeSignalDetail.setText(iconic ? "" : this.sceneUpper(lane.detail));
+    this.routeSignalDetail.setAlpha(iconic ? 0 : 0.72);
+    this.routeSignalPlate.setSize(iconic ? 54 : width, iconic ? 10 : 46);
+    this.routeSignalPlate.setFillStyle(0x050811, iconic ? 0.12 : 0.82);
+    this.routeSignalPlate.setStrokeStyle(1, color, iconic ? 0.18 : target.kind === "carrier" ? 0.8 : 0.56);
     this.routeSignal.setPosition(Phaser.Math.Clamp(labelX, 112, WORLD_WIDTH - 112), Phaser.Math.Clamp(labelY, 104, WORLD_HEIGHT - 104));
-    this.routeSignal.setAlpha(minimal ? 0.32 : target.kind === "carrier" ? 0.96 : 0.84);
+    this.routeSignal.setAlpha(iconic ? 0.28 : target.kind === "carrier" ? 0.96 : 0.84);
     this.routeSignal.setData("visible", true);
-    this.routeSignal.setData("laneLabel", lane.laneLabel);
-    this.routeSignal.setData("detail", lane.detail);
+    this.routeSignal.setData("laneLabel", iconic ? "" : lane.laneLabel);
+    this.routeSignal.setData("detail", iconic ? "" : lane.detail);
   }
 
   private createRouteSignal() {

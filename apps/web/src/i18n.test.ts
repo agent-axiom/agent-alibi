@@ -2,6 +2,21 @@ import { describe, expect, it } from "vitest";
 import { localizeText, t } from "./i18n";
 
 describe("rival intel localization", () => {
+  it("keeps neon chase labels compact in English Russian and Chinese", () => {
+    expect(t("en", "match.stealValue", { value: 3 })).toBe("Steal +3");
+    expect(t("ru", "match.stealValue", { value: 3 })).toBe("Украсть +3");
+    expect(t("zh", "match.stealValue", { value: 3 })).toBe("偷 +3");
+    expect(t("en", "match.escapeShort")).toBe("Escape");
+    expect(t("ru", "match.escapeShort")).toBe("Выход");
+    expect(t("zh", "match.escapeShort")).toBe("撤离");
+    expect(t("en", "match.alibiShort")).toBe("Alibi");
+    expect(t("ru", "match.alibiShort")).toBe("Алиби");
+    expect(t("zh", "match.alibiShort")).toBe("掩护");
+    expect(t("en", "match.dashShort")).toBe("Dash");
+    expect(t("ru", "match.dashShort")).toBe("Рывок");
+    expect(t("zh", "match.dashShort")).toBe("冲刺");
+  });
+
   it("translates rival intel labels and dynamic intent text", () => {
     expect(t("zh", "match.rivalIntel")).toBe("对手情报");
     expect(localizeText("ru", "Hunter")).toBe("Охотник");
