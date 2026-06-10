@@ -45,6 +45,7 @@ const INTERCEPT_RADIUS = 64;
 const DASH_COOLDOWN_MS = 1150;
 const AI_GRACE_MS = 10_500;
 const AI_WAKE_HOLD_MS = 14_000;
+const FIRST_SCORE_RIVAL_WAKE_HOLD_MS = 3_200;
 const LOOT_CHAIN_WINDOW_MS = 12_000;
 const SECURITY_SWEEP_PERIOD_MS = 5_600;
 const SECURITY_SWEEP_WARNING_WIDTH = 112;
@@ -314,7 +315,10 @@ export class ArcadeHeistScene extends Phaser.Scene {
   private state?: GameState;
   private rooms = new Map<string, { room: Room; x: number; y: number }>();
   private arenaRoomLabelCount = 0;
+  private visibleRoomLabelCount = 0;
   private arenaZoneBeacons = new Set<string>();
+  private ambientLightCount = 0;
+  private floorDetailCount = 0;
   private artifacts: RuntimeArtifact[] = [];
   private aiAgents: RuntimeAgent[] = [];
   private player?: RuntimeAgent;
@@ -609,6 +613,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       impactBurst: this.impactBurstDebug(),
       extractionSequence: this.extractionSequenceDebug(),
       arenaLabels: this.arenaLabelsDebug(),
+      worldPresentation: this.worldPresentationDebug(),
       routePulse: this.routePulse,
       alibiPayoff: this.alibiPayoff,
       routeMode: this.routeMode,
@@ -820,7 +825,10 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.state = config.state;
     this.rooms.clear();
     this.arenaRoomLabelCount = 0;
+    this.visibleRoomLabelCount = 0;
     this.arenaZoneBeacons.clear();
+    this.ambientLightCount = 0;
+    this.floorDetailCount = 0;
     this.artifacts = [];
     this.aiAgents = [];
     this.player = undefined;
@@ -1014,11 +1022,16 @@ export class ArcadeHeistScene extends Phaser.Scene {
     const bg = this.add.graphics();
     bg.fillStyle(0x050811, 1);
     bg.fillRect(0, 0, WORLD_WIDTH, WORLD_HEIGHT);
+    bg.fillStyle(0x071322, 0.92);
+    bg.fillRect(64, 64, WORLD_WIDTH - 128, WORLD_HEIGHT - 128);
+
+    this.drawAmbientFloor();
 
     const grid = this.add.graphics();
-    grid.lineStyle(1, 0x7efcff, 0.06);
+    grid.lineStyle(1, 0x7efcff, 0.035);
     for (let x = 0; x <= WORLD_WIDTH; x += 64) grid.lineBetween(x, 0, x, WORLD_HEIGHT);
     for (let y = 0; y <= WORLD_HEIGHT; y += 64) grid.lineBetween(0, y, WORLD_WIDTH, y);
+    this.drawFloorDetails();
 
     for (const room of state.rooms) {
       this.rooms.set(room.id, {
@@ -1029,19 +1042,34 @@ export class ArcadeHeistScene extends Phaser.Scene {
     }
 
     const corridors = this.add.graphics();
-    corridors.lineStyle(54, 0x1a2740, 0.94);
+    corridors.lineStyle(84, 0x020711, 0.48);
     for (const edge of state.edges) {
       const from = this.rooms.get(edge.from);
       const to = this.rooms.get(edge.to);
       if (!from || !to) continue;
       corridors.lineBetween(from.x, from.y, to.x, to.y);
     }
-    corridors.lineStyle(4, 0x7efcff, 0.18);
+    corridors.lineStyle(58, 0x17263d, 0.94);
     for (const edge of state.edges) {
       const from = this.rooms.get(edge.from);
       const to = this.rooms.get(edge.to);
       if (!from || !to) continue;
       corridors.lineBetween(from.x, from.y, to.x, to.y);
+    }
+    corridors.lineStyle(8, 0x7efcff, 0.11);
+    for (const edge of state.edges) {
+      const from = this.rooms.get(edge.from);
+      const to = this.rooms.get(edge.to);
+      if (!from || !to) continue;
+      corridors.lineBetween(from.x, from.y, to.x, to.y);
+    }
+    corridors.lineStyle(2, 0xffd56a, 0.16);
+    for (const edge of state.edges) {
+      const from = this.rooms.get(edge.from);
+      const to = this.rooms.get(edge.to);
+      if (!from || !to) continue;
+      corridors.lineBetween(from.x, from.y, to.x, to.y);
+      this.drawDoorPad(from.x, from.y, to.x, to.y);
     }
 
     for (const { room, x, y } of this.rooms.values()) {
@@ -1052,55 +1080,138 @@ export class ArcadeHeistScene extends Phaser.Scene {
     this.createEscapeZone();
   }
 
+  private drawAmbientFloor() {
+    const lights = [
+      { x: 290, y: 230, w: 270, h: 160, color: 0x4cf4f0, alpha: 0.055 },
+      { x: 790, y: 235, w: 330, h: 190, color: 0xffd56a, alpha: 0.052 },
+      { x: 1280, y: 260, w: 280, h: 180, color: 0xff4f7b, alpha: 0.05 },
+      { x: 310, y: 760, w: 330, h: 190, color: 0x4cf4f0, alpha: 0.048 },
+      { x: 780, y: 760, w: 360, h: 220, color: 0x7effdf, alpha: 0.05 },
+      { x: 1265, y: 780, w: 290, h: 170, color: 0xffd56a, alpha: 0.048 },
+      { x: 535, y: 500, w: 260, h: 180, color: 0x7efcff, alpha: 0.04 },
+      { x: 1030, y: 520, w: 280, h: 190, color: 0xff4f7b, alpha: 0.036 },
+      { x: 830, y: 500, w: 430, h: 250, color: 0xffd56a, alpha: 0.034 },
+      { x: 160, y: 520, w: 260, h: 180, color: 0x7effdf, alpha: 0.036 },
+      { x: 1510, y: 520, w: 240, h: 170, color: 0x4cf4f0, alpha: 0.036 },
+      { x: 840, y: 120, w: 180, h: 120, color: 0xffffff, alpha: 0.025 }
+    ];
+
+    for (const light of lights) {
+      this.add.ellipse(light.x, light.y, light.w, light.h, light.color, light.alpha);
+      this.ambientLightCount += 1;
+    }
+  }
+
+  private drawFloorDetails() {
+    const floor = this.add.graphics();
+    floor.lineStyle(2, 0x7efcff, 0.045);
+    for (let x = 112; x <= WORLD_WIDTH - 112; x += 178) {
+      floor.lineBetween(x, 96, x + 54, 96);
+      floor.lineBetween(x - 24, WORLD_HEIGHT - 108, x + 68, WORLD_HEIGHT - 108);
+      this.floorDetailCount += 2;
+    }
+    floor.lineStyle(2, 0xffd56a, 0.042);
+    for (let y = 138; y <= WORLD_HEIGHT - 138; y += 142) {
+      floor.lineBetween(88, y, 156, y + 22);
+      floor.lineBetween(WORLD_WIDTH - 156, y + 18, WORLD_WIDTH - 88, y);
+      this.floorDetailCount += 2;
+    }
+    floor.lineStyle(1, 0xffffff, 0.035);
+    for (let index = 0; index < 10; index += 1) {
+      const x = 250 + index * 122;
+      floor.strokeRect(x, 180 + (index % 4) * 152, 74, 42);
+      this.floorDetailCount += 1;
+    }
+  }
+
+  private drawDoorPad(fromX: number, fromY: number, toX: number, toY: number) {
+    const midX = Phaser.Math.Linear(fromX, toX, 0.5);
+    const midY = Phaser.Math.Linear(fromY, toY, 0.5);
+    const angle = Phaser.Math.Angle.Between(fromX, fromY, toX, toY);
+    this.add
+      .rectangle(midX, midY, 46, 16, 0xffd56a, 0.12)
+      .setRotation(angle)
+      .setStrokeStyle(1, 0xffd56a, 0.34);
+    this.floorDetailCount += 1;
+  }
+
   private drawRoom(room: Room, x: number, y: number) {
     const danger = Phaser.Math.Clamp(room.danger, 0, 4);
     const accent = danger >= 3 ? 0xff4f7b : room.id.includes("vault") ? 0xffd56a : 0x4cf4f0;
     const width = room.id === "inner-vault" ? 230 : 190;
     const height = room.id === "inner-vault" ? 138 : 112;
 
-    const halo = this.add.rectangle(x, y, width + 34, height + 34, accent, 0.08);
-    halo.setStrokeStyle(2, accent, 0.28);
+    const shadow = this.add.rectangle(x + 10, y + 12, width + 48, height + 46, 0x020711, 0.5);
+    shadow.setStrokeStyle(1, 0x000000, 0.12);
 
-    const panel = this.add.rectangle(x, y, width, height, 0x101827, 0.96);
-    panel.setStrokeStyle(3, accent, 0.7);
+    const halo = this.add.rectangle(x, y, width + 44, height + 42, accent, room.id === "atrium" ? 0.095 : 0.065);
+    halo.setStrokeStyle(2, accent, room.id === "inner-vault" ? 0.38 : 0.22);
 
-    this.add
-      .text(x, y - height / 2 - 22, this.sceneUpper(room.name), {
-        color: "#dffcff",
-        fontFamily: "Inter, Arial, sans-serif",
-        fontSize: "15px",
-        fontStyle: "900",
-        stroke: "#050811",
-        strokeThickness: 5
-      })
-      .setOrigin(0.5);
-    this.arenaRoomLabelCount += 1;
+    const panel = this.add.rectangle(x, y, width, height, 0x101827, 0.94);
+    panel.setStrokeStyle(room.id === "inner-vault" ? 4 : 2, accent, room.id === "inner-vault" ? 0.76 : 0.48);
+
+    const detail = this.add.graphics();
+    detail.lineStyle(1, accent, 0.16);
+    detail.strokeRect(x - width / 2 + 14, y - height / 2 + 14, width - 28, height - 28);
+    detail.lineStyle(2, 0xffffff, 0.05);
+    detail.lineBetween(x - width / 2 + 24, y, x + width / 2 - 24, y);
+    this.floorDetailCount += 2;
+
+    const shouldLabelRoom = room.id === "inner-vault" || room.id === "atrium" || room.id === "vault-door";
+    if (shouldLabelRoom) {
+      this.add
+        .text(x, y - height / 2 - 20, this.sceneUpper(room.name), {
+          color: room.id === "inner-vault" ? "#fff7d6" : "#dffcff",
+          fontFamily: "Inter, Arial, sans-serif",
+          fontSize: room.id === "inner-vault" ? "14px" : "12px",
+          fontStyle: "900",
+          stroke: "#050811",
+          strokeThickness: 5
+        })
+        .setOrigin(0.5)
+        .setAlpha(room.id === "inner-vault" ? 0.92 : 0.72);
+      this.visibleRoomLabelCount += 1;
+    }
+    this.arenaRoomLabelCount = this.visibleRoomLabelCount;
 
     if (room.id === "inner-vault") {
       this.createZoneBadge(x, y + height / 2 - 24, "HIGH VALUE", 0xffd56a);
     } else if (room.id === "east-hall" || room.id === "west-hall") {
-      this.createZoneBadge(x, y + height / 2 - 22, "RIVAL ENTRY", 0xff4f7b);
+      this.recordZoneBeacon("RIVAL ENTRY");
+      this.createEntryMarker(x, y + height / 2 - 22);
     } else if (danger >= 3) {
       this.createZoneBadge(x, y + height / 2 - 22, `RISK ${danger}`, 0xff4f7b);
     }
   }
 
+  private recordZoneBeacon(text: string) {
+    this.arenaZoneBeacons.add(this.sceneText(text));
+  }
+
+  private createEntryMarker(x: number, y: number) {
+    const plate = this.add.rectangle(0, 0, 62, 8, 0xff4f7b, 0.16).setStrokeStyle(1, 0xff4f7b, 0.24);
+    const left = this.add.triangle(-22, 0, 0, -8, 12, 0, 0, 8, 0xff4f7b, 0.52);
+    const right = this.add.triangle(22, 0, 0, -8, -12, 0, 0, 8, 0xff4f7b, 0.52);
+    this.add.container(x, y, [plate, left, right]).setDepth(9).setAlpha(0.72);
+    this.floorDetailCount += 1;
+  }
+
   private createZoneBadge(x: number, y: number, text: string, color: number) {
     const labelText = this.sceneText(text);
-    this.arenaZoneBeacons.add(labelText);
-    const width = Math.max(76, labelText.length * 8 + 18);
-    const plate = this.add.rectangle(0, 0, width, 24, 0x050811, 0.78).setStrokeStyle(2, color, 0.72);
+    this.recordZoneBeacon(text);
+    const width = Math.max(58, labelText.length * 6.2 + 14);
+    const plate = this.add.rectangle(0, 0, width, 18, 0x050811, 0.58).setStrokeStyle(1, color, 0.46);
     const label = this.add
       .text(0, 0, labelText, {
         color: `#${color.toString(16).padStart(6, "0")}`,
         fontFamily: "Inter, Arial, sans-serif",
-        fontSize: "11px",
+        fontSize: "9px",
         fontStyle: "900",
         stroke: "#050811",
-        strokeThickness: 3
+        strokeThickness: 2
       })
       .setOrigin(0.5);
-    this.add.container(x, y, [plate, label]).setDepth(11);
+    this.add.container(x, y, [plate, label]).setDepth(9).setAlpha(0.78);
   }
 
   private createArtifacts(state: GameState) {
@@ -1398,7 +1509,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
     if (!this.aiReleased) {
       const firstScoreWokeRivals = this.artifactsStolen > 0;
       if (!firstScoreWokeRivals && this.elapsedMs < AI_GRACE_MS) return;
-      this.releaseRivals({ announce: true, holdMs: AI_WAKE_HOLD_MS });
+      this.releaseRivals({ announce: true, holdMs: firstScoreWokeRivals ? FIRST_SCORE_RIVAL_WAKE_HOLD_MS : AI_WAKE_HOLD_MS });
       return;
     }
 
@@ -1591,7 +1702,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       this.collectArtifactVisual(artifact, 0xffd56a);
       this.updateEscapePayoutBadge();
       if (this.artifactsStolen === 1) {
-        this.releaseRivals({ announce: true, holdMs: AI_WAKE_HOLD_MS });
+        this.releaseRivals({ announce: true, holdMs: FIRST_SCORE_RIVAL_WAKE_HOLD_MS });
       }
       this.updateTargetMarker();
       this.updateGreedRouteHint();
@@ -1944,6 +2055,7 @@ export class ArcadeHeistScene extends Phaser.Scene {
       agent.ship.setScale(standby ? 0.86 : 1);
       agent.label.setText(standby ? this.sceneText("STANDBY") : agent.name.toUpperCase());
       agent.label.setColor(standby ? "#ff9fbd" : "#f8fdff");
+      agent.label.setAlpha(standby ? 0 : 1);
     }
   }
 
@@ -3635,6 +3747,16 @@ export class ArcadeHeistScene extends Phaser.Scene {
     };
   }
 
+  private worldPresentationDebug() {
+    return {
+      style: "arcade-heist",
+      visibleRoomLabels: this.visibleRoomLabelCount,
+      ambientLightCount: this.ambientLightCount,
+      floorDetailCount: this.floorDetailCount,
+      routeSignalMode: this.artifactsStolen === 0 ? "minimal" : "tactical"
+    };
+  }
+
   private targetMarkerDebug() {
     if (!this.targetMarker) return null;
     return {
@@ -4443,15 +4565,19 @@ export class ArcadeHeistScene extends Phaser.Scene {
     const progress = distance < 180 ? 0.5 : 0.42;
     const labelX = Phaser.Math.Linear(this.player.x, target.x, progress) + normalX * 42;
     const labelY = Phaser.Math.Linear(this.player.y, target.y, progress) + normalY * 42;
+    const minimal = this.artifactsStolen === 0 && target.kind === "artifact";
     const width = Math.max(144, lane.laneLabel.length * 8.5 + 34, lane.detail.length * 7 + 26);
 
-    this.routeSignalLabel.setText(lane.laneLabel);
+    this.routeSignalLabel.setText(minimal ? "" : lane.laneLabel);
     this.routeSignalLabel.setColor(this.hexCss(color));
-    this.routeSignalDetail.setText(this.sceneUpper(lane.detail));
-    this.routeSignalPlate.setSize(width, 46);
-    this.routeSignalPlate.setStrokeStyle(1, color, target.kind === "carrier" ? 0.8 : 0.56);
+    this.routeSignalLabel.setAlpha(minimal ? 0 : 1);
+    this.routeSignalDetail.setText(minimal ? "" : this.sceneUpper(lane.detail));
+    this.routeSignalDetail.setAlpha(minimal ? 0 : 0.72);
+    this.routeSignalPlate.setSize(minimal ? 82 : width, minimal ? 14 : 46);
+    this.routeSignalPlate.setFillStyle(0x050811, minimal ? 0.2 : 0.82);
+    this.routeSignalPlate.setStrokeStyle(1, color, minimal ? 0.18 : target.kind === "carrier" ? 0.8 : 0.56);
     this.routeSignal.setPosition(Phaser.Math.Clamp(labelX, 112, WORLD_WIDTH - 112), Phaser.Math.Clamp(labelY, 104, WORLD_HEIGHT - 104));
-    this.routeSignal.setAlpha(target.kind === "carrier" ? 0.96 : 0.84);
+    this.routeSignal.setAlpha(minimal ? 0.32 : target.kind === "carrier" ? 0.96 : 0.84);
     this.routeSignal.setData("visible", true);
     this.routeSignal.setData("laneLabel", lane.laneLabel);
     this.routeSignal.setData("detail", lane.detail);
@@ -4500,6 +4626,9 @@ export class ArcadeHeistScene extends Phaser.Scene {
       visible: true,
       laneLabel: String(this.routeSignal.getData("laneLabel") ?? ""),
       detail: String(this.routeSignal.getData("detail") ?? ""),
+      labelVisible: Boolean(this.routeSignalLabel?.text) && (this.routeSignalLabel?.alpha ?? 0) > 0.05,
+      detailVisible: Boolean(this.routeSignalDetail?.text) && (this.routeSignalDetail?.alpha ?? 0) > 0.05,
+      plateHeight: Math.round(this.routeSignalPlate?.height ?? 0),
       x: Math.round(this.routeSignal.x),
       y: Math.round(this.routeSignal.y)
     };

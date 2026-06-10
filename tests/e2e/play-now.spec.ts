@@ -125,6 +125,8 @@ test("language picker supports English Russian and Chinese and persists", async 
   expect(localizedArcade?.routeSignal?.laneLabel).toBe("偷取路线");
   expect(localizedArcade?.arenaLabels?.zoneBeacons).toEqual(expect.arrayContaining(["高价值", "撤离", "对手入口"]));
   expect(localizedArcade?.arenaLabels?.zoneBeacons).not.toEqual(expect.arrayContaining(["HIGH VALUE", "EXTRACT", "RIVAL ENTRY"]));
+  expect(localizedArcade?.worldPresentation?.style).toBe("arcade-heist");
+  expect(localizedArcade?.worldPresentation?.visibleRoomLabels).toBeLessThanOrEqual(3);
   expect(localizedArcade?.rivals?.[0]?.visualLabel).toBe("待命");
 });
 
@@ -163,8 +165,8 @@ test("solo match starts and reaches final case file", async ({ page }) => {
       objectiveCut: objectiveElement ? objectiveElement.scrollHeight > objectiveElement.clientHeight + 2 : true
     };
   });
-  expect(openingLayout.contract?.width).toBeLessThanOrEqual(270);
-  expect(openingLayout.contract?.height).toBeLessThanOrEqual(205);
+  expect(openingLayout.contract?.width).toBeLessThanOrEqual(224);
+  expect(openingLayout.contract?.height).toBeLessThanOrEqual(132);
   expect(openingLayout.objective?.height).toBeLessThanOrEqual(112);
   expect(openingLayout.objectiveCut).toBe(false);
   await expect(page.getByText(/moon vault run/i)).toBeVisible();
@@ -204,10 +206,30 @@ test("solo match starts and reaches final case file", async ({ page }) => {
   expect(initialTarget?.routeGuide?.laneLabel).toBe("STEAL ROUTE");
   expect(initialTarget?.routeGuide?.pulseCount).toBeGreaterThan(0);
   expect(initialTarget?.routeGuide?.signalVisible).toBe(true);
+  expect(initialTarget?.routeSignal).toEqual(
+    expect.objectContaining({
+      visible: true,
+      laneLabel: "STEAL ROUTE",
+      labelVisible: false,
+      detailVisible: false
+    })
+  );
+  expect(initialTarget?.routeSignal?.plateHeight).toBeLessThanOrEqual(16);
   expect(initialTarget?.cameraLookahead?.targetKind).toBe("artifact");
   expect(initialTarget?.cameraLookahead?.magnitude).toBeGreaterThan(15);
   expect(initialTarget?.nearestRival?.distanceMeters).toBeGreaterThan(0);
-  expect(initialTarget?.arenaLabels?.roomCount).toBeGreaterThanOrEqual(8);
+  expect(initialTarget?.worldPresentation).toEqual(
+    expect.objectContaining({
+      style: "arcade-heist",
+      visibleRoomLabels: expect.any(Number),
+      ambientLightCount: expect.any(Number),
+      floorDetailCount: expect.any(Number),
+      routeSignalMode: "minimal"
+    })
+  );
+  expect(initialTarget?.worldPresentation?.visibleRoomLabels).toBeLessThanOrEqual(3);
+  expect(initialTarget?.worldPresentation?.ambientLightCount).toBeGreaterThanOrEqual(10);
+  expect(initialTarget?.worldPresentation?.floorDetailCount).toBeGreaterThanOrEqual(24);
   expect(initialTarget?.arenaLabels?.zoneBeacons).toEqual(expect.arrayContaining(["HIGH VALUE", "EXTRACT", "RIVAL ENTRY"]));
   await page.waitForTimeout(1_600);
   const graceState = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());
@@ -233,6 +255,10 @@ test("solo match starts and reaches final case file", async ({ page }) => {
     })
   );
   await page.keyboard.press("KeyE");
+  const afterStealState = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.());
+  expect(afterStealState?.rivalsReleased).toBe(true);
+  expect(afterStealState?.rivalWakeHoldMs).toBeLessThanOrEqual(4_000);
+  expect(afterStealState?.worldPresentation?.routeSignalMode).toBe("tactical");
   const stealBurst = await page.evaluate(() => window.__AGENT_ALIBI_ARCADE_STATE__?.().impactBurst);
   expect(stealBurst).toEqual(
     expect.objectContaining({
